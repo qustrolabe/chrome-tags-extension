@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Bookmark Tags",
+  "version": "0.1",
+  "description": "Bookmarks tags manager",
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+  },
+  "permissions": [
+    "bookmarks"
+  ]
+}
