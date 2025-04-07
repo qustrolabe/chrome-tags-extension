@@ -2,6 +2,7 @@ import { defineConfig, PluginOption } from "vite";
 import deno from "@deno/vite-plugin";
 import preact from "@preact/preset-vite";
 import tailwindcss from "@tailwindcss/vite";
+import { config } from "node:process";
 
 export default defineConfig({
   server: { port: 3000 },

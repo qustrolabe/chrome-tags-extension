@@ -13,7 +13,7 @@
     "@deno/vite-plugin": "npm:@deno/vite-plugin@^1.0.4",
     "@preact/preset-vite": "npm:@preact/preset-vite@^2.9.1",
     "@tailwindcss/vite": "npm:@tailwindcss/vite@^4.0.7",
-    "preact": "npm:preact@^10.25.0",
+    "preact": "npm:preact@^10.26.5",
     "preact-iso": "npm:preact-iso@^2.9.1",
     "tailwindcss": "npm:tailwindcss@^4.0.7",
     "vite": "npm:vite@^6.2.0",
