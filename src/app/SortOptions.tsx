@@ -1,70 +1,40 @@
 import { useEffect, useState } from "preact/hooks";
 
-import { useBookmarks } from "./BookmarksContext.tsx";
+import { SortOption, useBookmarks } from "./BookmarksContext.tsx";
 
 export default function SortOptions() {
-  const { bookmarks, setBookmarks } = useBookmarks();
-  const [sortOption, setSortOption] = useState<
-    "dateAdded" | "dateLastUsed" | "id" | "title"
-  >("dateAdded");
-
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const { sortOption, setSortOption, sortDirection, setSortDirection } =
+    useBookmarks();
 
   const handleSortOptionChange = (
-    option: "dateAdded" | "dateLastUsed" | "id" | "title",
+    option: SortOption,
   ) => {
     if (option !== sortOption) {
       setSortOption(option);
-      //   setSortDirection("desc");
     } else {
       setSortDirection(sortDirection === "desc" ? "asc" : "desc");
     }
   };
 
-  useEffect(() => {
-    const sortedBookmarks = [...bookmarks];
-    sortedBookmarks.sort((a, b) => {
-      if (sortOption === "dateAdded") {
-        const aDate = a.dateAdded ?? 0;
-        const bDate = b.dateAdded ?? 0;
-        return sortDirection === "desc" ? bDate - aDate : aDate - bDate;
-      } else if (sortOption === "dateLastUsed") {
-        const aDate = a.dateLastUsed ?? 0;
-        const bDate = b.dateLastUsed ?? 0;
-        return sortDirection === "desc" ? bDate - aDate : aDate - bDate;
-      } else if (sortOption === "id") {
-        return sortDirection === "desc"
-          ? b.id.localeCompare(a.id)
-          : a.id.localeCompare(b.id);
-      } else if (sortOption === "title") {
-        return sortDirection === "desc"
-          ? b.title.localeCompare(a.title)
-          : a.title.localeCompare(b.title);
-      }
-      return 0;
-    });
-    setBookmarks(sortedBookmarks);
-  }, [sortOption, sortDirection]);
-
   const options = [
-    ["dateAdded", "Date Added"],
-    ["dateLastUsed", "Last Used"],
-    ["id", "ID"],
-    ["title", "Title"],
-  ] as const;
+    { value: "dateAdded", label: "Date Added" },
+    { value: "dateLastUsed", label: "Last Used" },
+    { value: "id", label: "ID" },
+    { value: "title", label: "Title" },
+  ];
 
   return (
     <div class="flex space-x-2">
-      {options.map(([option, label]) => (
+      {options.map(({ value, label }) => (
         <button
           type="button"
-          key={option}
+          key={value}
           class={`rounded p-2 ${
-            sortOption === option ? "bg-gray-800 text-white" : "bg-gray-700"
+            sortOption === value ? "bg-gray-800 text-white" : "bg-gray-700"
           }`}
-          onClick={() => handleSortOptionChange(option)}
+          onClick={() => handleSortOptionChange(value as SortOption)}
         >
-          {sortOption === option ? (sortDirection === "desc" ? "↓" : "↑") : ""}
+          {sortOption === value ? (sortDirection === "desc" ? "↓" : "↑") : ""}
           {" "}
           {label}
         </button>

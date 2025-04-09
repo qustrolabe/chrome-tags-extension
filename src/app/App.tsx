@@ -3,18 +3,18 @@ import { useEffect, useState } from "preact/hooks";
 import Header from "./Header.tsx";
 import BookmarkList from "./BookmarkList.tsx";
 
-import { BookmarksProvider } from "./BookmarksContext.tsx";
+import { BookmarksManagerProvider } from "./BookmarksContext.tsx";
 
-type Bookmark = chrome.bookmarks.BookmarkTreeNode;
+// type Bookmark = chrome.bookmarks.BookmarkTreeNode;
 
 export default function App() {
   return (
-    <BookmarksProvider>
+    <BookmarksManagerProvider>
       <div class="">
         <Header />
         <BookmarkList />
       </div>
-    </BookmarksProvider>
+    </BookmarksManagerProvider>
   );
 }
 

@@ -4,20 +4,106 @@ import { useContext, useEffect, useState } from "preact/hooks";
 
 export type Bookmark = chrome.bookmarks.BookmarkTreeNode;
 
-export type BookmarkContext = {
-  bookmarks: Bookmark[];
-  setBookmarks: (bookmarks: Bookmark[]) => void;
-};
+export type SortOption = "id" | "title" | "dateAdded" | "dateLastUsed";
+export type SortDirection = "asc" | "desc";
 
-export const BookmarksContext = createContext<BookmarkContext>({
-  bookmarks: [],
-  setBookmarks: () => {},
-});
+interface BookmarksManagerContextType {
+  sortOption: SortOption;
+  setSortOption: (sortOption: SortOption) => void;
+  sortDirection: SortDirection;
+  setSortDirection: (sortDirection: SortDirection) => void;
+  searchQuery: string;
+  setSearchQuery: (searchQuery: string) => void;
+  filterTags: string[];
+  setFilterTags: (filterTags: string[]) => void;
+  displayBookmarks: Bookmark[];
+  availableTags: string[];
+}
 
-export const BookmarksProvider = (
+export const BookmarksManagerContext = createContext<
+  BookmarksManagerContextType | undefined
+>(undefined);
+
+export const BookmarksManagerProvider = (
   { children }: { children: ComponentChildren },
 ) => {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
+
+  const [sortOption, setSortOption] = useState<SortOption>("dateAdded");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterTags, setFilterTags] = useState<string[]>([]);
+
+  const [displayBookmarks, setDisplayBookmarks] = useState<Bookmark[]>([]);
+
+  const availableTags = bookmarks
+    .map((b) => b.title)
+    .flatMap((title) => title.split(" "))
+    .filter((word) => word.startsWith("#"))
+    .map((word) => word.slice(1))
+    .filter((tag, index, tags) => tags.indexOf(tag) === index);
+
+  // Sort and filter bookmarks into displayBookmarks
+  useEffect(() => {
+    const filterByQuery = (
+      input_bookmarks: Bookmark[],
+      searchQuery: string,
+    ) =>
+      input_bookmarks.filter((b) =>
+        searchQuery
+          ? b.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (b.url && b.url.toLowerCase().includes(searchQuery.toLowerCase()))
+          : true
+      );
+
+    const filterByTags = (
+      input_bookmarks: Bookmark[],
+      filterTags: string[],
+    ) =>
+      input_bookmarks.filter((b) =>
+        filterTags.length === 0 ||
+        filterTags.every((tag) =>
+          tag.startsWith("-")
+            ? !b.title.toLowerCase().split(" ").some((word) =>
+              word === "#" + tag.slice(1)
+            )
+            : b.title.toLowerCase().split(" ").some((word) =>
+              word === "#" + tag
+            )
+        )
+      );
+
+    const sortBookmarks = (
+      input_bookmarks: Bookmark[],
+      sortOption: SortOption,
+      sortDirection: SortDirection,
+    ) => {
+      const compareFunctions: {
+        [key in SortOption]: (a: Bookmark, b: Bookmark) => number;
+      } = {
+        dateAdded: (a, b) => (b.dateAdded ?? 0) - (a.dateAdded ?? 0),
+        dateLastUsed: (a, b) => (b.dateLastUsed ?? 0) - (a.dateLastUsed ?? 0),
+        id: (a, b) => b.id.localeCompare(a.id),
+        title: (a, b) => b.title.localeCompare(a.title),
+      };
+      const compareFunction = compareFunctions[sortOption];
+      return input_bookmarks.sort((a, b) =>
+        sortDirection === "desc" ? compareFunction(a, b) : compareFunction(b, a)
+      );
+    };
+
+    const queryFilteredBookmarks = filterByQuery(bookmarks, searchQuery);
+    const tagFilteredBookmarks = filterByTags(
+      queryFilteredBookmarks,
+      filterTags,
+    );
+    const sortedBookmarks = sortBookmarks(
+      tagFilteredBookmarks,
+      sortOption,
+      sortDirection,
+    );
+    setDisplayBookmarks(sortedBookmarks);
+  }, [bookmarks, searchQuery, filterTags, sortOption, sortDirection]);
 
   useEffect(() => {
     chrome.bookmarks.getTree((bookmarkTreeNodes) => {
@@ -46,16 +132,27 @@ export const BookmarksProvider = (
   }, []);
 
   return (
-    <BookmarksContext.Provider
-      value={{ bookmarks, setBookmarks }}
+    <BookmarksManagerContext.Provider
+      value={{
+        sortOption,
+        setSortOption,
+        sortDirection,
+        setSortDirection,
+        searchQuery,
+        setSearchQuery,
+        filterTags,
+        setFilterTags,
+        displayBookmarks,
+        availableTags,
+      }}
     >
       {children}
-    </BookmarksContext.Provider>
+    </BookmarksManagerContext.Provider>
   );
 };
 
-export const useBookmarks = () => {
-  const context = useContext(BookmarksContext);
+export const useBookmarks = (): BookmarksManagerContextType => {
+  const context = useContext(BookmarksManagerContext);
   if (!context) {
     throw new Error("useBookmarks must be used within a BookmarksProvider");
   }

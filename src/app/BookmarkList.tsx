@@ -4,11 +4,11 @@ import { useBookmarks } from "./BookmarksContext.tsx";
 import BookmarkCard from "./BookmarkCard.tsx";
 
 export default function BookmarkList() {
-  const { bookmarks } = useBookmarks();
+  const { displayBookmarks } = useBookmarks();
 
   return (
     <div>
-      {bookmarks.map((bookmark) => (
+      {displayBookmarks.map((bookmark) => (
         <BookmarkCard key={bookmark.id} bookmark={bookmark} />
       ))}
     </div>
