@@ -14,29 +14,25 @@ export default function FilterTags() {
     .filter((s) => s.length > 0);
 
   useEffect(() => {
-    if (inputTags.length > 0) {
-      const lastTag = inputTags[inputTags.length - 1];
-      const startsWithNegative = lastTag.startsWith("-");
-      const tagToSearch = startsWithNegative ? lastTag.slice(1) : lastTag;
-      const suggestions = availableTags
-        .filter((tag) =>
-          !filterTags.includes(tag) &&
-          !filterTags.includes(`${startsWithNegative ? "-" : ""}${tag}`)
-        )
-        .filter((tag) => tag.toLowerCase().includes(tagToSearch.toLowerCase()));
-      setSuggestions(
-        startsWithNegative ? suggestions.map((tag) => `-${tag}`) : suggestions,
-      );
-      setShowDropdown(true);
-    } else {
-      setShowDropdown(false);
-    }
+    const lastTag = inputTags[inputTags.length - 1] || "";
+    const startsWithNegative = lastTag.startsWith("-");
+    const tagToSearch = startsWithNegative ? lastTag.slice(1) : lastTag;
+    const suggestions = availableTags
+      .filter((tag) =>
+        !filterTags.includes(tag) &&
+        !filterTags.includes(`${startsWithNegative ? "-" : ""}${tag}`)
+      )
+      .filter((tag) => tag.toLowerCase().includes(tagToSearch.toLowerCase()));
+    setSuggestions(
+      startsWithNegative ? suggestions.map((tag) => `-${tag}`) : suggestions,
+    );
   }, [inputValue, availableTags, filterTags]);
 
   const handleFilterTagInput = (e: InputEvent) => {
     const target = e.target as HTMLInputElement;
     setInputValue(target.value);
     setHighlightedIndex(-1);
+    setShowDropdown(true);
   };
 
   const handleFilterTagAdd = () => {
@@ -59,11 +55,6 @@ export default function FilterTags() {
     setFilterTags(filterTags.filter((t) => t !== tag));
   };
 
-  /**
-   * Handles when a suggestion in the dropdown is clicked.
-   * Adds the suggestion to the tags and clears the input.
-   * @param {string} suggestion - The suggestion that was clicked.
-   */
   const handleSuggestionClick = (suggestion: string) => {
     const newTags = [suggestion];
     setFilterTags([...filterTags, ...newTags]);
@@ -120,6 +111,9 @@ export default function FilterTags() {
         placeholder="Add tags..."
         class="flex-grow p-1 outline-none focus:ring-0 border-none text-sm min-w-[120px] text-white"
         value={inputValue}
+        onFocus={() => setShowDropdown(true)}
+        onBlur={() => setShowDropdown(false)}
+        onClick={() => setShowDropdown(true)}
         onInput={handleFilterTagInput}
         onKeyDown={handleKeyDown}
       />
