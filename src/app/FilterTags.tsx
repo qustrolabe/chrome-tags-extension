@@ -17,15 +17,19 @@ export default function FilterTags() {
     const lastTag = inputTags[inputTags.length - 1] || "";
     const startsWithNegative = lastTag.startsWith("-");
     const tagToSearch = startsWithNegative ? lastTag.slice(1) : lastTag;
-    const suggestions = availableTags
-      .filter((tag) =>
+    const suggestions = Object.entries(availableTags)
+      .filter(([tag]) =>
         !filterTags.includes(tag) &&
         !filterTags.includes(`${startsWithNegative ? "-" : ""}${tag}`)
       )
-      .filter((tag) => tag.toLowerCase().includes(tagToSearch.toLowerCase()));
-    setSuggestions(
-      startsWithNegative ? suggestions.map((tag) => `-${tag}`) : suggestions,
-    );
+      .filter(([tag]) => tag.toLowerCase().includes(tagToSearch.toLowerCase()))
+      .map(([tag, count]) => ({
+        tag: startsWithNegative ? `-${tag}` : tag,
+        count,
+      }))
+      .sort((a, b) => b.count - a.count)
+      .map(({ tag }) => tag);
+    setSuggestions(suggestions);
   }, [inputValue, availableTags, filterTags]);
 
   const handleFilterTagInput = (e: InputEvent) => {
@@ -55,8 +59,13 @@ export default function FilterTags() {
     setFilterTags(filterTags.filter((t) => t !== tag));
   };
 
-  const handleSuggestionClick = (suggestion: string) => {
-    const newTags = [suggestion];
+  const handleSuggestionClick = (
+    suggestion: string,
+    shiftKey: boolean = false,
+  ) => {
+    const isNegative = suggestion.startsWith("-");
+    const newTag = shiftKey && !isNegative ? `-${suggestion}` : suggestion;
+    const newTags = [newTag];
     setFilterTags([...filterTags, ...newTags]);
     setInputValue("");
     setShowDropdown(false);
@@ -129,9 +138,18 @@ export default function FilterTags() {
             class={`px-2 py-1 cursor-pointer hover:bg-gray-600 ${
               highlightedIndex === index ? "bg-gray-600" : ""
             }`}
-            onMouseDown={() => handleSuggestionClick(suggestion)}
+            onMouseDown={(e) => {
+              if (e.shiftKey) {
+                handleSuggestionClick(suggestion, true);
+              } else {
+                handleSuggestionClick(suggestion);
+              }
+            }}
           >
-            {suggestion}
+            <span class="mr-1">{suggestion}</span>
+            <span class="text-gray-500">
+              ({availableTags[suggestion] || 0})
+            </span>
           </li>
         ))}
       </ul>

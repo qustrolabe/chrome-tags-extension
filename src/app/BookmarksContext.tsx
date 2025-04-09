@@ -17,7 +17,7 @@ interface BookmarksManagerContextType {
   filterTags: string[];
   setFilterTags: (filterTags: string[]) => void;
   displayBookmarks: Bookmark[];
-  availableTags: string[];
+  availableTags: Record<string, number>;
 }
 
 export const BookmarksManagerContext = createContext<
@@ -36,12 +36,15 @@ export const BookmarksManagerProvider = (
 
   const [displayBookmarks, setDisplayBookmarks] = useState<Bookmark[]>([]);
 
-  const availableTags = bookmarks
+  const availableTags = displayBookmarks
     .map((b) => b.title)
     .flatMap((title) => title.split(" "))
     .filter((word) => word.startsWith("#"))
     .map((word) => word.slice(1))
-    .filter((tag, index, tags) => tags.indexOf(tag) === index);
+    .reduce((acc, tag) => {
+      acc[tag] = (acc[tag] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
 
   // Sort and filter bookmarks into displayBookmarks
   useEffect(() => {
