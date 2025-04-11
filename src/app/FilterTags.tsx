@@ -106,7 +106,7 @@ export default function FilterTags() {
               class={`tag-capsule flex items-center text-sm font-medium px-2.5 py-0.5 rounded-full ${
                 isNegative ? "bg-red-900" : "bg-gray-900"
               } text-white`}
-              title="Click to remove TailwindCSS"
+              title="Click to remove this tag"
               onClick={() => handleFilterTagRemove(tag)}
             >
               {isNegative ? tag.slice(1) : tag}

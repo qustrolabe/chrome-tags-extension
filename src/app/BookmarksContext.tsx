@@ -18,6 +18,7 @@ interface BookmarksManagerContextType {
   setFilterTags: (filterTags: string[]) => void;
   displayBookmarks: Bookmark[];
   availableTags: Record<string, number>;
+  bookmarks: Bookmark[];
 }
 
 export const BookmarksManagerContext = createContext<
@@ -36,6 +37,7 @@ export const BookmarksManagerProvider = (
 
   const [displayBookmarks, setDisplayBookmarks] = useState<Bookmark[]>([]);
 
+  // Get all available tags from currently displayed bookmarks
   const availableTags = displayBookmarks
     .map((b) => b.title)
     .flatMap((title) => title.split(" "))
@@ -46,8 +48,30 @@ export const BookmarksManagerProvider = (
       return acc;
     }, {} as Record<string, number>);
 
+  // Save and load sortOption, sortDirection, searchQuery, and filterTags from GET parameters
+  useEffect(() => {
+    const params = new URLSearchParams(globalThis.location.search);
+    setSortOption(params.get("sort") as SortOption || "dateAdded");
+    setSortDirection(params.get("sortDirection") as SortDirection || "desc");
+    setSearchQuery(params.get("searchQuery") || "");
+    setFilterTags(params.getAll("filterTags"));
+  }, []);
+  useEffect(() => {
+    const params = new URLSearchParams(globalThis.location.search);
+    params.set("sort", sortOption);
+    params.set("sortDirection", sortDirection);
+    params.set("searchQuery", searchQuery);
+    params.delete("filterTags");
+    filterTags.forEach((tag) => params.append("filterTags", tag));
+    history.replaceState({}, "", "?" + params.toString());
+  }, [sortOption, sortDirection, searchQuery, filterTags]);
+
   // Sort and filter bookmarks into displayBookmarks
   useEffect(() => {
+    // Filter out folders
+    const filterFolders = (input_bookmarks: Bookmark[]) =>
+      input_bookmarks.filter((b) => b.url);
+
     const filterByQuery = (
       input_bookmarks: Bookmark[],
       searchQuery: string,
@@ -95,7 +119,11 @@ export const BookmarksManagerProvider = (
       );
     };
 
-    const queryFilteredBookmarks = filterByQuery(bookmarks, searchQuery);
+    const filteredBookmarks = filterFolders(bookmarks);
+    const queryFilteredBookmarks = filterByQuery(
+      filteredBookmarks,
+      searchQuery,
+    );
     const tagFilteredBookmarks = filterByTags(
       queryFilteredBookmarks,
       filterTags,
@@ -113,17 +141,18 @@ export const BookmarksManagerProvider = (
       const bookmarks: Bookmark[] = [];
       function traverse(nodes: chrome.bookmarks.BookmarkTreeNode[]) {
         nodes.forEach((node) => {
-          if (node.url) {
-            bookmarks.push({
-              id: node.id,
-              title: node.title,
-              url: node.url,
-              dateAdded: node.dateAdded,
-              dateGroupModified: node.dateGroupModified,
-              dateLastUsed: node.dateLastUsed,
-              syncing: node.syncing,
-            });
-          }
+          // if (node.url) {
+          //   bookmarks.push({
+          //     id: node.id,
+          //     title: node.title,
+          //     url: node.url,
+          //     dateAdded: node.dateAdded,
+          //     dateGroupModified: node.dateGroupModified,
+          //     dateLastUsed: node.dateLastUsed,
+          //     syncing: node.syncing,
+          //   });
+          // }
+          bookmarks.push(node);
           if (node.children) {
             traverse(node.children);
           }
@@ -147,6 +176,7 @@ export const BookmarksManagerProvider = (
         setFilterTags,
         displayBookmarks,
         availableTags,
+        bookmarks,
       }}
     >
       {children}
