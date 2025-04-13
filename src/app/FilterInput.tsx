@@ -65,6 +65,7 @@ export default function FilterInput() {
         const filteredTags = Object.entries(availableTags)
           .filter(([t]) => t.startsWith(tag))
           .sort(([, a], [, b]) => b - a)
+          .slice(0, 20)
           .map(([t]) => t);
         return filteredTags.map((t) =>
           inputValue.startsWith("-") ? `-${t}` : `#${t}`
