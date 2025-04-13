@@ -23,7 +23,7 @@ function BookmarksCounter() {
 
 export default function Header() {
   return (
-    <div class="flex bg-gray-900 p-2 rounded gap-2">
+    <div class="flex bg-gray-900 p-2 rounded-b gap-2">
       <div class="flex space-x-2 flex-1">
         <FilterInput />
       </div>
