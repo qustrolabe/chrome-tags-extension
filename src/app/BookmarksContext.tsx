@@ -113,7 +113,23 @@ export const BookmarksManagerProvider = (
   const [filters, setFilters] = useState<Filter[]>([]);
 
   const addFilter = (filter: Filter) => {
-    setFilters([...filters, filter]);
+    const oppositeFilter = { ...filter, negative: !filter.negative };
+    const existingFilter = filters.find((f) =>
+      JSON.stringify(f) === JSON.stringify(filter)
+    );
+    const existingOppositeFilter = filters.find((f) =>
+      JSON.stringify(f) === JSON.stringify(oppositeFilter)
+    );
+
+    if (existingFilter) {
+      return;
+    } else if (existingOppositeFilter) {
+      setFilters(
+        filters.filter((f) => f !== existingOppositeFilter).concat(filter),
+      );
+    } else {
+      setFilters([...filters, filter]);
+    }
   };
 
   const removeFilter = (filter: Filter) => {

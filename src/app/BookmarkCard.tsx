@@ -47,13 +47,15 @@ export default function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
 
   const { bookmarks, addFilter } = useBookmarks();
 
-  const addFolderFilter = (folderId: string) =>
+  const handleAddFolderFilter = (folderId: string, negative: boolean) => {
     addFilter(
-      { type: "folder", folderId: folderId, negative: false } as FolderFilter,
+      { type: "folder", folderId: folderId, negative } as FolderFilter,
     );
+  };
 
-  const addTagFilter = (tag: string) =>
-    addFilter({ type: "tag", tag: tag, negative: false } as TagFilter);
+  const handleAddTagFilter = (tag: string, negative: boolean) => {
+    addFilter({ type: "tag", tag: tag, negative } as TagFilter);
+  };
 
   const handleEdit = () => {
     if (isEditing) {
@@ -98,7 +100,9 @@ export default function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
     <div class="flex flex-col border border-gray-900 rounded m-1 p-2 bg-gray-800">
       <div class="flex items-center">
         {bookmark.url && (
-          <img style="r-4" src={faviconURL(bookmark.url)} alt="" />
+          <div class="mr-2">
+            <img class="rounded" src={faviconURL(bookmark.url)} alt="" />
+          </div>
         )}
         {isEditing
           ? (
@@ -114,7 +118,7 @@ export default function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
           : <span class="flex-1 font-bold ">{title}</span>}
         <button
           type="button"
-          class="ml-2rounded bg-gray-800"
+          class="ml-2 rounded bg-gray-800"
           onClick={handleEdit}
         >
           {isEditing ? "Submit" : "Edit"}
@@ -135,14 +139,17 @@ export default function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
           {path.length > 0 && (
             <span class="flex items-center ml-2">
               {path.map((node) => (
-                <span key={node.id} class="hover:underline">
-                  <a
-                    href="#"
+                <span key={node.id} class="hover:underline cursor-pointer">
+                  <span
                     class="text-gray-300 hover:text-blue-500"
-                    onClick={() => addFolderFilter(node.id)}
+                    onClick={(e) =>
+                      handleAddFolderFilter(
+                        node.id,
+                        e.shiftKey,
+                      )}
                   >
                     {node.title}/
-                  </a>
+                  </span>
                 </span>
               ))}
             </span>
@@ -166,7 +173,7 @@ export default function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
             {tags?.map((tag) => (
               <div
                 class="select-none cursor-pointer"
-                onClick={() => addTagFilter(tag)}
+                onClick={(e) => handleAddTagFilter(tag, e.shiftKey)}
                 key={tag}
               >
                 <BookmarkTagCapsule tag={tag} />
