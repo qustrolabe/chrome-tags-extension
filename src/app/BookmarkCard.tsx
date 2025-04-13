@@ -1,10 +1,17 @@
 import { useEffect, useRef, useState } from "preact/hooks";
-import { useBookmarks } from "./BookmarksContext.tsx";
+import { FolderFilter, TagFilter, useBookmarks } from "./BookmarksContext.tsx";
 
 type Bookmark = chrome.bookmarks.BookmarkTreeNode;
 
 interface BookmarkCardProps {
   bookmark: Bookmark;
+}
+
+function faviconURL(u: string) {
+  const url = new URL(chrome.runtime.getURL("/_favicon/"));
+  url.searchParams.set("pageUrl", u);
+  url.searchParams.set("size", "16");
+  return url.toString();
 }
 
 const formatDateTime = (date: number | undefined) => {
@@ -38,7 +45,15 @@ export default function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
   const [title, setTitle] = useState(bookmark.title);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { bookmarks, searchQuery, setSearchQuery } = useBookmarks();
+  const { bookmarks, addFilter } = useBookmarks();
+
+  const addFolderFilter = (folderId: string) =>
+    addFilter(
+      { type: "folder", folderId: folderId, negative: false } as FolderFilter,
+    );
+
+  const addTagFilter = (tag: string) =>
+    addFilter({ type: "tag", tag: tag, negative: false } as TagFilter);
 
   const handleEdit = () => {
     if (isEditing) {
@@ -77,9 +92,14 @@ export default function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
     return p;
   })();
 
+  const tags = bookmark.title.match(/#(\w+)/g)?.map((tag) => tag.slice(1));
+
   return (
-    <div class="flex flex-col space-y-1 border border-gray-900 rounded p-2 bg-gray-800">
+    <div class="flex flex-col border border-gray-900 rounded m-1 p-2 bg-gray-800">
       <div class="flex items-center">
+        {bookmark.url && (
+          <img style="r-4" src={faviconURL(bookmark.url)} alt="" />
+        )}
         {isEditing
           ? (
             <input
@@ -91,10 +111,10 @@ export default function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
               class="w-full rounded p-2 bg-gray-500"
             />
           )
-          : <span class="flex-1 font-bold text-xl">{title}</span>}
+          : <span class="flex-1 font-bold ">{title}</span>}
         <button
           type="button"
-          class="ml-2 rounded p-2 bg-gray-800"
+          class="ml-2rounded bg-gray-800"
           onClick={handleEdit}
         >
           {isEditing ? "Submit" : "Edit"}
@@ -119,8 +139,7 @@ export default function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
                   <a
                     href="#"
                     class="text-gray-300 hover:text-blue-500"
-                    onClick={() =>
-                      setSearchQuery(searchQuery + `folder_id:${node.id}`)}
+                    onClick={() => addFolderFilter(node.id)}
                   >
                     {node.title}/
                   </a>
@@ -130,24 +149,42 @@ export default function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
           )}
         </div>
       </div>
-      <ul class="list-disc pl-4 space-y-1">
-        <li>ID: {bookmark.id}</li>
-        <li>Created: {formatDateTime(bookmark.dateAdded)}</li>
-        <li>Last used: {formatDateTime(bookmark.dateLastUsed)}</li>
-        <li>Modified: {formatDateTime(bookmark.dateGroupModified)}</li>
-      </ul>
-      <div class="flex items-center space-x-2 text-sm">
-        <span class="text-gray-600">Tags:</span>
-        <span class="flex items-center space-x-1">
-          {bookmark.title
-            .match(/#(\w+)/g)
-            ?.map((tag) => <BookmarkTagCapsule key={tag} tag={tag.slice(1)} />)}
-        </span>
+      <div class="flex flex-row space-x-2 justify-between">
+        <div>ID: {bookmark.id}</div>
+        <div class="flex space-x-2 text-gray-400">
+          <div class="flex items-center space-x-1">
+            <span>Created: {formatDateTime(bookmark.dateAdded)}</span>
+          </div>
+          <div class="flex items-center space-x-1">
+            <span>Last used: {formatDateTime(bookmark.dateLastUsed)}</span>
+          </div>
+        </div>
       </div>
+      {tags?.length
+        ? (
+          <div class="w-full flex flex-wrap gap-x-1 gap-y-1">
+            {tags?.map((tag) => (
+              <div
+                class="select-none cursor-pointer"
+                onClick={() => addTagFilter(tag)}
+                key={tag}
+              >
+                <BookmarkTagCapsule tag={tag} />
+              </div>
+            ))}
+          </div>
+        )
+        : null}
     </div>
   );
 }
 
-function BookmarkTagCapsule({ tag }: { tag: string }) {
-  return <span class="rounded px-2 py-1 bg-gray-600 ">{tag}</span>;
+function BookmarkTagCapsule(
+  { tag }: { tag: string },
+) {
+  return (
+    <div class="rounded p-1.5 bg-gray-600 hover:bg-gray-700 ">
+      #{tag}
+    </div>
+  );
 }

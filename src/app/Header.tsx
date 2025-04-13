@@ -1,46 +1,33 @@
 import { useEffect, useState } from "preact/hooks";
 
+import FilterInput from "./FilterInput.tsx";
+
 import { useBookmarks } from "./BookmarksContext.tsx";
 import SortOptions from "./SortOptions.tsx";
-import FilterTags from "./FilterTags.tsx";
-
-function SearchBar() {
-  const { searchQuery, setSearchQuery } = useBookmarks();
-
-  const handleSearch = (e: InputEvent) => {
-    const target = e.target as HTMLInputElement;
-    setSearchQuery(target.value);
-  };
-
-  return (
-    <input
-      type="text"
-      value={searchQuery}
-      onInput={handleSearch}
-      placeholder="Search bookmarks..."
-      class="rounded p-2 border bg-gray-800 text-white"
-    />
-  );
-}
 
 function BookmarksCounter() {
-  const { displayBookmarks } = useBookmarks();
+  const { displayBookmarks, bookmarks } = useBookmarks();
 
   return (
-    <div class="text-gray-500">
-      {displayBookmarks.length} bookmarks
+    <div class="text-gray-500 flex items-center">
+      <span title="Displayed filtered bookmarks">
+        {displayBookmarks.length}
+      </span>{" "}
+      /{" "}
+      <span title="Total number of bookmarks (including folders)">
+        {bookmarks.length}
+      </span>
     </div>
   );
 }
 
 export default function Header() {
   return (
-    <div class="flex justify-between items-center mb-4 bg-gray-900 p-4 rounded">
-      <div class="flex space-x-2">
-        <SearchBar />
-        <SortOptions />
-        <FilterTags />
+    <div class="flex bg-gray-900 p-2 rounded gap-2">
+      <div class="flex space-x-2 flex-1">
+        <FilterInput />
       </div>
+      <SortOptions />
       <BookmarksCounter />
     </div>
   );

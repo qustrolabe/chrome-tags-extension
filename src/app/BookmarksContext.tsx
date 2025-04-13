@@ -11,19 +11,94 @@ interface BookmarksManagerContextType {
   sortOption: SortOption;
   setSortOption: (sortOption: SortOption) => void;
   sortDirection: SortDirection;
-  setSortDirection: (sortDirection: SortDirection) => void;
-  searchQuery: string;
-  setSearchQuery: (searchQuery: string) => void;
-  filterTags: string[];
-  setFilterTags: (filterTags: string[]) => void;
+  toggleSortDirection: () => void;
+
   displayBookmarks: Bookmark[];
   availableTags: Record<string, number>;
   bookmarks: Bookmark[];
+
+  filters: Filter[];
+  addFilter: (filter: Filter) => void;
+  removeFilter: (filter: Filter) => void;
+  clearFilters: () => void;
 }
 
 export const BookmarksManagerContext = createContext<
   BookmarksManagerContextType | undefined
 >(undefined);
+
+type BaseFilter = {
+  type: string;
+  negative: boolean;
+};
+
+// Filter that matches url or title or folder name
+export type AnyFilter = BaseFilter & {
+  type: "any";
+  value: string;
+};
+
+export type TagFilter = BaseFilter & {
+  type: "tag";
+  tag: string;
+};
+
+export type TitleFilter = BaseFilter & {
+  type: "title";
+  title: string;
+};
+
+export type UrlFilter = BaseFilter & {
+  type: "url";
+  url: string;
+};
+
+export type FolderFilter = BaseFilter & {
+  type: "folder";
+  folderId: string;
+};
+
+// export type DateFilter = BaseFilter & {
+//   type: "date";
+//   // implement for filtering before/after a certain date of last used or added or modified property
+// };
+
+export type Filter =
+  | TagFilter
+  | TitleFilter
+  | UrlFilter
+  | FolderFilter
+  | AnyFilter;
+
+const serializeFilters = (filters: Filter[]) => JSON.stringify(filters);
+const deserializeFilters = (filters: string) => JSON.parse(filters);
+
+const applyFilter = (filter: Filter, bookmarks: Bookmark[]): Bookmark[] => {
+  return bookmarks.filter((bookmark) => {
+    const match = (value: string, target?: string) =>
+      target?.toLowerCase().includes(value.toLowerCase());
+
+    switch (filter.type) {
+      case "any":
+        return (
+          match(filter.value, bookmark.title) ||
+          match(filter.value, bookmark.url)
+        ) !== filter.negative;
+      case "tag":
+        return match(`#${filter.tag}`, bookmark.title) !== filter.negative;
+      case "title":
+        return match(filter.title, bookmark.title) !== filter.negative;
+      case "url":
+        return match(filter.url, bookmark.url) !== filter.negative;
+      case "folder":
+        return (
+          (bookmark.parentId === filter.folderId) !== filter.negative
+        );
+      default:
+        return true;
+    }
+  });
+};
 
 export const BookmarksManagerProvider = (
   { children }: { children: ComponentChildren },
@@ -32,10 +107,26 @@ export const BookmarksManagerProvider = (
 
   const [sortOption, setSortOption] = useState<SortOption>("dateAdded");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterTags, setFilterTags] = useState<string[]>([]);
 
   const [displayBookmarks, setDisplayBookmarks] = useState<Bookmark[]>([]);
+
+  const [filters, setFilters] = useState<Filter[]>([]);
+
+  const addFilter = (filter: Filter) => {
+    setFilters([...filters, filter]);
+  };
+
+  const removeFilter = (filter: Filter) => {
+    setFilters(filters.filter((f) => f !== filter));
+  };
+
+  const clearFilters = () => {
+    setFilters([]);
+  };
+
+  const toggleSortDirection = () => {
+    setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+  };
 
   // Get all available tags from currently displayed bookmarks
   const availableTags = displayBookmarks
@@ -48,57 +139,34 @@ export const BookmarksManagerProvider = (
       return acc;
     }, {} as Record<string, number>);
 
-  // Save and load sortOption, sortDirection, searchQuery, and filterTags from GET parameters
   useEffect(() => {
     const params = new URLSearchParams(globalThis.location.search);
     setSortOption(params.get("sort") as SortOption || "dateAdded");
     setSortDirection(params.get("sortDirection") as SortDirection || "desc");
-    setSearchQuery(params.get("searchQuery") || "");
-    setFilterTags(params.getAll("filterTags"));
+    setFilters(deserializeFilters(params.get("filterTags") || "[]"));
   }, []);
   useEffect(() => {
     const params = new URLSearchParams(globalThis.location.search);
     params.set("sort", sortOption);
     params.set("sortDirection", sortDirection);
-    params.set("searchQuery", searchQuery);
-    params.delete("filterTags");
-    filterTags.forEach((tag) => params.append("filterTags", tag));
+    params.set("filterTags", serializeFilters(filters));
     history.replaceState({}, "", "?" + params.toString());
-  }, [sortOption, sortDirection, searchQuery, filterTags]);
+  }, [sortOption, sortDirection, filters]);
 
   // Sort and filter bookmarks into displayBookmarks
   useEffect(() => {
-    // Filter out folders
-    const filterFolders = (input_bookmarks: Bookmark[]) =>
-      input_bookmarks.filter((b) => b.url);
-
-    const filterByQuery = (
+    const filterFolders = (
       input_bookmarks: Bookmark[],
-      searchQuery: string,
-    ) =>
-      input_bookmarks.filter((b) =>
-        searchQuery
-          ? b.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (b.url && b.url.toLowerCase().includes(searchQuery.toLowerCase()))
-          : true
-      );
+    ) => input_bookmarks.filter((b) => b.url !== undefined);
 
-    const filterByTags = (
+    const applyFilters = (
       input_bookmarks: Bookmark[],
-      filterTags: string[],
-    ) =>
-      input_bookmarks.filter((b) =>
-        filterTags.length === 0 ||
-        filterTags.every((tag) =>
-          tag.startsWith("-")
-            ? !b.title.toLowerCase().split(" ").some((word) =>
-              word === "#" + tag.slice(1)
-            )
-            : b.title.toLowerCase().split(" ").some((word) =>
-              word === "#" + tag
-            )
-        )
+    ) => {
+      return filters.reduce(
+        (acc, filter) => applyFilter(filter, acc),
+        input_bookmarks,
       );
+    };
 
     const sortBookmarks = (
       input_bookmarks: Bookmark[],
@@ -119,39 +187,23 @@ export const BookmarksManagerProvider = (
       );
     };
 
-    const filteredBookmarks = filterFolders(bookmarks);
-    const queryFilteredBookmarks = filterByQuery(
-      filteredBookmarks,
-      searchQuery,
-    );
-    const tagFilteredBookmarks = filterByTags(
-      queryFilteredBookmarks,
-      filterTags,
-    );
+    const nonFolderBookmarks = filterFolders(bookmarks);
+    const filteredBookmarks = applyFilters(nonFolderBookmarks);
+
     const sortedBookmarks = sortBookmarks(
-      tagFilteredBookmarks,
+      filteredBookmarks,
       sortOption,
       sortDirection,
     );
+
     setDisplayBookmarks(sortedBookmarks);
-  }, [bookmarks, searchQuery, filterTags, sortOption, sortDirection]);
+  }, [bookmarks, sortOption, sortDirection, filters]);
 
   useEffect(() => {
     chrome.bookmarks.getTree((bookmarkTreeNodes) => {
       const bookmarks: Bookmark[] = [];
       function traverse(nodes: chrome.bookmarks.BookmarkTreeNode[]) {
         nodes.forEach((node) => {
-          // if (node.url) {
-          //   bookmarks.push({
-          //     id: node.id,
-          //     title: node.title,
-          //     url: node.url,
-          //     dateAdded: node.dateAdded,
-          //     dateGroupModified: node.dateGroupModified,
-          //     dateLastUsed: node.dateLastUsed,
-          //     syncing: node.syncing,
-          //   });
-          // }
           bookmarks.push(node);
           if (node.children) {
             traverse(node.children);
@@ -169,14 +221,16 @@ export const BookmarksManagerProvider = (
         sortOption,
         setSortOption,
         sortDirection,
-        setSortDirection,
-        searchQuery,
-        setSearchQuery,
-        filterTags,
-        setFilterTags,
-        displayBookmarks,
-        availableTags,
+        toggleSortDirection,
+
         bookmarks,
+        availableTags,
+        displayBookmarks,
+
+        filters,
+        addFilter,
+        removeFilter,
+        clearFilters,
       }}
     >
       {children}
