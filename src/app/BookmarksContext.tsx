@@ -215,7 +215,7 @@ export const BookmarksManagerProvider = (
     setDisplayBookmarks(sortedBookmarks);
   }, [bookmarks, sortOption, sortDirection, filters]);
 
-  useEffect(() => {
+  const fetchBookmarks = () => {
     chrome.bookmarks.getTree((bookmarkTreeNodes) => {
       const bookmarks: Bookmark[] = [];
       function traverse(nodes: chrome.bookmarks.BookmarkTreeNode[]) {
@@ -229,6 +229,26 @@ export const BookmarksManagerProvider = (
       traverse(bookmarkTreeNodes);
       setBookmarks(bookmarks);
     });
+  };
+
+  useEffect(() => {
+    fetchBookmarks();
+
+    const handleBookmarkChange = () => {
+      fetchBookmarks();
+    };
+
+    chrome.bookmarks.onChanged.addListener(handleBookmarkChange);
+    chrome.bookmarks.onMoved.addListener(handleBookmarkChange);
+    chrome.bookmarks.onRemoved.addListener(handleBookmarkChange);
+    chrome.bookmarks.onCreated.addListener(handleBookmarkChange);
+
+    return () => {
+      chrome.bookmarks.onChanged.removeListener(handleBookmarkChange);
+      chrome.bookmarks.onMoved.removeListener(handleBookmarkChange);
+      chrome.bookmarks.onRemoved.removeListener(handleBookmarkChange);
+      chrome.bookmarks.onCreated.removeListener(handleBookmarkChange);
+    };
   }, []);
 
   return (
