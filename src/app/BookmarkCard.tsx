@@ -101,7 +101,12 @@ export default function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
       <div class="flex items-center">
         {bookmark.url && (
           <div class="mr-2">
-            <img class="rounded" src={faviconURL(bookmark.url)} alt="" />
+            <img
+              loading="lazy"
+              class="rounded"
+              src={faviconURL(bookmark.url)}
+              alt=""
+            />
           </div>
         )}
         {isEditing
