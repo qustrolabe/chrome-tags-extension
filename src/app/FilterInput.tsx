@@ -50,8 +50,16 @@ const makeFilterCapsuleData = (filter: Filter) => {
 };
 
 export default function FilterInput() {
-  const { filters, addFilter, removeFilter, clearFilters, availableTags } =
-    useBookmarks();
+  const {
+    filters: {
+      list: filters,
+      add: addFilter,
+      remove: removeFilter,
+      clear: clearFilters,
+    },
+    bookmarks: { availableTags },
+  } = useBookmarks();
+
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);

@@ -6,7 +6,8 @@ import { useBookmarks } from "./BookmarksContext.tsx";
 import SortOptions from "./SortOptions.tsx";
 
 function BookmarksCounter() {
-  const { displayBookmarks, bookmarks } = useBookmarks();
+  const { bookmarks: { all: bookmarks, display: displayBookmarks } } =
+    useBookmarks();
 
   return (
     <div class="text-gray-500 flex items-center">

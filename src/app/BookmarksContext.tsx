@@ -1,6 +1,6 @@
 import { ComponentChildren } from "preact";
 import { createContext } from "preact";
-import { useContext, useEffect, useState } from "preact/hooks";
+import { useContext, useEffect, useMemo, useState } from "preact/hooks";
 
 export type Bookmark = chrome.bookmarks.BookmarkTreeNode;
 
@@ -8,19 +8,23 @@ export type SortOption = "id" | "title" | "dateAdded" | "dateLastUsed";
 export type SortDirection = "asc" | "desc";
 
 interface BookmarksManagerContextType {
-  sortOption: SortOption;
-  setSortOption: (sortOption: SortOption) => void;
-  sortDirection: SortDirection;
-  toggleSortDirection: () => void;
-
-  displayBookmarks: Bookmark[];
-  availableTags: Record<string, number>;
-  bookmarks: Bookmark[];
-
-  filters: Filter[];
-  addFilter: (filter: Filter) => void;
-  removeFilter: (filter: Filter) => void;
-  clearFilters: () => void;
+  bookmarks: {
+    all: Bookmark[];
+    display: Bookmark[];
+    availableTags: Record<string, number>;
+  };
+  filters: {
+    list: Filter[];
+    add: (filter: Filter) => void;
+    remove: (filter: Filter) => void;
+    clear: () => void;
+  };
+  sorting: {
+    sortOption: SortOption;
+    setSortOption: (sortOption: SortOption) => void;
+    sortDirection: SortDirection;
+    toggleSortDirection: () => void;
+  };
 }
 
 export const BookmarksManagerContext = createContext<
@@ -251,24 +255,35 @@ export const BookmarksManagerProvider = (
     };
   }, []);
 
+  const value = useMemo(() => ({
+    bookmarks: {
+      all: bookmarks,
+      display: displayBookmarks,
+      availableTags,
+    },
+    filters: {
+      list: filters,
+      add: addFilter,
+      remove: removeFilter,
+      clear: clearFilters,
+    },
+    sorting: {
+      sortOption,
+      setSortOption,
+      sortDirection,
+      toggleSortDirection,
+    },
+  }), [
+    bookmarks,
+    availableTags,
+    displayBookmarks,
+    filters,
+    sortOption,
+    sortDirection,
+  ]);
+
   return (
-    <BookmarksManagerContext.Provider
-      value={{
-        sortOption,
-        setSortOption,
-        sortDirection,
-        toggleSortDirection,
-
-        bookmarks,
-        availableTags,
-        displayBookmarks,
-
-        filters,
-        addFilter,
-        removeFilter,
-        clearFilters,
-      }}
-    >
+    <BookmarksManagerContext.Provider value={value}>
       {children}
     </BookmarksManagerContext.Provider>
   );

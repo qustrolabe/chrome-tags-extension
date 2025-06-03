@@ -14,8 +14,9 @@ const SORT_OPTIONS: SortOptionType[] = [
 ];
 
 const SortOptions = () => {
-  const { sortOption, setSortOption, sortDirection, toggleSortDirection } =
-    useBookmarks();
+  const {
+    sorting: { sortOption, setSortOption, sortDirection, toggleSortDirection },
+  } = useBookmarks();
 
   const [isOpen, setIsOpen] = useState(false);
 

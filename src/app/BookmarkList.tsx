@@ -4,7 +4,7 @@ import { useBookmarks } from "./BookmarksContext.tsx";
 import BookmarkCard from "./BookmarkCard.tsx";
 
 export default function BookmarkList() {
-  const { displayBookmarks } = useBookmarks();
+  const { bookmarks: { display: displayBookmarks } } = useBookmarks();
 
   return (
     <div>

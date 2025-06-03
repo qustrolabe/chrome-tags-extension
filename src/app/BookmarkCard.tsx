@@ -45,7 +45,8 @@ export default function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
   const [title, setTitle] = useState(bookmark.title);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { bookmarks, addFilter } = useBookmarks();
+  const { bookmarks: { all: allBookmarks }, filters: { add: addFilter } } =
+    useBookmarks();
 
   const handleAddFolderFilter = (folderId: string, negative: boolean) => {
     addFilter(
@@ -82,7 +83,7 @@ export default function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
     let currentId = bookmark.parentId;
     const p: Bookmark[] = [];
     while (currentId) {
-      const folder = bookmarks.find((b) => b.id === currentId);
+      const folder = allBookmarks.find((b) => b.id === currentId);
       if (!folder) break;
       p.unshift(folder);
       currentId = folder.parentId;
