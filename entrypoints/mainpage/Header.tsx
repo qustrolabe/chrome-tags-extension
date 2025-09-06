@@ -1,8 +1,8 @@
-import { useEffect, useState } from "preact/hooks";
+import React from "react";
 
 import FilterInput from "./FilterInput.tsx";
 
-import { useBookmarks } from "./BookmarksContext.tsx";
+import { useBookmarks } from "@/context/BookmarksContext.tsx";
 import SortOptions from "./SortOptions.tsx";
 
 function BookmarksCounter() {
@@ -10,7 +10,7 @@ function BookmarksCounter() {
     useBookmarks();
 
   return (
-    <div class="text-gray-500 flex items-center">
+    <div className="text-neutral-500 flex items-center">
       <span title="Displayed filtered bookmarks">
         {displayBookmarks.length}
       </span>{" "}
@@ -24,8 +24,8 @@ function BookmarksCounter() {
 
 export default function Header() {
   return (
-    <div class="flex bg-gray-900 p-2 rounded-b gap-2">
-      <div class="flex space-x-2 flex-1">
+    <div className="flex bg-neutral-900 p-2 rounded-b gap-2">
+      <div className="flex space-x-2 flex-1">
         <FilterInput />
       </div>
       <SortOptions />

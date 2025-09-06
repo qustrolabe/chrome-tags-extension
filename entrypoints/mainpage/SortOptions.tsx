@@ -1,5 +1,5 @@
-import { useEffect, useState } from "preact/hooks";
-import { SortOption, useBookmarks } from "./BookmarksContext.tsx";
+import React from "react";
+import { SortOption, useBookmarks } from "@/context/BookmarksContext.tsx";
 
 type SortOptionType = {
   value: SortOption;
@@ -32,16 +32,16 @@ const SortOptions = () => {
   )?.label;
 
   return (
-    <div class="">
+    <div className="">
       <button
         type="button"
-        class="rounded p-2 bg-gray-700 text-white"
+        className="rounded p-2 bg-neutral-700 text-white"
         onClick={() => setIsOpen(!isOpen)}
       >
         {currentOptionLabel}
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          class="h-5 w-5 inline-block"
+          className="h-5 w-5 inline-block"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -56,15 +56,14 @@ const SortOptions = () => {
       </button>
       {isOpen && (
         <ul
-          class="absolute z-10 w-40 bg-gray-600 shadow-md rounded"
+          className="absolute z-10 w-40 bg-neutral-600 shadow-md rounded"
           style={{ width: "8rem" }}
         >
           {SORT_OPTIONS.map(({ value, label }) => (
             <li
               key={value}
-              class={`hover:bg-gray-500 p-2 ${
-                sortOption === value ? "bg-gray-500" : ""
-              }`}
+              className={`hover:bg-neutral-500 p-2 ${sortOption === value ? "bg-neutral-500" : ""
+                }`}
               onClick={() => handleSortOptionChange(value)}
             >
               {label}
@@ -74,7 +73,7 @@ const SortOptions = () => {
       )}
       <button
         type="button"
-        class="rounded p-2 bg-gray-700 text-white ml-2"
+        className="rounded p-2 bg-neutral-700 text-white ml-2"
         onClick={toggleSortDirection}
       >
         {sortDirection === "desc" ? "↓" : "↑"}

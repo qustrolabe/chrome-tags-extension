@@ -1,6 +1,4 @@
-import { ComponentChildren } from "preact";
-import { createContext } from "preact";
-import { useContext, useEffect, useState } from "preact/hooks";
+import React, { createContext } from "react";
 
 export type DarkModeContextType = {
   darkMode: boolean;
@@ -9,11 +7,11 @@ export type DarkModeContextType = {
 
 export const DarkModeContext = createContext<DarkModeContextType>({
   darkMode: false,
-  setDarkMode: () => {},
+  setDarkMode: () => { },
 });
 
 export const DarkModeProvider = (
-  { children }: { children: ComponentChildren },
+  { children }: { children: React.ReactNode },
 ) => {
   const [darkMode, setDarkMode] = useState<boolean>(true);
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "preact/hooks";
+import React from "react";
 import type {
   AnyFilter,
   Filter,
@@ -6,8 +6,8 @@ import type {
   TagFilter,
   TitleFilter,
   UrlFilter,
-} from "./BookmarksContext.tsx";
-import { useBookmarks } from "./BookmarksContext.tsx";
+} from "@/context/BookmarksContext.tsx";
+import { useBookmarks } from "@/context/BookmarksContext.tsx";
 
 const makeFilterCapsuleData = (filter: Filter) => {
   let displayString = "";
@@ -39,7 +39,7 @@ const makeFilterCapsuleData = (filter: Filter) => {
     default:
       displayString = `${filter.value}`;
       titleString = `${prefix} title or URL: ${filter.value}`;
-      color = "bg-gray-200 text-black";
+      color = "bg-neutral-200 text-black";
   }
 
   color = filter.negative
@@ -85,9 +85,8 @@ export default function FilterInput() {
     setSuggestions(generateSuggestions());
   }, [inputValue, availableTags]);
 
-  const handleFilterInput = (e: InputEvent) => {
-    const target = e.target as HTMLInputElement;
-    setInputValue(target.value);
+  const handleFilterInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
     setHighlightedIndex(-1);
   };
 
@@ -105,7 +104,7 @@ export default function FilterInput() {
     setSuggestions([]);
   };
 
-  const handleKeyDown = (e: KeyboardEvent) => {
+  const handleKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
     if (e.key === "Enter") {
       if (highlightedIndex !== -1) {
         const suggestion = suggestions[highlightedIndex];
@@ -194,14 +193,14 @@ export default function FilterInput() {
   };
 
   return (
-    <div class="flex flex-wrap gap-1 bg-gray-800 rounded p-1 w-full items-center focus-within:outline-none focus-within:ring focus-within:ring-blue-500">
+    <div className="flex flex-wrap gap-1 bg-neutral-800 rounded p-1 w-full items-center focus-within:outline-none focus-within:ring focus-within:ring-blue-500">
       {filters.map((filter, index) => {
         const { displayString, titleString, color } = makeFilterCapsuleData(
           filter,
         );
         return (
           <span
-            class={`bg-gray-500 p-1 rounded cursor-pointer select-none ${color}`}
+            className={`bg-neutral-500 p-1 rounded cursor-pointer select-none ${color}`}
             title={titleString}
             key={index}
             onClick={() => handleFilterRemove(filter)}
@@ -210,22 +209,21 @@ export default function FilterInput() {
           </span>
         );
       })}
-      <div class="flex-1">
+      <div className="flex-1">
         <input
           type="text"
           placeholder="Search (e.g., url:, #tag, title:, -#tag, -url:)"
-          class="flex-grow bg-transparent w-full p-1 min-w-[100px] align-middle focus:outline-none"
+          className="flex-grow bg-transparent w-full p-1 min-w-[100px] align-middle focus:outline-none"
           value={inputValue}
           onInput={handleFilterInput}
           onKeyDown={handleKeyDown}
         />
         {suggestions.length > 0 && (
-          <ul class="absolute bg-gray-900 rounded p-1 max-w-[200px]">
+          <ul className="absolute bg-neutral-900 rounded p-1 max-w-[200px] z-10">
             {suggestions.map((s, index) => (
               <li
-                class={`p-1 cursor-pointer hover:bg-gray-700 ${
-                  index === highlightedIndex ? "bg-gray-700" : ""
-                } overflow-hidden`}
+                className={`p-1 cursor-pointer hover:bg-neutral-700 ${index === highlightedIndex ? "bg-neutral-700" : ""
+                  } overflow-hidden`}
                 key={s}
                 onClick={() => handleClickSuggestion(s)}
               >

@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "preact/hooks";
-import { FolderFilter, TagFilter, useBookmarks } from "./BookmarksContext.tsx";
+import React from "react";
+import { FolderFilter, TagFilter, useBookmarks } from "@/context/BookmarksContext.tsx";
 
 type Bookmark = chrome.bookmarks.BookmarkTreeNode;
 
@@ -73,8 +73,8 @@ export default function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
     }
   }, [isEditing]);
 
-  const handleEnter = (e: KeyboardEvent) => {
-    if (e.key === "Enter") {
+  const handleEnter: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
+    if (e.key === 'Enter') {
       handleEdit();
     }
   };
@@ -98,13 +98,13 @@ export default function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
   const tags = bookmark.title.match(/#(\w+)/g)?.map((tag) => tag.slice(1));
 
   return (
-    <div class="flex flex-col border border-gray-900 rounded m-1 p-2 bg-gray-800">
-      <div class="flex items-center">
+    <div className="flex flex-col border border-neutral-900 rounded m-1 p-2 bg-neutral-800">
+      <div className="flex items-center">
         {bookmark.url && (
-          <div class="mr-2">
+          <div className="mr-2">
             <img
               loading="lazy"
-              class="rounded"
+              className="rounded"
               src={faviconURL(bookmark.url)}
               alt=""
             />
@@ -118,22 +118,22 @@ export default function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
               value={title}
               onInput={(e) => setTitle(e.currentTarget.value)}
               onKeyDown={handleEnter}
-              class="w-full rounded p-2 bg-gray-500"
+              className="w-full rounded p-2 bg-neutral-500"
             />
           )
-          : <span class="flex-1 font-bold ">{title}</span>}
+          : <span className="flex-1 font-bold ">{title}</span>}
         <button
           type="button"
-          class="ml-2 rounded bg-gray-800"
+          className="ml-2 rounded bg-neutral-800"
           onClick={handleEdit}
         >
           {isEditing ? "Submit" : "Edit"}
         </button>
       </div>
-      <div class="text-sm text-gray-600">
+      <div className="text-sm text-neutral-600">
         <a
           href={bookmark.url}
-          class="hover:underline text-blue-500"
+          className="hover:underline text-blue-500"
         >
           {bookmark.url
             ? bookmark.url.length > 50
@@ -141,13 +141,13 @@ export default function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
               : bookmark.url
             : "URL not available"}
         </a>
-        <div class="text-gray-400">
+        <div className="text-neutral-400">
           {path.length > 0 && (
-            <span class="flex items-center ml-2">
+            <span className="flex items-center ml-2">
               {path.map((node) => (
-                <span key={node.id} class="hover:underline cursor-pointer">
+                <span key={node.id} className="hover:underline cursor-pointer">
                   <span
-                    class="text-gray-300 hover:text-blue-500"
+                    className="text-neutral-300 hover:text-blue-500"
                     onClick={(e) =>
                       handleAddFolderFilter(
                         node.id,
@@ -162,23 +162,23 @@ export default function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
           )}
         </div>
       </div>
-      <div class="flex flex-row space-x-2 justify-between">
+      <div className="flex flex-row space-x-2 justify-between">
         <div>ID: {bookmark.id}</div>
-        <div class="flex space-x-2 text-gray-400">
-          <div class="flex items-center space-x-1">
+        <div className="flex space-x-2 text-neutral-400">
+          <div className="flex items-center space-x-1">
             <span>Created: {formatDateTime(bookmark.dateAdded)}</span>
           </div>
-          <div class="flex items-center space-x-1">
+          <div className="flex items-center space-x-1">
             <span>Last used: {formatDateTime(bookmark.dateLastUsed)}</span>
           </div>
         </div>
       </div>
       {tags?.length
         ? (
-          <div class="w-full flex flex-wrap gap-x-1 gap-y-1">
+          <div className="w-full flex flex-wrap gap-x-1 gap-y-1">
             {tags?.map((tag) => (
               <div
-                class="select-none cursor-pointer"
+                className="select-none cursor-pointer"
                 onClick={(e) => handleAddTagFilter(tag, e.shiftKey)}
                 key={tag}
               >
@@ -196,7 +196,7 @@ function BookmarkTagCapsule(
   { tag }: { tag: string },
 ) {
   return (
-    <div class="rounded p-1.5 bg-gray-600 hover:bg-gray-700 ">
+    <div className="rounded p-1.5 bg-neutral-600 hover:bg-neutral-700 ">
       #{tag}
     </div>
   );

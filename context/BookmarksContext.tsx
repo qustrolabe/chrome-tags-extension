@@ -1,6 +1,5 @@
-import { ComponentChildren } from "preact";
-import { createContext } from "preact";
-import { useContext, useEffect, useMemo, useState } from "preact/hooks";
+import React, { createContext } from "react";
+
 
 export type Bookmark = chrome.bookmarks.BookmarkTreeNode;
 
@@ -105,16 +104,26 @@ const applyFilter = (filter: Filter, bookmarks: Bookmark[]): Bookmark[] => {
 };
 
 export const BookmarksManagerProvider = (
-  { children }: { children: ComponentChildren },
+  { children }: { children: React.ReactNode },
 ) => {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
 
-  const [sortOption, setSortOption] = useState<SortOption>("dateAdded");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const [sortOption, setSortOption] = useState<SortOption>(() => {
+    const params = new URLSearchParams(globalThis.location.search);
+    return params.get("sort") as SortOption || "dateAdded"
+  });
+  const [sortDirection, setSortDirection] = useState<SortDirection>(() => {
+    const params = new URLSearchParams(globalThis.location.search);
+    return params.get("sortDirection") as SortDirection || "desc";
+  });
 
   const [displayBookmarks, setDisplayBookmarks] = useState<Bookmark[]>([]);
 
-  const [filters, setFilters] = useState<Filter[]>([]);
+  const [filters, setFilters] = useState<Filter[]>(() => {
+    // Try to get tags from url params
+    const params = new URLSearchParams(globalThis.location.search);
+    return deserializeFilters(params.get("filterTags") || "[]");
+  });
 
   const addFilter = (filter: Filter) => {
     const oppositeFilter = { ...filter, negative: !filter.negative };
@@ -149,6 +158,7 @@ export const BookmarksManagerProvider = (
   };
 
   // Get all available tags from currently displayed bookmarks
+  // (used in displaying tag search suggestion)
   const availableTags = displayBookmarks
     .map((b) => b.title)
     .flatMap((title) => title.split(" "))
@@ -159,12 +169,9 @@ export const BookmarksManagerProvider = (
       return acc;
     }, {} as Record<string, number>);
 
-  useEffect(() => {
-    const params = new URLSearchParams(globalThis.location.search);
-    setSortOption(params.get("sort") as SortOption || "dateAdded");
-    setSortDirection(params.get("sortDirection") as SortDirection || "desc");
-    setFilters(deserializeFilters(params.get("filterTags") || "[]"));
-  }, []);
+  // useEffect(() => {
+  //   const params = new URLSearchParams(globalThis.location.search);
+  // }, []);
   useEffect(() => {
     const params = new URLSearchParams(globalThis.location.search);
     params.set("sort", sortOption);

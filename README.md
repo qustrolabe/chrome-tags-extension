@@ -1,4 +1,5 @@
 # chrome-tags-extension
+
 ![preview](https://github.com/user-attachments/assets/3ad64a13-8030-42fe-9be4-cd84cc1f9040)
 
 Chrome extension that allows you to add tags to bookmarks and filter them. Tags
@@ -12,7 +13,7 @@ bookmarks. **Backup your bookmarks** before using it.
 To build the extension, run:
 
 ```bash
-deno task build
+bun run dev
 ```
 
 Unpacked extension will be built in the `dist` directory.
