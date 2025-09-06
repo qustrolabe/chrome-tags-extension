@@ -1,4 +1,4 @@
-import React from "react";
+import { useState, useEffect } from "react";
 import type {
   AnyFilter,
   Filter,
@@ -65,25 +65,26 @@ export default function FilterInput() {
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
 
   useEffect(() => {
-    const generateSuggestions = () => {
-      if (inputValue.startsWith("#") || inputValue.startsWith("-#")) {
-        const tag = inputValue.startsWith("-#")
-          ? inputValue.slice(2).trim()
-          : inputValue.slice(1).trim();
-        const filteredTags = Object.entries(availableTags)
-          .filter(([t]) => t.startsWith(tag))
-          .sort(([, a], [, b]) => b - a)
-          .slice(0, 20)
-          .map(([t]) => t);
-        return filteredTags.map((t) =>
-          inputValue.startsWith("-") ? `-${t}` : `#${t}`
-        );
-      }
-      return [];
-    };
+    if (inputValue.startsWith("#") || inputValue.startsWith("-#")) {
+      const isNegative = inputValue.startsWith("-#");
+      const tagPrefix = isNegative ? inputValue.slice(2).trim() : inputValue.slice(1).trim();
 
-    setSuggestions(generateSuggestions());
-  }, [inputValue, availableTags]);
+      // Exclude tags already in filters from suggestions
+      const tagsInFilters = new Set(
+        filters.filter((f): f is TagFilter => f.type === "tag").map((f) => f.tag)
+      );
+
+      const suggestions = Object.entries(availableTags)
+        .filter(([tag]) => tag.startsWith(tagPrefix) && !tagsInFilters.has(tag))
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 20)
+        .map(([tag]) => (isNegative ? `-${tag}` : `#${tag}`));
+
+      setSuggestions(suggestions);
+    } else {
+      setSuggestions([]);
+    }
+  }, [inputValue, availableTags, filters]);
 
   const handleFilterInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
