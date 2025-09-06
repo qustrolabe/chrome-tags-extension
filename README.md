@@ -13,7 +13,8 @@ bookmarks. **Backup your bookmarks** before using it.
 To build the extension, run:
 
 ```bash
-bun run dev
+bun run build
 ```
 
-Unpacked extension will be built in the `dist` directory.
+Unpacked extension will be built in the `.output` directory.
+
