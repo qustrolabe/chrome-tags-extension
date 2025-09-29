@@ -2,7 +2,7 @@
   "name": "browser-bookmarks-manager",
   "description": "Bookmarks tags manager",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.4.2",
   "type": "module",
   "scripts": {
     "dev": "wxt",
