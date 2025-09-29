@@ -18,7 +18,7 @@ export default function BookmarkList() {
   return (
     <List
       rowComponent={Row}
-      rowHeight={130}
+      rowHeight={110}
       rowCount={displayBookmarks.length}
       rowProps={{}}
       style={{ scrollbarColor: "var(--color-neutral-500) var(--color-neutral-900)" }}

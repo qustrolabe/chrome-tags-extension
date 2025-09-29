@@ -1,4 +1,6 @@
 import React from "react";
+import { Tooltip } from "radix-ui";
+
 import { FolderFilter, TagFilter, useBookmarks } from "@/context/BookmarksContext.tsx";
 
 type Bookmark = chrome.bookmarks.BookmarkTreeNode;
@@ -14,20 +16,28 @@ function faviconURL(u: string) {
   return url.toString();
 }
 
-const formatDateTime = (date: number | undefined) => {
-  if (!date) return "Unknown";
+/**
+ * Formats a Unix timestamp into a human-readable string.
+ * - Shows relative time for recent dates (seconds, minutes, hours, days)
+ * - Falls back to absolute date for older timestamps
+ * @param date Unix timestamp in milliseconds or undefined
+ * @returns Formatted string
+ */
+const formatDateTime = (date: number | undefined): string => {
+  if (date === undefined || date === null) return "Unknown";
 
-  const now = new Date().getTime();
+  const now = Date.now();
   const diff = now - date;
-  const seconds = Math.floor(diff / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
 
-  if (seconds < 5) return "<5 min ago";
+  const seconds = Math.floor(diff / 1000);
+  const minutes = Math.floor(diff / 1000 / 60);
+  const hours = Math.floor(diff / 1000 / 60 / 60);
+  const days = Math.floor(diff / 1000 / 60 / 60 / 24);
+
+  if (seconds < 5) return "now";
   if (minutes < 1) return `${seconds} sec ago`;
   if (minutes < 60) return `${minutes} min ago`;
-  if (hours < 24) return `${hours} hours ago`;
+  if (hours < 24) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
   if (days < 7) return `${days} day${days > 1 ? "s" : ""} ago`;
   return new Intl.DateTimeFormat("en-US", {
     year: "numeric",
@@ -38,6 +48,14 @@ const formatDateTime = (date: number | undefined) => {
     second: "2-digit",
     hour12: false,
   }).format(new Date(date));
+};
+
+const cleanLink = (url: string): string => {
+  // Remove protocol (http:// or https://) case-insensitive
+  let cleaned = url.replace(/^https?:\/\//i, '');
+  // Remove www. if present
+  cleaned = cleaned.replace(/^www\./i, '');
+  return cleaned;
 };
 
 export default function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
@@ -98,18 +116,31 @@ export default function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
   const tags = bookmark.title.match(/#(\w+)/g)?.map((tag) => tag.slice(1));
 
   return (
-    <div className="flex flex-col border border-neutral-900 rounded m-1 p-2 bg-neutral-800">
+    <div className="h-[105px] max-h flex flex-col border border-neutral-900 rounded m-1 p-2 bg-neutral-800">
       <div className="flex items-center">
-        {bookmark.url && (
-          <div className="mr-2">
-            <img
-              loading="lazy"
-              className="rounded"
-              src={faviconURL(bookmark.url)}
-              alt=""
-            />
-          </div>
-        )}
+        <Tooltip.Provider>
+          <Tooltip.Root delayDuration={200}>
+            <Tooltip.Trigger>
+              <div className="mr-2">
+                <img
+                  loading="lazy"
+                  className="rounded"
+                  src={faviconURL(bookmark.url ?? "")}
+                  alt=""
+                />
+              </div>
+            </Tooltip.Trigger>
+            <Tooltip.Portal>
+              <Tooltip.Content side="right">
+                <div className="bg-neutral-600 p-1 rounded">
+                  ID: {bookmark.id}
+                </div>
+                {/* <Tooltip.Arrow /> */}
+              </Tooltip.Content>
+            </Tooltip.Portal>
+          </Tooltip.Root>
+        </Tooltip.Provider>
+
         {isEditing
           ? (
             <input
@@ -118,10 +149,10 @@ export default function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
               value={title}
               onInput={(e) => setTitle(e.currentTarget.value)}
               onKeyDown={handleEnter}
-              className="w-full rounded p-2 bg-neutral-500"
+              className="w-full rounded bg-neutral-500"
             />
           )
-          : <span className="flex-1 font-bold ">{title}</span>}
+          : <span className="flex-1 font-bold truncate" title={title}>{title}</span>}
         <button
           type="button"
           className="ml-2 rounded bg-neutral-800"
@@ -130,17 +161,7 @@ export default function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
           {isEditing ? "Submit" : "Edit"}
         </button>
       </div>
-      <div className="text-sm text-neutral-600">
-        <a
-          href={bookmark.url}
-          className="hover:underline text-blue-500"
-        >
-          {bookmark.url
-            ? bookmark.url.length > 50
-              ? `${bookmark.url.slice(0, 47)}...`
-              : bookmark.url
-            : "URL not available"}
-        </a>
+      <div className="text-sm text-neutral-600 flex ">
         <div className="text-neutral-400">
           {path.length > 0 && (
             <span className="flex items-center ml-2">
@@ -161,21 +182,44 @@ export default function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
             </span>
           )}
         </div>
+        <div className="truncate">
+
+          <a
+            href={bookmark.url}
+            className="hover:underline text-blue-500 "
+            title={bookmark.url}
+          >
+            {bookmark.url
+              ? cleanLink(bookmark.url).length > 100
+                ? `${cleanLink(bookmark.url).slice(0, 97)}...`
+                : cleanLink(bookmark.url)
+              : "URL not available"}
+            {/* {bookmark.url} */}
+          </a>
+        </div>
       </div>
       <div className="flex flex-row space-x-2 justify-between">
-        <div>ID: {bookmark.id}</div>
         <div className="flex space-x-2 text-neutral-400">
           <div className="flex items-center space-x-1">
-            <span>Created: {formatDateTime(bookmark.dateAdded)}</span>
+            <span
+              title={bookmark.dateAdded ? new Date(bookmark.dateAdded).toLocaleString() : undefined}
+            >
+              Created {formatDateTime(bookmark.dateAdded)}
+            </span>
           </div>
+          <span>•</span>
           <div className="flex items-center space-x-1">
-            <span>Last used: {formatDateTime(bookmark.dateLastUsed)}</span>
+            <span
+              title={bookmark.dateLastUsed ? new Date(bookmark.dateLastUsed).toLocaleString() : undefined}
+            >
+              Last used {formatDateTime(bookmark.dateLastUsed)}
+            </span>
           </div>
         </div>
       </div>
       {tags?.length
         ? (
-          <div className="w-full flex flex-wrap gap-x-1 gap-y-1">
+          <div className="w-full flex truncate gap-x-1 gap-y-1" title={tags.map(tag => `#${tag}`).join(" ")}>
             {tags?.map((tag) => (
               <div
                 className="select-none cursor-pointer"
