@@ -1,14 +1,29 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
+    <script>
+      // Script to load theme from localstorage
+      // and set background-color faster
+      (function () {
+        try {
+          const theme = localStorage.getItem("theme");
+          if (theme) document.documentElement.classList.add(theme);
+          const isDark = theme === "dark" || theme === "brutalism-dark";
+          document.documentElement.style.backgroundColor = isDark
+            ? "#000000"
+            : "#fcfcfc";
+        } catch (e) {}
+      })();
+    </script>
+
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Bookmarks Manager</title>
 
+    <link rel="stylesheet" href="@/assets/global.css">
     <link rel="stylesheet" href="./style.css">
-
   </head>
-  <body class="dark:bg-neutral-700 dark:text-white "> <!-- // overflow-y-scroll -->
+  <body class="bg-background text-foreground">
     <div id="root"></div>
     <script type="module" src="./main.tsx"></script>
   </body>

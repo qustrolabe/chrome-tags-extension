@@ -1,6 +1,5 @@
 import React, { createContext } from "react";
 
-
 export type Bookmark = chrome.bookmarks.BookmarkTreeNode;
 
 export type SortOption = "id" | "title" | "dateAdded" | "dateLastUsed";
@@ -17,6 +16,7 @@ interface BookmarksManagerContextType {
     add: (filter: Filter) => void;
     remove: (filter: Filter) => void;
     clear: () => void;
+    set: (filters: Filter[]) => void;
   };
   sorting: {
     sortOption: SortOption;
@@ -56,8 +56,19 @@ export type UrlFilter = BaseFilter & {
   url: string;
 };
 
+/**
+ * Filter that matches a folder and all its subfolders (recursive).
+ */
 export type FolderFilter = BaseFilter & {
   type: "folder";
+  folderId: string;
+};
+
+/**
+ * Filter that matches ONLY the immediate children of a folder (non-recursive).
+ */
+export type StrictFolderFilter = BaseFilter & {
+  type: "strict_folder";
   folderId: string;
 };
 
@@ -71,12 +82,17 @@ export type Filter =
   | TitleFilter
   | UrlFilter
   | FolderFilter
+  | StrictFolderFilter
   | AnyFilter;
 
 const serializeFilters = (filters: Filter[]) => JSON.stringify(filters);
 const deserializeFilters = (filters: string) => JSON.parse(filters);
 
-const applyFilter = (filter: Filter, bookmarks: Bookmark[]): Bookmark[] => {
+const applyFilter = (
+  filter: Filter,
+  bookmarks: Bookmark[],
+  ancestors: Map<string, Set<string>>, // Need ancestors map here
+): Bookmark[] => {
   return bookmarks.filter((bookmark) => {
     const match = (value: string, target?: string) =>
       target?.toLowerCase().includes(value.toLowerCase());
@@ -93,7 +109,21 @@ const applyFilter = (filter: Filter, bookmarks: Bookmark[]): Bookmark[] => {
         return match(filter.title, bookmark.title) !== filter.negative;
       case "url":
         return match(filter.url, bookmark.url) !== filter.negative;
-      case "folder":
+      case "folder": {
+        // Recursive check: true if bookmark's ancestors include the folderId,
+        // OR if the bookmark itself IS the folder (optional, but usually we filter items INSIDE)
+        // Adjust logic: usually folder filter means "items inside this folder or subfolders".
+        // Ancestors map contains all parent folder IDs.
+        const bookmarkAncestors = ancestors.get(bookmark.id);
+        const isDescendant = bookmarkAncestors?.has(filter.folderId) ?? false;
+        // Also check if it is the folder itself? Usually filters show content.
+        // If I filter by "FolderA", I want to see bookmarks in FolderA.
+        // If I have subfolder "FolderA/B", I want to see bookmarks in B too.
+        // "bookmark" here can be a file or a folder.
+
+        return isDescendant !== filter.negative;
+      }
+      case "strict_folder":
         return (
           (bookmark.parentId === filter.folderId) !== filter.negative
         );
@@ -107,10 +137,13 @@ export const BookmarksManagerProvider = (
   { children }: { children: React.ReactNode },
 ) => {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
+  const [ancestors, setAncestors] = useState<Map<string, Set<string>>>(
+    new Map(),
+  );
 
   const [sortOption, setSortOption] = useState<SortOption>(() => {
     const params = new URLSearchParams(globalThis.location.search);
-    return params.get("sort") as SortOption || "dateAdded"
+    return params.get("sort") as SortOption || "dateAdded";
   });
   const [sortDirection, setSortDirection] = useState<SortDirection>(() => {
     const params = new URLSearchParams(globalThis.location.search);
@@ -122,7 +155,12 @@ export const BookmarksManagerProvider = (
   const [filters, setFilters] = useState<Filter[]>(() => {
     // Try to get tags from url params
     const params = new URLSearchParams(globalThis.location.search);
-    return deserializeFilters(params.get("filterTags") || "[]");
+    try {
+      return deserializeFilters(params.get("filterTags") || "[]");
+    } catch (e) {
+      console.error("Failed to parse filters", e);
+      return [];
+    }
   });
 
   const addFilter = (filter: Filter) => {
@@ -190,7 +228,7 @@ export const BookmarksManagerProvider = (
       input_bookmarks: Bookmark[],
     ) => {
       return filters.reduce(
-        (acc, filter) => applyFilter(filter, acc),
+        (acc, filter) => applyFilter(filter, acc, ancestors),
         input_bookmarks,
       );
     };
@@ -224,21 +262,34 @@ export const BookmarksManagerProvider = (
     );
 
     setDisplayBookmarks(sortedBookmarks);
-  }, [bookmarks, sortOption, sortDirection, filters]);
+  }, [bookmarks, sortOption, sortDirection, filters, ancestors]);
 
   const fetchBookmarks = () => {
     chrome.bookmarks.getTree((bookmarkTreeNodes) => {
       const bookmarks: Bookmark[] = [];
-      function traverse(nodes: chrome.bookmarks.BookmarkTreeNode[]) {
+      const ancestorMap = new Map<string, Set<string>>();
+
+      function traverse(
+        nodes: chrome.bookmarks.BookmarkTreeNode[],
+        parentAncestors: Set<string> = new Set(),
+      ) {
         nodes.forEach((node) => {
           bookmarks.push(node);
+
+          // Store ancestors for this node
+          ancestorMap.set(node.id, parentAncestors);
+
           if (node.children) {
-            traverse(node.children);
+            // Create new set for children that includes this node
+            const currentAncestors = new Set(parentAncestors);
+            currentAncestors.add(node.id);
+            traverse(node.children, currentAncestors);
           }
         });
       }
       traverse(bookmarkTreeNodes);
       setBookmarks(bookmarks);
+      setAncestors(ancestorMap);
     });
   };
 
@@ -273,6 +324,7 @@ export const BookmarksManagerProvider = (
       add: addFilter,
       remove: removeFilter,
       clear: clearFilters,
+      set: setFilters,
     },
     sorting: {
       sortOption,

@@ -1,5 +1,5 @@
 import React from "react";
-import { List, RowComponentProps } from 'react-window';
+import { List, RowComponentProps } from "react-window";
 
 import { useBookmarks } from "@/context/BookmarksContext.tsx";
 import BookmarkCard from "./BookmarkCard.tsx";
@@ -21,7 +21,6 @@ export default function BookmarkList() {
       rowHeight={110}
       rowCount={displayBookmarks.length}
       rowProps={{}}
-      style={{ scrollbarColor: "var(--color-neutral-500) var(--color-neutral-900)" }}
     />
   );
 }

@@ -1,4 +1,5 @@
 import React from "react";
+import * as Select from "@radix-ui/react-select";
 import { SortOption, useBookmarks } from "@/context/BookmarksContext.tsx";
 
 type SortOptionType = {
@@ -18,62 +19,52 @@ const SortOptions = () => {
     sorting: { sortOption, setSortOption, sortDirection, toggleSortDirection },
   } = useBookmarks();
 
-  const [isOpen, setIsOpen] = useState(false);
-
-  const handleSortOptionChange = (option: SortOption) => {
-    if (option !== sortOption) {
-      setSortOption(option);
-    }
-    setIsOpen(false);
-  };
-
-  const currentOptionLabel = SORT_OPTIONS.find((option) =>
-    option.value === sortOption
-  )?.label;
-
   return (
-    <div className="">
-      <button
-        type="button"
-        className="rounded p-2 bg-neutral-700 text-white"
-        onClick={() => setIsOpen(!isOpen)}
+    <div className="flex items-center gap-2">
+      <Select.Root
+        value={sortOption}
+        onValueChange={(value) => setSortOption(value as SortOption)}
       >
-        {currentOptionLabel}
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-5 w-5 inline-block"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 9l-7 7-7-7"
-          />
-        </svg>
-      </button>
-      {isOpen && (
-        <ul
-          className="absolute z-10 w-40 bg-neutral-600 shadow-md rounded"
-          style={{ width: "8rem" }}
-        >
-          {SORT_OPTIONS.map(({ value, label }) => (
-            <li
-              key={value}
-              className={`hover:bg-neutral-500 p-2 ${sortOption === value ? "bg-neutral-500" : ""
-                }`}
-              onClick={() => handleSortOptionChange(value)}
+        <Select.Trigger className="inline-flex items-center justify-between rounded-md p-2 bg-secondary text-secondary-foreground hover:opacity-90 transition-opacity gap-1 outline-none">
+          <Select.Value />
+          <Select.Icon>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
             >
-              {label}
-            </li>
-          ))}
-        </ul>
-      )}
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </Select.Icon>
+        </Select.Trigger>
+
+        <Select.Portal>
+          <Select.Content className="z-50 min-w-32 bg-popover text-popover-foreground shadow-lg rounded-md border border-border overflow-hidden">
+            <Select.Viewport className="p-1">
+              {SORT_OPTIONS.map(({ value, label }) => (
+                <Select.Item
+                  key={value}
+                  value={value}
+                  className="relative flex items-center p-2 rounded-sm text-sm hover:bg-muted cursor-pointer transition-colors outline-none data-[state=checked]:bg-muted data-[state=checked]:font-medium"
+                >
+                  <Select.ItemText>{label}</Select.ItemText>
+                </Select.Item>
+              ))}
+            </Select.Viewport>
+          </Select.Content>
+        </Select.Portal>
+      </Select.Root>
+
       <button
         type="button"
-        className="rounded p-2 bg-neutral-700 text-white ml-2"
+        className="rounded-md p-2 bg-secondary text-secondary-foreground hover:opacity-90"
         onClick={toggleSortDirection}
       >
         {sortDirection === "desc" ? "↓" : "↑"}

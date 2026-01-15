@@ -1,7 +1,12 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Tooltip } from "radix-ui";
 
-import { FolderFilter, TagFilter, useBookmarks } from "@/context/BookmarksContext.tsx";
+import {
+  FolderFilter,
+  StrictFolderFilter,
+  TagFilter,
+  useBookmarks,
+} from "@/context/BookmarksContext.tsx";
 
 type Bookmark = chrome.bookmarks.BookmarkTreeNode;
 
@@ -52,9 +57,9 @@ const formatDateTime = (date: number | undefined): string => {
 
 const cleanLink = (url: string): string => {
   // Remove protocol (http:// or https://) case-insensitive
-  let cleaned = url.replace(/^https?:\/\//i, '');
+  let cleaned = url.replace(/^https?:\/\//i, "");
   // Remove www. if present
-  cleaned = cleaned.replace(/^www\./i, '');
+  cleaned = cleaned.replace(/^www\./i, "");
   return cleaned;
 };
 
@@ -66,9 +71,17 @@ export default function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
   const { bookmarks: { all: allBookmarks }, filters: { add: addFilter } } =
     useBookmarks();
 
-  const handleAddFolderFilter = (folderId: string, negative: boolean) => {
+  const handleAddFolderFilter = (
+    folderId: string,
+    negative: boolean,
+    strict: boolean = false,
+  ) => {
     addFilter(
-      { type: "folder", folderId: folderId, negative } as FolderFilter,
+      {
+        type: strict ? "strict_folder" : "folder",
+        folderId: folderId,
+        negative,
+      } as FolderFilter | StrictFolderFilter,
     );
   };
 
@@ -92,7 +105,7 @@ export default function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
   }, [isEditing]);
 
   const handleEnter: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleEdit();
     }
   };
@@ -116,7 +129,7 @@ export default function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
   const tags = bookmark.title.match(/#(\w+)/g)?.map((tag) => tag.slice(1));
 
   return (
-    <div className="h-[105px] max-h flex flex-col border border-neutral-900 rounded m-1 p-2 bg-neutral-800">
+    <div className="h-[105px] max-h flex flex-col border border-border rounded-lg m-1 p-2 bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow">
       <div className="flex items-center">
         <Tooltip.Provider>
           <Tooltip.Root delayDuration={200}>
@@ -124,7 +137,7 @@ export default function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
               <div className="mr-2">
                 <img
                   loading="lazy"
-                  className="rounded"
+                  className="rounded-sm"
                   src={faviconURL(bookmark.url ?? "")}
                   alt=""
                 />
@@ -132,7 +145,7 @@ export default function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
             </Tooltip.Trigger>
             <Tooltip.Portal>
               <Tooltip.Content side="right">
-                <div className="bg-neutral-600 p-1 rounded">
+                <div className="bg-popover text-popover-foreground p-1 rounded-md border border-border shadow-sm">
                   ID: {bookmark.id}
                 </div>
                 {/* <Tooltip.Arrow /> */}
@@ -149,30 +162,35 @@ export default function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
               value={title}
               onInput={(e) => setTitle(e.currentTarget.value)}
               onKeyDown={handleEnter}
-              className="w-full rounded bg-neutral-500"
+              className="w-full rounded-md bg-input text-foreground border border-border px-2"
             />
           )
-          : <span className="flex-1 font-bold truncate" title={title}>{title}</span>}
+          : (
+            <span className="flex-1 font-bold truncate" title={title}>
+              {title}
+            </span>
+          )}
         <button
           type="button"
-          className="ml-2 rounded bg-neutral-800"
+          className="ml-2 rounded-md bg-secondary text-secondary-foreground px-3 py-1 hover:opacity-90"
           onClick={handleEdit}
         >
           {isEditing ? "Submit" : "Edit"}
         </button>
       </div>
-      <div className="text-sm text-neutral-600 flex ">
-        <div className="text-neutral-400">
+      <div className="text-sm text-muted-foreground flex ">
+        <div className="text-muted-foreground/80">
           {path.length > 0 && (
             <span className="flex items-center ml-2">
               {path.map((node) => (
                 <span key={node.id} className="hover:underline cursor-pointer">
                   <span
-                    className="text-neutral-300 hover:text-blue-500"
+                    className="text-muted-foreground hover:text-primary transition-colors"
                     onClick={(e) =>
                       handleAddFolderFilter(
                         node.id,
                         e.shiftKey,
+                        e.altKey,
                       )}
                   >
                     {node.title}/
@@ -183,10 +201,9 @@ export default function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
           )}
         </div>
         <div className="truncate">
-
           <a
             href={bookmark.url}
-            className="hover:underline text-blue-500 "
+            className="hover:underline text-primary/80 hover:text-primary transition-colors"
             title={bookmark.url}
           >
             {bookmark.url
@@ -199,10 +216,12 @@ export default function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
         </div>
       </div>
       <div className="flex flex-row space-x-2 justify-between">
-        <div className="flex space-x-2 text-neutral-400">
+        <div className="flex space-x-2 text-muted-foreground text-xs">
           <div className="flex items-center space-x-1">
             <span
-              title={bookmark.dateAdded ? new Date(bookmark.dateAdded).toLocaleString() : undefined}
+              title={bookmark.dateAdded
+                ? new Date(bookmark.dateAdded).toLocaleString()
+                : undefined}
             >
               Created {formatDateTime(bookmark.dateAdded)}
             </span>
@@ -210,7 +229,9 @@ export default function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
           <span>•</span>
           <div className="flex items-center space-x-1">
             <span
-              title={bookmark.dateLastUsed ? new Date(bookmark.dateLastUsed).toLocaleString() : undefined}
+              title={bookmark.dateLastUsed
+                ? new Date(bookmark.dateLastUsed).toLocaleString()
+                : undefined}
             >
               Last used {formatDateTime(bookmark.dateLastUsed)}
             </span>
@@ -219,7 +240,10 @@ export default function BookmarkCard({ bookmark }: { bookmark: Bookmark }) {
       </div>
       {tags?.length
         ? (
-          <div className="w-full flex truncate gap-x-1 gap-y-1" title={tags.map(tag => `#${tag}`).join(" ")}>
+          <div
+            className="w-full flex truncate gap-x-1 gap-y-1"
+            title={tags.map((tag) => `#${tag}`).join(" ")}
+          >
             {tags?.map((tag) => (
               <div
                 className="select-none cursor-pointer"
@@ -240,7 +264,7 @@ function BookmarkTagCapsule(
   { tag }: { tag: string },
 ) {
   return (
-    <div className="rounded p-1.5 bg-neutral-600 hover:bg-neutral-700 ">
+    <div className="rounded-md px-2 py-0.5 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
       #{tag}
     </div>
   );

@@ -1,15 +1,28 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import type {
   AnyFilter,
+  Bookmark,
   Filter,
   FolderFilter,
+  StrictFolderFilter,
   TagFilter,
   TitleFilter,
   UrlFilter,
 } from "@/context/BookmarksContext.tsx";
 import { useBookmarks } from "@/context/BookmarksContext.tsx";
 
-const makeFilterCapsuleData = (filter: Filter) => {
+const getFolderPath = (folderId: string, bookmarks: Bookmark[]) => {
+  let current = bookmarks.find((b) => b.id === folderId);
+  const path: string[] = [];
+  while (current) {
+    path.unshift(current.title || "Root");
+    if (!current.parentId || current.id === "0") break;
+    current = bookmarks.find((b) => b.id === current?.parentId);
+  }
+  return path.join(" / ") || folderId;
+};
+
+const makeFilterCapsuleData = (filter: Filter, bookmarks: Bookmark[]) => {
   let displayString = "";
   let titleString = "";
   let color = "";
@@ -21,11 +34,20 @@ const makeFilterCapsuleData = (filter: Filter) => {
       titleString = `${prefix} tag: #${filter.tag}`;
       color = "bg-green-500 text-white";
       break;
-    case "folder":
-      displayString = `folder:${filter.folderId}`;
-      titleString = `${prefix} folder: ${filter.folderId}`;
+    case "folder": {
+      const path = getFolderPath(filter.folderId, bookmarks);
+      displayString = `folder:${path}`;
+      titleString = `${prefix} folder: ${path} (${filter.folderId})`;
       color = "bg-blue-500 text-white";
       break;
+    }
+    case "strict_folder": {
+      const path = getFolderPath(filter.folderId, bookmarks);
+      displayString = `strict:${path}`;
+      titleString = `${prefix} strict folder: ${path} (${filter.folderId})`;
+      color = "bg-teal-600 text-white";
+      break;
+    }
     case "title":
       displayString = `title:${filter.title}`;
       titleString = `${prefix} title: '${filter.title}'`;
@@ -43,7 +65,7 @@ const makeFilterCapsuleData = (filter: Filter) => {
   }
 
   color = filter.negative
-    ? `${color} outline outline-2 outline-red-500`
+    ? `${color} outline outline-2 outline-destructive`
     : color;
 
   return { displayString, titleString, color };
@@ -57,7 +79,7 @@ export default function FilterInput() {
       remove: removeFilter,
       clear: clearFilters,
     },
-    bookmarks: { availableTags },
+    bookmarks: { availableTags, all: allBookmarks },
   } = useBookmarks();
 
   const [inputValue, setInputValue] = useState("");
@@ -67,11 +89,15 @@ export default function FilterInput() {
   useEffect(() => {
     if (inputValue.startsWith("#") || inputValue.startsWith("-#")) {
       const isNegative = inputValue.startsWith("-#");
-      const tagPrefix = isNegative ? inputValue.slice(2).trim() : inputValue.slice(1).trim();
+      const tagPrefix = isNegative
+        ? inputValue.slice(2).trim()
+        : inputValue.slice(1).trim();
 
       // Exclude tags already in filters from suggestions
       const tagsInFilters = new Set(
-        filters.filter((f): f is TagFilter => f.type === "tag").map((f) => f.tag)
+        filters.filter((f): f is TagFilter => f.type === "tag").map((f) =>
+          f.tag
+        ),
       );
 
       const suggestions = Object.entries(availableTags)
@@ -121,6 +147,7 @@ export default function FilterInput() {
           const isNegative = suggestion.startsWith("-");
           const cleanInput = isNegative ? suggestion.slice(1) : suggestion;
           const isFolder = cleanInput.startsWith("folder:");
+          const isStrictFolder = cleanInput.startsWith("strictfolder:");
           const isTitle = cleanInput.startsWith("title:");
           const isUrl = cleanInput.startsWith("url:");
           const isTag = cleanInput.startsWith("#");
@@ -137,6 +164,13 @@ export default function FilterInput() {
               folderId: cleanInput.slice(7),
               negative: isNegative,
             } as FolderFilter;
+          }
+          if (isStrictFolder) {
+            return {
+              type: "strict_folder",
+              folderId: cleanInput.slice(13),
+              negative: isNegative,
+            } as StrictFolderFilter;
           }
           if (isTitle) {
             return {
@@ -194,14 +228,15 @@ export default function FilterInput() {
   };
 
   return (
-    <div className="flex flex-wrap gap-1 bg-neutral-800 rounded p-1 w-full items-center focus-within:outline-none focus-within:ring focus-within:ring-blue-500">
+    <div className="flex flex-wrap gap-1 bg-input text-foreground rounded  brutalism:rounded-none! p-1 w-full items-center focus-within:outline-none focus-within:ring focus-within:ring-focus">
       {filters.map((filter, index) => {
         const { displayString, titleString, color } = makeFilterCapsuleData(
           filter,
+          allBookmarks,
         );
         return (
           <span
-            className={`bg-neutral-500 p-1 rounded cursor-pointer select-none ${color}`}
+            className={`bg-secondary text-secondary-foreground p-1 rounded-md cursor-pointer select-none ${color}`}
             title={titleString}
             key={index}
             onClick={() => handleFilterRemove(filter)}
@@ -214,17 +249,18 @@ export default function FilterInput() {
         <input
           type="text"
           placeholder="Search (e.g., url:, #tag, title:, -#tag, -url:)"
-          className="flex-grow bg-transparent w-full p-1 min-w-[100px] align-middle focus:outline-none"
+          className="grow bg-transparent w-full p-1 min-w-[100px] align-middle focus:outline-none"
           value={inputValue}
           onInput={handleFilterInput}
           onKeyDown={handleKeyDown}
         />
         {suggestions.length > 0 && (
-          <ul className="absolute bg-neutral-900 rounded p-1 max-w-[200px] z-10">
+          <ul className="absolute bg-popover text-popover-foreground border border-border rounded-md p-1 max-w-[200px] z-10 shadow-lg top-full left-0 mt-1">
             {suggestions.map((s, index) => (
               <li
-                className={`p-1 cursor-pointer hover:bg-neutral-700 ${index === highlightedIndex ? "bg-neutral-700" : ""
-                  } overflow-hidden`}
+                className={`p-1 cursor-pointer rounded-sm hover:bg-muted ${
+                  index === highlightedIndex ? "bg-muted" : ""
+                } overflow-hidden`}
                 key={s}
                 onClick={() => handleClickSuggestion(s)}
               >

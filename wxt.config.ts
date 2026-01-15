@@ -18,5 +18,11 @@ export default defineConfig({
     },
     permissions: ["bookmarks", "storage", "favicon"],
     author: { email: "qustrolabe@gmail.com" },
+    browser_specific_settings: {
+      gecko: {
+        id: "bookmarks-tags-manager@qustrolabe.com",
+        strict_min_version: "116",
+      },
+    },
   },
 });

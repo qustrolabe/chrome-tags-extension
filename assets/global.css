@@ -1,0 +1,239 @@
+@import "tailwindcss";
+
+/* background-color displayed before react app is loaded */
+:root {
+    background-color: #fcfcfc;
+    color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+    :root {
+        background-color: #000000;
+        color-scheme: dark;
+    }
+}
+
+/* @custom-variant dark (&:is([data-theme=dark], .dark, .dark *)); */
+@custom-variant dark (&:is(.dark, .dark *));
+/* @custom-variant brutalism (&:is([data-theme=brutalism], .brutalism, .brutalism *)); */
+@custom-variant brutalism (&:is(.brutalism, .brutalism *));
+@custom-variant brutalism-dark (&:is(.brutalism-dark, .brutalism-dark *));
+
+@theme {
+    /* Colors - using OKLCH for consistency and gamut */
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    --radius-DEFAULT: var(--radius);
+    --radius-lg: var(--radius);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-sm: calc(var(--radius) - 4px);
+
+    /* Custom Shadows for Themes */
+    --shadow-sm: var(--shadow-sm);
+    --shadow-md: var(--shadow-md);
+    --shadow-lg: var(--shadow-lg);
+    --shadow-xl: var(--shadow-xl);
+
+    --border-width-DEFAULT: var(--border-width);
+}
+
+/* Base Variables (Light Theme Default) */
+:root {
+    scrollbar-color: var(--color-muted-foreground) var(--color-muted);
+
+    --background: oklch(98% 0 0);
+    --foreground: oklch(20% 0.01 270);
+
+    --card: oklch(100% 0 0);
+    --card-foreground: oklch(20% 0.01 270);
+
+    --popover: oklch(100% 0 0);
+    --popover-foreground: oklch(20% 0.01 270);
+
+    --primary: oklch(60% 0.15 270);
+    --primary-foreground: oklch(98% 0 0);
+
+    --secondary: oklch(95% 0.02 270);
+    --secondary-foreground: oklch(40% 0.05 270);
+
+    --muted: oklch(95% 0.02 270);
+    --muted-foreground: oklch(50% 0.02 270);
+
+    --accent: oklch(95% 0.02 270);
+    --accent-foreground: oklch(20% 0.01 270);
+
+    --destructive: oklch(60% 0.25 25);
+    --destructive-foreground: oklch(98% 0 0);
+
+    --border: oklch(90% 0.02 270);
+    --input: oklch(90% 0.02 270);
+    --ring: oklch(60% 0.15 270);
+
+    --radius: 0.5rem;
+    --border-width: 1px;
+
+    /* Soft Shadows for Light Mode */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md:
+        0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg:
+        0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl:
+        0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+/* Dark Theme */
+@variant dark {
+    --background: oklch(15% 0.02 270);
+    --foreground: oklch(95% 0.01 270);
+
+    --card: oklch(18% 0.02 270);
+    --card-foreground: oklch(95% 0.01 270);
+
+    --popover: oklch(18% 0.02 270);
+    --popover-foreground: oklch(95% 0.01 270);
+
+    --primary: oklch(65% 0.15 270);
+    --primary-foreground: oklch(15% 0.02 270);
+
+    --secondary: oklch(25% 0.03 270);
+    --secondary-foreground: oklch(95% 0.01 270);
+
+    --muted: oklch(25% 0.03 270);
+    --muted-foreground: oklch(70% 0.02 270);
+
+    --accent: oklch(25% 0.03 270);
+    --accent-foreground: oklch(95% 0.01 270);
+
+    --destructive: oklch(40% 0.2 25);
+    --destructive-foreground: oklch(95% 0 0);
+
+    --border: oklch(30% 0.03 270);
+    --input: oklch(30% 0.03 270);
+    --ring: oklch(50% 0.15 270);
+
+    --radius: 0.5rem;
+    --border-width: 1px;
+
+    /* Slightly stronger shadows for Dark Mode visibility */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow-md:
+        0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+    --shadow-lg:
+        0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5);
+    --shadow-xl:
+        0 20px 25px -5px rgb(0 0 0 / 0.6), 0 8px 10px -6px rgb(0 0 0 / 0.6);
+}
+
+/* Neubrutalism Theme */
+@variant brutalism {
+    --background: oklch(96% 0.01 50); /* Slightly off-white/paper */
+    --foreground: oklch(10% 0 0); /* Stark Black */
+
+    --card: oklch(100% 0 0);
+    --card-foreground: oklch(10% 0 0);
+
+    --popover: oklch(100% 0 0);
+    --popover-foreground: oklch(10% 0 0);
+
+    --primary: oklch(65% 0.25 260); /* Vivid Purple/Blue */
+    --primary-foreground: oklch(98% 0 0);
+
+    --secondary: oklch(85% 0.18 100); /* Vivid Yellow */
+    --secondary-foreground: oklch(10% 0 0);
+
+    --muted: oklch(90% 0 0);
+    --muted-foreground: oklch(30% 0 0);
+
+    --accent: oklch(70% 0.2 340); /* Hot Pink */
+    --accent-foreground: oklch(98% 0 0);
+
+    --destructive: oklch(60% 0.25 25);
+    --destructive-foreground: oklch(98% 0 0);
+
+    --border: oklch(10% 0 0);
+    --input: oklch(100% 0 0);
+    --ring: oklch(10% 0 0);
+
+    --radius: 0px; /* Sharp corners */
+    --border-width: 2px; /* Thick borders */
+
+    /* Hard, Directional Shadows with Accent Colors (Neubrutalism) */
+    --shadow-sm: 2px 2px 0 0 var(--color-border);
+    --shadow-md: 4px 4px 0 0 var(--color-border);
+    --shadow-lg: 6px 6px 0 0 var(--color-accent); /* Accent Shadow */
+    --shadow-xl: 8px 8px 0 0 var(--color-primary); /* Primary Shadow */
+}
+
+/* Dark Brutalism Theme */
+@variant brutalism-dark {
+    --background: #121212;
+    --foreground: oklch(95% 0 0); /* Near white text */
+
+    --card: #1E1E1E;
+    --card-foreground: oklch(95% 0 0);
+
+    --popover: #1E1E1E;
+    --popover-foreground: oklch(95% 0 0);
+
+    --primary: oklch(70% 0.25 260); /* Vivid electric blue/purple */
+    --primary-foreground: oklch(10% 0 0);
+
+    --secondary: oklch(74.419% 0.18112 56.449); /* Muted gold/yellow */
+    --secondary-foreground: oklch(10% 0 0);
+
+    --muted: oklch(20% 0.02 270);
+    --muted-foreground: oklch(70% 0 0);
+
+    --accent: oklch(65% 0.22 340); /* Hot pink */
+    --accent-foreground: oklch(10% 0 0);
+
+    --destructive: oklch(55% 0.25 25);
+    --destructive-foreground: oklch(95% 0 0);
+
+    --border: oklch(85% 0 0); /* Light border for contrast on dark */
+    --input: oklch(18% 0.02 270);
+    --ring: oklch(85% 0 0);
+
+    --radius: 0px; /* Sharp corners */
+    --border-width: 2px; /* Thick borders */
+
+    /* Hard shadows - lighter color for dark mode visibility */
+    --shadow-sm: 2px 2px 0 0 oklch(40% 0 0);
+    --shadow-md: 4px 4px 0 0 oklch(40% 0 0);
+    --shadow-lg: 6px 6px 0 0 var(--color-accent);
+    --shadow-xl: 8px 8px 0 0 var(--color-primary);
+}
+@layer base {
+    * {
+        @apply border-border;
+    }
+    body {
+        @apply bg-background text-foreground;
+    }
+}
