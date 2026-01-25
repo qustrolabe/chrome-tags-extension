@@ -24,17 +24,19 @@ function MainContent() {
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <BookmarksManagerProvider>
-        <SidebarProvider>
-          <ViewsProvider>
-            <div className="flex flex-col h-screen overflow-hidden">
-              <Header />
-              <MainContent />
-            </div>
-          </ViewsProvider>
-        </SidebarProvider>
-      </BookmarksManagerProvider>
-    </ThemeProvider>
+    <div className="bg-background text-foreground">
+      <ThemeProvider>
+        <BookmarksManagerProvider>
+          <SidebarProvider>
+            <ViewsProvider>
+              <div className="flex flex-col h-screen overflow-hidden">
+                <Header />
+                <MainContent />
+              </div>
+            </ViewsProvider>
+          </SidebarProvider>
+        </BookmarksManagerProvider>
+      </ThemeProvider>
+    </div>
   );
 }

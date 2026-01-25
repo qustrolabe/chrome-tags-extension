@@ -69,7 +69,7 @@ function FolderItem({
     return (
         <div>
             <div
-                className={`flex items-center gap-1 py-1 px-1 rounded-sm brutalism:rounded-none! group cursor-pointer border-l-3 ${
+                className={`flex items-center gap-1 py-1 px-1 rounded-sm group cursor-pointer border-l-3 ${
                     filterState === "positive"
                         ? "bg-blue-500/20 text-blue-700 dark:text-blue-300 border-l-blue-500 font-medium"
                         : filterState === "negative"

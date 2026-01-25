@@ -99,7 +99,7 @@ export default function SidebarTagList() {
                         <button
                             key={tag}
                             onClick={(e) => handleTagClick(tag, e)}
-                            className={`flex items-center gap-1.5 px-2 py-1.5 rounded-md brutalism:rounded-none! text-sm transition-colors cursor-pointer text-left border-2 ${
+                            className={`flex items-center gap-1.5 px-2 py-1.5 rounded-md text-sm transition-colors cursor-pointer text-left border-2 ${
                                 state === "positive"
                                     ? "bg-green-500/20 text-green-700 dark:text-green-300 border-green-500 font-medium"
                                     : state === "negative"

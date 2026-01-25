@@ -1,14 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <script>
+      // Script to load theme from localstorage
+      // and set background-color faster
+      (function () {
+        try {
+          const theme = localStorage.getItem("theme");
+          if (theme) document.documentElement.classList.add(theme);
+          const isDark = theme === "dark";
+          document.documentElement.style.backgroundColor = isDark
+            ? "#000000"
+            : "#fcfcfc";
+        } catch (e) {}
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Options</title>
+    <title>Options - Bookmarks Manager</title>
 
     <meta name="manifest.open_in_tab" content="true" />
     <link rel="stylesheet" href="@/assets/global.css">
   </head>
-  <body class="dark:bg-neutral-700 dark:text-white overflow-y-scroll">
+  <body class="min-h-screen bg-transparent">
     <div id="root"></div>
     <script type="module" src="./main.tsx"></script>
   </body>

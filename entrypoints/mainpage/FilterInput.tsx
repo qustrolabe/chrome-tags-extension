@@ -32,36 +32,40 @@ const makeFilterCapsuleData = (filter: Filter, bookmarks: Bookmark[]) => {
     case "tag":
       displayString = `#${filter.tag}`;
       titleString = `${prefix} tag: #${filter.tag}`;
-      color = "bg-green-500 text-white";
+      color =
+        "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100";
       break;
     case "folder": {
       const path = getFolderPath(filter.folderId, bookmarks);
       displayString = `folder:${path}`;
       titleString = `${prefix} folder: ${path} (${filter.folderId})`;
-      color = "bg-blue-500 text-white";
+      color = "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100";
       break;
     }
     case "strict_folder": {
       const path = getFolderPath(filter.folderId, bookmarks);
       displayString = `strict:${path}`;
       titleString = `${prefix} strict folder: ${path} (${filter.folderId})`;
-      color = "bg-teal-600 text-white";
+      color = "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-100";
       break;
     }
     case "title":
       displayString = `title:${filter.title}`;
       titleString = `${prefix} title: '${filter.title}'`;
-      color = "bg-purple-200 text-black";
+      color =
+        "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100";
       break;
     case "url":
       displayString = `url:${filter.url}`;
       titleString = `${prefix} URL: ${filter.url}`;
-      color = "bg-orange-200 text-black";
+      color =
+        "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100";
       break;
     default:
       displayString = `${filter.value}`;
       titleString = `${prefix} title or URL: ${filter.value}`;
-      color = "bg-neutral-200 text-black";
+      color =
+        "bg-neutral-100 text-neutral-800 dark:bg-neutral-900 dark:text-neutral-100";
   }
 
   color = filter.negative
@@ -228,7 +232,7 @@ export default function FilterInput() {
   };
 
   return (
-    <div className="flex flex-wrap gap-1 bg-input text-foreground rounded  brutalism:rounded-none! p-1 w-full items-center focus-within:outline-none focus-within:ring focus-within:ring-focus">
+    <div className="flex flex-wrap gap-1 bg-input text-foreground rounded p-1 w-full items-center focus-within:outline-none focus-within:ring focus-within:ring-focus">
       {filters.map((filter, index) => {
         const { displayString, titleString, color } = makeFilterCapsuleData(
           filter,
@@ -236,7 +240,7 @@ export default function FilterInput() {
         );
         return (
           <span
-            className={`bg-secondary text-secondary-foreground p-1 rounded-md cursor-pointer select-none ${color}`}
+            className={`p-1 rounded-md cursor-pointer select-none ${color}`}
             title={titleString}
             key={index}
             onClick={() => handleFilterRemove(filter)}

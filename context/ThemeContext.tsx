@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-export type Theme = "light" | "dark" | "brutalism" | "brutalism-dark";
+export type Theme = "light" | "dark";
 
 export type ThemeContextType = {
   theme: Theme;
@@ -38,8 +38,8 @@ export const ThemeProvider = (
     localStorage.setItem("theme", theme);
 
     const root = document.documentElement;
-    const themes: Theme[] = ["light", "dark", "brutalism", "brutalism-dark"];
-    root.classList.remove(...themes);
+    const themes: Theme[] = ["light", "dark"];
+    root.classList.remove("light", "dark", "brutalism", "brutalism-dark");
     root.classList.add(theme);
   }, [theme]);
 

@@ -34,7 +34,7 @@ function SidebarToggle() {
   return (
     <button
       onClick={toggleSidebar}
-      className={`p-2 rounded-md brutalism:rounded-none! transition-colors cursor-pointer ${
+      className={`p-2 rounded-md transition-colors cursor-pointer ${
         isOpen
           ? "bg-primary text-primary-foreground"
           : "hover:bg-muted text-foreground"

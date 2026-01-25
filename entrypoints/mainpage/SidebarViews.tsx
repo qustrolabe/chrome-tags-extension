@@ -77,7 +77,7 @@ export default function SidebarViews() {
                     <button
                         onClick={() => setIsCreating(true)}
                         disabled={filters.list.length === 0}
-                        className="flex items-center gap-2 px-3 py-2 text-sm bg-primary/10 hover:bg-primary/20 text-primary rounded-md brutalism:rounded-none! transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex items-center gap-2 px-3 py-2 text-sm bg-primary/10 hover:bg-primary/20 text-primary rounded-md transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <AiOutlineSave className="w-4 h-4" />
                         Save current filters as view
@@ -94,12 +94,12 @@ export default function SidebarViews() {
                                 if (e.key === "Escape") setIsCreating(false);
                             }}
                             placeholder="View name..."
-                            className="flex-1 px-2 py-1.5 text-sm border border-border rounded-md brutalism:rounded-none! bg-input focus:outline-none focus:ring-1 focus:ring-ring"
+                            className="flex-1 px-2 py-1.5 text-sm border border-border rounded-md bg-input focus:outline-none focus:ring-1 focus:ring-ring"
                             autoFocus
                         />
                         <button
                             onClick={handleSave}
-                            className="p-2 bg-primary text-primary-foreground rounded-md brutalism:rounded-none! hover:bg-primary/90 disabled:opacity-50"
+                            className="p-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"
                         >
                             <AiOutlineCheck className="w-4 h-4" />
                         </button>
@@ -118,7 +118,7 @@ export default function SidebarViews() {
                     filters.clear();
                     clearActiveView();
                 }}
-                className={`flex items-center gap-2 px-2 py-2 rounded-md brutalism:rounded-none! group transition-colors w-full text-left ${
+                className={`flex items-center gap-2 px-2 py-2 rounded-md  group transition-colors w-full text-left ${
                     !activeViewId && filters.list.length === 0
                         ? "bg-primary/20 border border-primary/50"
                         : "hover:bg-muted border border-transparent"
@@ -152,7 +152,7 @@ export default function SidebarViews() {
                             return (
                                 <div
                                     key={view.id}
-                                    className={`flex items-center gap-2 px-2 py-2 rounded-md brutalism:rounded-none! group transition-colors ${
+                                    className={`flex items-center gap-2 px-2 py-2 rounded-md group transition-colors ${
                                         isActive
                                             ? "bg-primary/20 border border-primary/50"
                                             : "hover:bg-muted border border-transparent"

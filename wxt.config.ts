@@ -7,6 +7,9 @@ export default defineConfig({
 
   vite: () => ({
     plugins: [tailwindcss()],
+    define: {
+      __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
+    },
   }),
   webExt: {
     disabled: true,

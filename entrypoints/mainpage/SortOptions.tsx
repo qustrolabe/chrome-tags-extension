@@ -1,6 +1,7 @@
 import React from "react";
 import * as Select from "@radix-ui/react-select";
 import { SortOption, useBookmarks } from "@/context/BookmarksContext.tsx";
+import { AiOutlineArrowDown, AiOutlineArrowUp } from "react-icons/ai";
 
 type SortOptionType = {
   value: SortOption;
@@ -20,39 +21,36 @@ const SortOptions = () => {
   } = useBookmarks();
 
   return (
-    <div className="flex items-center gap-2">
+    <div
+      className="flex items-center bg-secondary rounded-md p-0.5 gap-0.5"
+      style={{ width: "120px" }}
+    >
       <Select.Root
         value={sortOption}
         onValueChange={(value) => setSortOption(value as SortOption)}
       >
-        <Select.Trigger className="inline-flex items-center justify-between rounded-md p-2 bg-secondary text-secondary-foreground hover:opacity-90 transition-opacity gap-1 outline-none">
-          <Select.Value />
-          <Select.Icon>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
-          </Select.Icon>
+        <Select.Trigger className="flex-1 inline-flex items-center justify-between rounded-sm px-2 h-7 bg-inherit text-secondary-foreground hover:bg-input cursor-pointer transition-colors gap-1 outline-none">
+          <Select.Value className="text-sm" />
         </Select.Trigger>
 
+        <button
+          type="button"
+          className="h-7 w-7 flex items-center justify-center rounded hover:bg-input cursor-pointer transition-colors"
+          onClick={toggleSortDirection}
+        >
+          {sortDirection === "desc"
+            ? <AiOutlineArrowDown className="w-4 h-4" />
+            : <AiOutlineArrowUp className="w-4 h-4" />}
+        </button>
+
         <Select.Portal>
-          <Select.Content className="z-50 min-w-32 bg-popover text-popover-foreground shadow-lg rounded-md border border-border overflow-hidden">
-            <Select.Viewport className="p-1">
+          <Select.Content className="z-50 min-w-[150px] bg-popover text-popover-foreground shadow-lg rounded-md border border-border overflow-hidden">
+            <Select.Viewport className="p-2">
               {SORT_OPTIONS.map(({ value, label }) => (
                 <Select.Item
                   key={value}
                   value={value}
-                  className="relative flex items-center p-2 rounded-sm text-sm hover:bg-muted cursor-pointer transition-colors outline-none data-[state=checked]:bg-muted data-[state=checked]:font-medium"
+                  className="relative flex items-center p-2 rounded-sm text-sm hover:bg-muted cursor-pointer transition-colors outline-none data-[state=checked]:bg-muted data-[state=checked]:font-medium mb-1 last:mb-0"
                 >
                   <Select.ItemText>{label}</Select.ItemText>
                 </Select.Item>
@@ -61,14 +59,6 @@ const SortOptions = () => {
           </Select.Content>
         </Select.Portal>
       </Select.Root>
-
-      <button
-        type="button"
-        className="rounded-md p-2 bg-secondary text-secondary-foreground hover:opacity-90"
-        onClick={toggleSortDirection}
-      >
-        {sortDirection === "desc" ? "↓" : "↑"}
-      </button>
     </div>
   );
 };
