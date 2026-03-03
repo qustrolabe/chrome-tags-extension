@@ -23,14 +23,14 @@ const SortOptions = () => {
   return (
     <div
       className="flex items-center bg-secondary rounded-md p-0.5 gap-0.5"
-      style={{ width: "120px" }}
+      style={{ width: "140px" }}
     >
       <Select.Root
         value={sortOption}
         onValueChange={(value) => setSortOption(value as SortOption)}
       >
-        <Select.Trigger className="flex-1 min-w-0 flex items-center justify-between rounded-sm px-2 h-7 bg-inherit text-secondary-foreground hover:bg-input cursor-pointer transition-colors gap-1 outline-none">
-          <Select.Value className="text-sm truncate" />
+        <Select.Trigger className="flex-1 min-w-0 overflow-hidden flex items-center justify-between rounded-sm px-2 h-7 bg-inherit text-secondary-foreground hover:bg-input cursor-pointer transition-colors gap-1 outline-none">
+          <Select.Value className="text-sm truncate whitespace-nowrap" />
         </Select.Trigger>
 
         <button
@@ -50,7 +50,7 @@ const SortOptions = () => {
                 <Select.Item
                   key={value}
                   value={value}
-                  className="relative flex items-center p-2 rounded-sm text-sm hover:bg-muted cursor-pointer transition-colors outline-none data-[state=checked]:bg-muted data-[state=checked]:font-medium mb-1 last:mb-0"
+                  className="relative flex items-center p-2 rounded-sm hover:bg-muted cursor-pointer transition-colors outline-none data-[state=checked]:bg-muted data-[state=checked]:font-medium mb-1 last:mb-0"
                 >
                   <Select.ItemText>{label}</Select.ItemText>
                 </Select.Item>
