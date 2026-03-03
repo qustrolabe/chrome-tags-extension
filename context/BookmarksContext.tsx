@@ -88,7 +88,7 @@ export type Filter =
 const serializeFilters = (filters: Filter[]) => JSON.stringify(filters);
 const deserializeFilters = (filters: string) => JSON.parse(filters);
 
-const applyFilter = (
+export const applyFilter = (
   filter: Filter,
   bookmarks: Bookmark[],
   ancestors: Map<string, Set<string>>, // Need ancestors map here
@@ -131,6 +131,25 @@ const applyFilter = (
         return true;
     }
   });
+};
+
+export const sortBookmarks = (
+  input_bookmarks: Bookmark[],
+  sortOption: SortOption,
+  sortDirection: SortDirection,
+): Bookmark[] => {
+  const compareFunctions: {
+    [key in SortOption]: (a: Bookmark, b: Bookmark) => number;
+  } = {
+    dateAdded: (a, b) => (b.dateAdded ?? 0) - (a.dateAdded ?? 0),
+    dateLastUsed: (a, b) => (b.dateLastUsed ?? 0) - (a.dateLastUsed ?? 0),
+    id: (a, b) => b.id.localeCompare(a.id),
+    title: (a, b) => b.title.localeCompare(a.title),
+  };
+  const compareFunction = compareFunctions[sortOption];
+  return [...input_bookmarks].sort((a, b) =>
+    sortDirection === "desc" ? compareFunction(a, b) : compareFunction(b, a)
+  );
 };
 
 export const BookmarksManagerProvider = (
@@ -233,25 +252,6 @@ export const BookmarksManagerProvider = (
       );
     };
 
-    const sortBookmarks = (
-      input_bookmarks: Bookmark[],
-      sortOption: SortOption,
-      sortDirection: SortDirection,
-    ) => {
-      const compareFunctions: {
-        [key in SortOption]: (a: Bookmark, b: Bookmark) => number;
-      } = {
-        dateAdded: (a, b) => (b.dateAdded ?? 0) - (a.dateAdded ?? 0),
-        dateLastUsed: (a, b) => (b.dateLastUsed ?? 0) - (a.dateLastUsed ?? 0),
-        id: (a, b) => b.id.localeCompare(a.id),
-        title: (a, b) => b.title.localeCompare(a.title),
-      };
-      const compareFunction = compareFunctions[sortOption];
-      return input_bookmarks.sort((a, b) =>
-        sortDirection === "desc" ? compareFunction(a, b) : compareFunction(b, a)
-      );
-    };
-
     const nonFolderBookmarks = filterFolders(bookmarks);
     const filteredBookmarks = applyFilters(nonFolderBookmarks);
 
@@ -265,7 +265,7 @@ export const BookmarksManagerProvider = (
   }, [bookmarks, sortOption, sortDirection, filters, ancestors]);
 
   const fetchBookmarks = () => {
-    chrome.bookmarks.getTree((bookmarkTreeNodes) => {
+    browser.bookmarks.getTree().then((bookmarkTreeNodes) => {
       const bookmarks: Bookmark[] = [];
       const ancestorMap = new Map<string, Set<string>>();
 
@@ -300,16 +300,16 @@ export const BookmarksManagerProvider = (
       fetchBookmarks();
     };
 
-    chrome.bookmarks.onChanged.addListener(handleBookmarkChange);
-    chrome.bookmarks.onMoved.addListener(handleBookmarkChange);
-    chrome.bookmarks.onRemoved.addListener(handleBookmarkChange);
-    chrome.bookmarks.onCreated.addListener(handleBookmarkChange);
+    browser.bookmarks.onChanged.addListener(handleBookmarkChange);
+    browser.bookmarks.onMoved.addListener(handleBookmarkChange);
+    browser.bookmarks.onRemoved.addListener(handleBookmarkChange);
+    browser.bookmarks.onCreated.addListener(handleBookmarkChange);
 
     return () => {
-      chrome.bookmarks.onChanged.removeListener(handleBookmarkChange);
-      chrome.bookmarks.onMoved.removeListener(handleBookmarkChange);
-      chrome.bookmarks.onRemoved.removeListener(handleBookmarkChange);
-      chrome.bookmarks.onCreated.removeListener(handleBookmarkChange);
+      browser.bookmarks.onChanged.removeListener(handleBookmarkChange);
+      browser.bookmarks.onMoved.removeListener(handleBookmarkChange);
+      browser.bookmarks.onRemoved.removeListener(handleBookmarkChange);
+      browser.bookmarks.onCreated.removeListener(handleBookmarkChange);
     };
   }, []);
 

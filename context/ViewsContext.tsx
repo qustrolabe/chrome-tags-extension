@@ -42,7 +42,7 @@ export const ViewsProvider = ({
 
     // Load persisted views
     useEffect(() => {
-        chrome.storage.local.get(["savedViews"], (result) => {
+        browser.storage.local.get(["savedViews"]).then((result) => {
             if (result.savedViews) {
                 setViews(result.savedViews as SavedView[]);
             }
@@ -53,7 +53,7 @@ export const ViewsProvider = ({
     // Persist views when they change
     useEffect(() => {
         if (!mounted) return;
-        chrome.storage.local.set({ savedViews: views });
+        browser.storage.local.set({ savedViews: views });
     }, [views, mounted]);
 
     const saveView = useCallback(

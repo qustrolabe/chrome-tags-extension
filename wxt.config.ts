@@ -14,18 +14,22 @@ export default defineConfig({
   webExt: {
     disabled: true,
   },
-  manifest: {
+  manifest: ({ browser }) => ({
     name: "Bookmarks Tags Manager",
     action: {
       "default_title": "Open Main Page",
     },
-    permissions: ["bookmarks", "storage", "favicon"],
-    author: { email: "qustrolabe@gmail.com" },
+    permissions: browser === "firefox"
+      ? ["bookmarks", "storage"]
+      : ["bookmarks", "storage", "favicon"],
+    author: browser === "firefox"
+      ? "qustrolabe@gmail.com"
+      : { email: "qustrolabe@gmail.com" },
     browser_specific_settings: {
       gecko: {
         id: "bookmarks-tags-manager@qustrolabe.com",
         strict_min_version: "116",
       },
     },
-  },
+  }),
 });

@@ -23,7 +23,7 @@ export const ThemeProvider = (
 
   useEffect(() => {
     // Initial sync with chrome storage
-    chrome.storage.local.get("theme", (result) => {
+    browser.storage.local.get("theme").then((result) => {
       if (result.theme && result.theme !== theme) {
         setTheme(result.theme as Theme);
         localStorage.setItem("theme", result.theme as string);
@@ -34,7 +34,7 @@ export const ThemeProvider = (
 
   useEffect(() => {
     // Mirror to both storages
-    chrome.storage.local.set({ theme });
+    browser.storage.local.set({ theme });
     localStorage.setItem("theme", theme);
 
     const root = document.documentElement;

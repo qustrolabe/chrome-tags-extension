@@ -10,7 +10,7 @@ type SortOptionType = {
 
 const SORT_OPTIONS: SortOptionType[] = [
   { value: "dateAdded", label: "Date Added" },
-  { value: "dateLastUsed", label: "Last Used" },
+  ...(import.meta.env.FIREFOX ? [] : [{ value: "dateLastUsed" as SortOption, label: "Last Used" }]),
   { value: "id", label: "ID" },
   { value: "title", label: "Title" },
 ];
@@ -29,8 +29,8 @@ const SortOptions = () => {
         value={sortOption}
         onValueChange={(value) => setSortOption(value as SortOption)}
       >
-        <Select.Trigger className="flex-1 inline-flex items-center justify-between rounded-sm px-2 h-7 bg-inherit text-secondary-foreground hover:bg-input cursor-pointer transition-colors gap-1 outline-none">
-          <Select.Value className="text-sm" />
+        <Select.Trigger className="flex-1 min-w-0 flex items-center justify-between rounded-sm px-2 h-7 bg-inherit text-secondary-foreground hover:bg-input cursor-pointer transition-colors gap-1 outline-none">
+          <Select.Value className="text-sm truncate" />
         </Select.Trigger>
 
         <button

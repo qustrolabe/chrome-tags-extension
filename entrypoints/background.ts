@@ -1,8 +1,11 @@
 export default defineBackground(() => {
-  // console.log("Hello background!", { id: browser.runtime.id });
-  chrome.action.onClicked.addListener(() => {
-    chrome.tabs.create({
-      url: chrome.runtime.getURL("mainpage.html"),
+  if (import.meta.env.MANIFEST_VERSION === 3) {
+    browser.action.onClicked.addListener(() => {
+      browser.tabs.create({ url: browser.runtime.getURL("/mainpage.html") });
     });
-  });
+  } else {
+    (browser as any).browserAction.onClicked.addListener(() => {
+      browser.tabs.create({ url: browser.runtime.getURL("/mainpage.html") });
+    });
+  }
 });

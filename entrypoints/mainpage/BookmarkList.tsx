@@ -28,7 +28,7 @@ export default function BookmarkList() {
             )}
           onAddTagFilter={(tag, negative) =>
             addFilter({ type: "tag", tag, negative } as any)}
-          onEdit={(id, title) => chrome.bookmarks.update(id, { title })}
+          onEdit={(id, title) => browser.bookmarks.update(id, { title })}
         />
       </div>
     );

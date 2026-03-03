@@ -18,11 +18,15 @@ interface BookmarkCardProps {
 
 function faviconURL(u: string) {
     try {
-        const url = new URL(chrome.runtime.getURL("/_favicon/"));
+        if (import.meta.env.FIREFOX) {
+            const domain = new URL(u).hostname;
+            return `https://www.google.com/s2/favicons?domain=${domain}&sz=16`;
+        }
+        const url = new URL((browser.runtime.getURL as (p: string) => string)("/_favicon/"));
         url.searchParams.set("pageUrl", u);
         url.searchParams.set("size", "16");
         return url.toString();
-    } catch (e) {
+    } catch {
         return "";
     }
 }
@@ -78,7 +82,7 @@ export default function BookmarkCard({
                 if (onEdit) {
                     onEdit(bookmark.id, title);
                 } else {
-                    chrome.bookmarks.update(bookmark.id, { title });
+                    browser.bookmarks.update(bookmark.id, { title });
                 }
             }
         }

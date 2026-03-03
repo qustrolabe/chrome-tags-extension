@@ -63,6 +63,7 @@
 
 /* Base Variables (Light Theme Default) */
 :root {
+    font-size: 16px;
     scrollbar-color: var(--color-muted-foreground) var(--color-muted);
 
     --background: oklch(98% 0 0);

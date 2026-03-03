@@ -12,6 +12,8 @@
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
     "compile": "tsc --noEmit",
+    "test": "bun test",
+    "test:watch": "bun test --watch",
     "postinstall": "wxt prepare",
     "release": "commit-and-tag-version --skip.changelog"
   },

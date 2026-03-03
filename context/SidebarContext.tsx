@@ -23,7 +23,7 @@ export const SidebarProvider = ({
 
     // Load persisted state
     useEffect(() => {
-        chrome.storage.local.get(["sidebarOpen", "sidebarMode"], (result) => {
+        browser.storage.local.get(["sidebarOpen", "sidebarMode"]).then((result) => {
             if (typeof result.sidebarOpen === "boolean") {
                 setIsOpen(result.sidebarOpen);
             }
@@ -37,7 +37,7 @@ export const SidebarProvider = ({
     // Persist state changes
     useEffect(() => {
         if (!mounted) return;
-        chrome.storage.local.set({ sidebarOpen: isOpen, sidebarMode: mode });
+        browser.storage.local.set({ sidebarOpen: isOpen, sidebarMode: mode });
     }, [isOpen, mode, mounted]);
 
     const toggleSidebar = () => setIsOpen((prev) => !prev);
