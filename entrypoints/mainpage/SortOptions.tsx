@@ -11,6 +11,8 @@ type SortOptionType = {
 const SORT_OPTIONS: SortOptionType[] = [
   { value: "dateAdded", label: "Date Added" },
   ...(import.meta.env.FIREFOX ? [] : [{ value: "dateLastUsed" as SortOption, label: "Last Used" }]),
+  { value: "frecency", label: "Frecency" },
+  { value: "visits", label: "Visits" },
   { value: "id", label: "ID" },
   { value: "title", label: "Title" },
 ];
@@ -44,7 +46,15 @@ const SortOptions = () => {
         </button>
 
         <Select.Portal>
-          <Select.Content className="z-50 min-w-[150px] bg-popover text-popover-foreground shadow-lg rounded-md border border-border overflow-hidden">
+          <Select.Content
+            position="popper"
+            side="bottom"
+            align="end"
+            sideOffset={6}
+            collisionPadding={8}
+            className="z-50 min-w-[150px] bg-popover text-popover-foreground shadow-lg rounded-md border border-border overflow-hidden"
+            style={{ minWidth: "var(--radix-select-trigger-width)" }}
+          >
             <Select.Viewport className="p-2">
               {SORT_OPTIONS.map(({ value, label }) => (
                 <Select.Item

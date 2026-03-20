@@ -50,6 +50,13 @@ export default function CardsTab() {
         { id: "1", title: "Bookmarks Menu", parentId: "0" },
     ] as chrome.bookmarks.BookmarkTreeNode[];
 
+    const MOCK_STATS = [
+        { visits: 12, score: 9.4, lastVisited: Date.now() - 120000, frecency: 18.8 },
+        { visits: 6, score: 5.2, lastVisited: Date.now() - 3600000, frecency: 10.4 },
+        { visits: 3, score: 2.5, lastVisited: Date.now() - 86400000, frecency: 1.25 },
+        { visits: 20, score: 14.8, lastVisited: Date.now() - 300000, frecency: 29.6 },
+    ];
+
     return (
         <section className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div>
@@ -65,14 +72,24 @@ export default function CardsTab() {
                     description="This is how your bookmarks currently look. Future settings will allow you to toggle specific elements."
                 >
                     <div className="flex flex-col gap-3 mt-2">
-                        {MOCK_BOOKMARKS.map((bookmark) => (
-                            <BookmarkCard
-                                key={bookmark.id}
-                                bookmark={bookmark}
-                                isSettingsPreview={true}
-                                allBookmarks={MOCK_FOLDERS}
-                            />
-                        ))}
+                        {MOCK_BOOKMARKS.map((bookmark, index) => {
+                            const stats = MOCK_STATS[index % MOCK_STATS.length];
+                            return (
+                                <BookmarkCard
+                                    key={bookmark.id}
+                                    bookmark={bookmark}
+                                    isSettingsPreview={true}
+                                    allBookmarks={MOCK_FOLDERS}
+                                    showTracking={true}
+                                    trackingStats={{
+                                        visits: stats.visits,
+                                        score: stats.score,
+                                        lastVisited: stats.lastVisited,
+                                    }}
+                                    trackingFrecency={stats.frecency}
+                                />
+                            );
+                        })}
                     </div>
                 </SettingsCard>
 

@@ -3,14 +3,16 @@ import {
   AiOutlineInfoCircle,
   AiOutlineLayout,
   AiOutlineSetting,
+  AiOutlineBarChart,
 } from "react-icons/ai";
 import { useTheme } from "@/context/ThemeContext";
 import Sidebar from "./components/Sidebar";
 import GeneralTab from "./components/GeneralTab";
 import CardsTab from "./components/CardsTab";
 import AboutTab from "./components/AboutTab";
+import TrackingTab from "./components/TrackingTab";
 
-type TabId = "general" | "cards" | "about";
+type TabId = "general" | "cards" | "tracking" | "about";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabId>("general");
@@ -19,6 +21,7 @@ export default function App() {
   const TABS = [
     { id: "general", label: "General", icon: AiOutlineSetting },
     { id: "cards", label: "Bookmark Cards", icon: AiOutlineLayout },
+    { id: "tracking", label: "Tracking", icon: AiOutlineBarChart },
     { id: "about", label: "About", icon: AiOutlineInfoCircle },
   ] as const;
 
@@ -40,6 +43,8 @@ export default function App() {
           )}
 
           {activeTab === "cards" && <CardsTab />}
+
+          {activeTab === "tracking" && <TrackingTab />}
 
           {activeTab === "about" && <AboutTab />}
         </div>

@@ -8,6 +8,7 @@ import { BookmarksManagerProvider } from "@/context/BookmarksContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { SidebarProvider, useSidebar } from "@/context/SidebarContext";
 import { ViewsProvider } from "@/context/ViewsContext";
+import { TrackingProvider } from "@/context/TrackingContext";
 
 function MainContent() {
   const { isOpen } = useSidebar();
@@ -26,16 +27,18 @@ export default function App() {
   return (
     <div className="bg-background text-foreground">
       <ThemeProvider>
-        <BookmarksManagerProvider>
-          <SidebarProvider>
-            <ViewsProvider>
-              <div className="flex flex-col h-screen overflow-hidden">
-                <Header />
-                <MainContent />
-              </div>
-            </ViewsProvider>
-          </SidebarProvider>
-        </BookmarksManagerProvider>
+        <TrackingProvider>
+          <BookmarksManagerProvider>
+            <SidebarProvider>
+              <ViewsProvider>
+                <div className="flex flex-col h-screen overflow-hidden">
+                  <Header />
+                  <MainContent />
+                </div>
+              </ViewsProvider>
+            </SidebarProvider>
+          </BookmarksManagerProvider>
+        </TrackingProvider>
       </ThemeProvider>
     </div>
   );

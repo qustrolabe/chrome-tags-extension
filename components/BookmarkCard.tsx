@@ -6,6 +6,13 @@ type Bookmark = chrome.bookmarks.BookmarkTreeNode;
 interface BookmarkCardProps {
     bookmark: Bookmark;
     isSettingsPreview?: boolean;
+    trackingStats?: {
+        visits: number;
+        score: number;
+        lastVisited: number;
+    };
+    trackingFrecency?: number;
+    showTracking?: boolean;
     onAddFolderFilter?: (
         folderId: string,
         negative: boolean,
@@ -67,6 +74,9 @@ const cleanLink = (url: string): string => {
 export default function BookmarkCard({
     bookmark,
     isSettingsPreview = false, // if previewing in settings, don't update onEdit
+    trackingStats,
+    trackingFrecency = 0,
+    showTracking = false,
     onAddFolderFilter,
     onAddTagFilter,
     onEdit,
@@ -127,7 +137,7 @@ export default function BookmarkCard({
 
     return (
         <div
-            className={`h-[105px] max-h flex flex-col border border-border rounded-lg p-2 bg-card text-card-foreground shadow-sm transition-shadow ${
+            className={`min-h-[100px] flex flex-col border border-border rounded-lg p-2 bg-card text-card-foreground shadow-sm transition-shadow ${
                 isSettingsPreview ? "" : "m-1 hover:shadow-md"
             }`}
         >
@@ -226,7 +236,7 @@ export default function BookmarkCard({
                 </div>
             </div>
 
-            <div className="flex flex-row space-x-3 mt-1.5 text-[10px] text-muted-foreground font-medium">
+            <div className="flex flex-row flex-wrap gap-x-3 gap-y-1 mt-1.5 text-[10px] text-muted-foreground font-medium">
                 <div className="flex items-center gap-1">
                     <span
                         title={bookmark.dateAdded
@@ -245,12 +255,32 @@ export default function BookmarkCard({
                         Last used {formatDateTime(bookmark.dateLastUsed)}
                     </span>
                 </div>
+                {showTracking && trackingStats
+                    ? (
+                        <>
+                            <div className="flex items-center gap-1">
+                                <span
+                                    title={`Visits ${trackingStats.visits}`}
+                                >
+                                    Visits {trackingStats.visits}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <span
+                                    title={`Frecency ${trackingFrecency.toFixed(2)} • Score ${trackingStats.score.toFixed(2)}`}
+                                >
+                                    Frecency {trackingFrecency.toFixed(2)}
+                                </span>
+                            </div>
+                        </>
+                    )
+                    : null}
             </div>
 
             {tags?.length
                 ? (
                     <div
-                        className="w-full flex truncate gap-x-1 mt-auto pt-1"
+                        className="w-full flex truncate gap-x-1 mt-1"
                         title={tags.map((tag) => `#${tag}`).join(" ")}
                     >
                         {tags?.map((tag) => (

@@ -1,8 +1,16 @@
-import React, { createContext } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { useTracking } from "@/context/TrackingContext";
+import { computeFrecency } from "@/utils/tracking";
 
 export type Bookmark = chrome.bookmarks.BookmarkTreeNode;
 
-export type SortOption = "id" | "title" | "dateAdded" | "dateLastUsed";
+export type SortOption =
+  | "id"
+  | "title"
+  | "dateAdded"
+  | "dateLastUsed"
+  | "frecency"
+  | "visits";
 export type SortDirection = "asc" | "desc";
 
 interface BookmarksManagerContextType {
@@ -137,6 +145,7 @@ export const sortBookmarks = (
   input_bookmarks: Bookmark[],
   sortOption: SortOption,
   sortDirection: SortDirection,
+  stats: Record<string, { visits: number; score: number; lastVisited: number }>,
 ): Bookmark[] => {
   const compareFunctions: {
     [key in SortOption]: (a: Bookmark, b: Bookmark) => number;
@@ -145,6 +154,18 @@ export const sortBookmarks = (
     dateLastUsed: (a, b) => (b.dateLastUsed ?? 0) - (a.dateLastUsed ?? 0),
     id: (a, b) => b.id.localeCompare(a.id),
     title: (a, b) => b.title.localeCompare(a.title),
+    frecency: (a, b) => {
+      const aStats = stats[a.id];
+      const bStats = stats[b.id];
+      const aValue = aStats ? computeFrecency(aStats.score, aStats.lastVisited) : 0;
+      const bValue = bStats ? computeFrecency(bStats.score, bStats.lastVisited) : 0;
+      return bValue - aValue;
+    },
+    visits: (a, b) => {
+      const aValue = stats[a.id]?.visits ?? 0;
+      const bValue = stats[b.id]?.visits ?? 0;
+      return bValue - aValue;
+    },
   };
   const compareFunction = compareFunctions[sortOption];
   return [...input_bookmarks].sort((a, b) =>
@@ -155,6 +176,7 @@ export const sortBookmarks = (
 export const BookmarksManagerProvider = (
   { children }: { children: React.ReactNode },
 ) => {
+  const { stats } = useTracking();
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [ancestors, setAncestors] = useState<Map<string, Set<string>>>(
     new Map(),
@@ -259,10 +281,11 @@ export const BookmarksManagerProvider = (
       filteredBookmarks,
       sortOption,
       sortDirection,
+      stats,
     );
 
     setDisplayBookmarks(sortedBookmarks);
-  }, [bookmarks, sortOption, sortDirection, filters, ancestors]);
+  }, [bookmarks, sortOption, sortDirection, filters, ancestors, stats]);
 
   const fetchBookmarks = () => {
     browser.bookmarks.getTree().then((bookmarkTreeNodes) => {

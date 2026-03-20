@@ -2,6 +2,8 @@ import React from "react";
 import { List, RowComponentProps } from "react-window";
 
 import { useBookmarks } from "@/context/BookmarksContext.tsx";
+import { useTracking } from "@/context/TrackingContext";
+import { computeFrecency } from "@/utils/tracking";
 import BookmarkCard from "@/components/BookmarkCard";
 
 export default function BookmarkList() {
@@ -9,6 +11,7 @@ export default function BookmarkList() {
     bookmarks: { display: displayBookmarks, all: allBookmarks },
     filters: { add: addFilter },
   } = useBookmarks();
+  const { stats, settings } = useTracking();
 
   const Row = ({ index, style }: RowComponentProps) => {
     const bookmark = displayBookmarks[index];
@@ -18,6 +21,11 @@ export default function BookmarkList() {
           key={bookmark.id}
           bookmark={bookmark}
           allBookmarks={allBookmarks}
+          trackingStats={stats[bookmark.id]}
+          trackingFrecency={stats[bookmark.id]
+            ? computeFrecency(stats[bookmark.id].score, stats[bookmark.id].lastVisited)
+            : 0}
+          showTracking={settings.enabled && settings.showStats}
           onAddFolderFilter={(folderId, negative, strict) =>
             addFilter(
               {
