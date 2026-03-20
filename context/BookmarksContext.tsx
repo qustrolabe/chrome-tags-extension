@@ -190,6 +190,7 @@ export const BookmarksManagerProvider = (
     const params = new URLSearchParams(globalThis.location.search);
     return params.get("sortDirection") as SortDirection || "desc";
   });
+  const [sortingMounted, setSortingMounted] = useState(false);
 
   const [displayBookmarks, setDisplayBookmarks] = useState<Bookmark[]>([]);
 
@@ -258,6 +259,24 @@ export const BookmarksManagerProvider = (
     params.set("filterTags", serializeFilters(filters));
     history.replaceState({}, "", "?" + params.toString());
   }, [sortOption, sortDirection, filters]);
+
+  useEffect(() => {
+    browser.storage.local.get(["sortOption", "sortDirection"]).then((result) => {
+      const storedSort = result.sortOption as SortOption | undefined;
+      const storedDirection = result.sortDirection as SortDirection | undefined;
+      if (storedSort) setSortOption(storedSort);
+      if (storedDirection) setSortDirection(storedDirection);
+      setSortingMounted(true);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!sortingMounted) return;
+    browser.storage.local.set({
+      sortOption,
+      sortDirection,
+    });
+  }, [sortOption, sortDirection, sortingMounted]);
 
   // Sort and filter bookmarks into displayBookmarks
   useEffect(() => {
