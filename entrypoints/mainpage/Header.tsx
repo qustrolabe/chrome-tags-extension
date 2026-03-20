@@ -5,6 +5,7 @@ import FilterInput from "./FilterInput.tsx";
 import { useBookmarks } from "@/context/BookmarksContext.tsx";
 import { useSidebar } from "@/context/SidebarContext.tsx";
 import SortOptions from "./SortOptions.tsx";
+import { useViewMode } from "@/context/ViewModeContext";
 
 import { AiOutlineMenu } from "react-icons/ai";
 import { RiSideBarLine } from "react-icons/ri";
@@ -47,13 +48,33 @@ function SidebarToggle() {
 }
 
 export default function Header() {
+  const { mode, setMode } = useViewMode();
+
   return (
-    <div className="flex items-center bg-background text-foreground border-b border-border p-2 gap-2 shadow-sm z-10 relative">
+    <div className="flex items-center bg-background text-foreground border-b border-border p-2 gap-2 shadow-sm z-30 relative">
       <SidebarToggle />
       <div className="flex space-x-2 flex-1">
         <FilterInput />
       </div>
-      <SortOptions />
+      <div className="flex items-center gap-2">
+        <div className="flex items-center bg-secondary rounded-md p-0.5">
+          {(["list", "table"] as const).map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setMode(value)}
+              className={`px-2.5 h-7 rounded-sm text-xs font-semibold transition-colors ${
+                mode === value
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {value === "list" ? "List" : "Table"}
+            </button>
+          ))}
+        </div>
+        <SortOptions />
+      </div>
       <BookmarksCounter />
       <ControlMenu />
     </div>

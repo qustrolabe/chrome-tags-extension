@@ -19,6 +19,8 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.18",
+    "@tanstack/react-table": "^8.21.3",
+    "@tanstack/react-virtual": "^3.13.23",
     "cmdk": "^1.1.1",
     "radix-ui": "^1.4.3",
     "react": "^19.2.3",

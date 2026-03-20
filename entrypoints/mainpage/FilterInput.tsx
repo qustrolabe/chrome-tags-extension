@@ -249,7 +249,7 @@ export default function FilterInput() {
           </span>
         );
       })}
-      <div className="flex-1">
+      <div className="flex-1 relative">
         <input
           type="text"
           placeholder="Search (e.g., url:, #tag, title:, -#tag, -url:)"
@@ -259,7 +259,7 @@ export default function FilterInput() {
           onKeyDown={handleKeyDown}
         />
         {suggestions.length > 0 && (
-          <ul className="absolute bg-popover text-popover-foreground border border-border rounded-md p-1 max-w-[200px] z-10 shadow-lg top-full left-0 mt-1">
+          <ul className="absolute bg-popover text-popover-foreground border border-border rounded-md p-1 max-w-[200px] z-50 shadow-lg top-full left-0 mt-1">
             {suggestions.map((s, index) => (
               <li
                 className={`p-1 cursor-pointer rounded-sm hover:bg-muted ${
