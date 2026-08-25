@@ -167,9 +167,8 @@ export default function SearchBar() {
       e.preventDefault();
       setHighlightedIndex((prev) => {
         const len = suggestions.length;
-        if (len === 0) return -1;
-        const next = Math.min(prev, len) - 1;
-        return next < 0 ? len - 1 : next;
+        if (len === 0 || prev <= 0) return -1; // leaving the list / nothing selected
+        return prev - 1;
       });
     } else if (e.key === "Enter" || e.key === "Tab") {
       const index = e.key === "Enter"

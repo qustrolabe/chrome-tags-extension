@@ -227,6 +227,80 @@ const valueSuggestions = (
   return out.slice(0, MAX_SUGGESTIONS);
 };
 
+/**
+ * Mixed suggestions for a BARE fragment (no key typed yet): matching keys,
+ * tags, folders and — for number-like fragments — date/number templates
+ * across keys, all merged into one relevance-ordered list.
+ */
+const bareSuggestions = (
+  frag: Fragment,
+  data: SuggestData,
+  existing: Set<string>,
+): Suggestion[] => {
+  const prefix = frag.valuePrefix.toLowerCase();
+  const neg = frag.negated ? "-" : "";
+  const out: Suggestion[] = [];
+
+  const pushToken = (
+    tokenText: string,
+    category: string,
+    comment?: string,
+  ) => {
+    out.push({
+      type: "value",
+      label: tokenText,
+      category,
+      comment,
+      replaceFrom: -1,
+      replaceTo: -1,
+      insert: tokenText,
+    });
+  };
+
+  // Matching keys first.
+  out.push(...keySuggestions(frag));
+
+  // Tags by count.
+  Object.entries(data.tags)
+    .filter(([tag]) => tag.toLowerCase().startsWith(prefix))
+    .sort(([, a], [, b]) => b - a)
+    .forEach(([tag, count]) => {
+      const text = `${neg}tag:"${tag}"`;
+      if (!existing.has(`tag:${tag.toLowerCase()}`)) {
+        pushToken(text, "tag", `${count} bookmarks`);
+      }
+    });
+
+  // Folders (anywhere in the tree).
+  descendantNames(data.folderTree)
+    .filter((name) => name.toLowerCase().startsWith(prefix))
+    .sort()
+    .forEach((name) => {
+      const text = `${neg}folder:"${name}"`;
+      if (!existing.has(`folder:${name.toLowerCase()}`)) {
+        pushToken(text, "folder", "in this folder or any subfolder");
+      }
+    });
+
+  // Number-ish fragments also surface date/number templates across keys.
+  if (/^[<>=]?\d/.test(prefix)) {
+    DATE_TEMPLATES.forEach(({ value, comment }) => {
+      if (value.startsWith(prefix)) {
+        pushToken(`${neg}added:${value}`, "date", `added ${comment}`);
+        pushToken(`${neg}last_used:${value}`, "date", `last used ${comment}`);
+      }
+    });
+    NUMBER_TEMPLATES("visits").forEach(({ value, comment }) => {
+      if (value.startsWith(prefix)) {
+        pushToken(`${neg}visits:${value}`, "visits", comment);
+        pushToken(`${neg}frecency:${value}`, "frecency", comment.replace("visits", "score"));
+      }
+    });
+  }
+
+  return out.slice(0, MAX_SUGGESTIONS);
+};
+
 /** Key suggestions for a typed prefix like `tag` / `-ur`. */
 const keySuggestions = (frag: Fragment): Suggestion[] => {
   const prefix = (frag.valuePrefix ?? "").toLowerCase();
@@ -410,7 +484,7 @@ export const suggest = (
   );
 
   if (frag.key === null) {
-    return keySuggestions(frag).map((s) => ({
+    return bareSuggestions(frag, data, existing).map((s) => ({
       ...s,
       replaceFrom: fragment.start,
       replaceTo: caret,

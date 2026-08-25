@@ -208,6 +208,29 @@ describe("suggest — token actions (caret inside existing token)", () => {
     expect(techEntries[0].comment).toBe("current value");
   });
 
+  test("bare fragment mixes tags, folders and keys together", () => {
+    // a matching tag...
+    expect(suggest("ne", 2, DATA).map((x) => x.insert))
+      .toContain('tag:"news"');
+    // ...and matching folders flow into the same list
+    const s = suggest("de", 2, DATA);
+    const inserts = s.map((x) => x.insert);
+    expect(inserts).toContain('folder:"dev"');
+    expect(inserts).toContain('folder:"design"');
+  });
+
+  test("number-like fragment surfaces date and number templates across keys", () => {
+    const s = suggest("<1", 2, DATA);
+    const inserts = s.map((x) => x.insert);
+    expect(inserts).toContain("added:<1d");
+    expect(inserts).toContain("last_used:<1w");
+    // number templates that don't match the prefix stay out
+    expect(inserts).not.toContain("visits:>10");
+
+    const s2 = suggest(">10", 3, DATA);
+    expect(s2.map((x) => x.insert)).toContain("visits:>10");
+  });
+
   test("first two suggestions are invert & remove", () => {
     const query = 'tag:"tech" url:x';
     const caret = 6; // inside first token
