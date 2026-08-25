@@ -167,24 +167,34 @@ const valueSuggestions = (
           push(tag, `${count} bookmarks`),
         );
     } else if (isFolderKey) {
-      // Split into completed chain segments + the partial segment being
-      // typed (a trailing "/" means an empty partial).
-      const endsWithSlash = frag.valuePrefix.endsWith("/");
-      const segments = splitSegments(frag.valuePrefix);
+      // Leading "/" anchors at the tree top; otherwise chains anchor
+      // anywhere (or under another folder token's subtree).
+      const raw = frag.valuePrefix;
+      const anchored = raw.startsWith("/");
+      const inner = anchored ? raw.slice(1) : raw;
+      const endsWithSlash = inner.endsWith("/");
+      const segments = splitSegments(inner);
       const partial = endsWithSlash
         ? ""
         : (segments[segments.length - 1] ?? "").toLowerCase();
       const completed = endsWithSlash ? segments : segments.slice(0, -1);
       const chainPrefix =
-        completed.length > 0 ? completed.join("/") + "/" : "";
+        (anchored ? "/" : "") +
+        (completed.length > 0 ? completed.join("/") + "/" : "");
 
       // Scope candidates:
-      // - inside a chain -> children of the resolved chain (anchored
-      //   anywhere in the tree),
+      // - anchored -> children of the resolved chain from the tree top,
+      // - inside a chain -> children of the resolved chain,
       // - constrained by another folder token -> children of those nodes,
       // - otherwise -> every folder name in the tree.
       let candidateNames: string[];
-      if (completed.length > 0 || folderConstraintNodes) {
+      if (anchored) {
+        const bases =
+          completed.length > 0
+            ? resolveChain(data.folderTree, completed)
+            : data.folderTree;
+        candidateNames = childNames(bases);
+      } else if (completed.length > 0 || folderConstraintNodes) {
         const bases =
           completed.length > 0
             ? resolveChain(
@@ -204,14 +214,14 @@ const valueSuggestions = (
           push(chainPrefix + name, spec.description),
         );
 
-      // "~" reaches top-level folders; it cannot collide with a real
-      // folder name and isn't reachable via glob matching.
+      // Empty value = the root level ("/" lists it too).
       if (
+        !anchored &&
         completed.length === 0 &&
         !folderConstraintNodes &&
-        "~".startsWith(partial)
+        partial === ""
       ) {
-        push("~", "top-level folders");
+        push("", "top-level folders");
       }
     } else {
       // url/title: no meaningful static sources; offer wildcard hint.
@@ -291,20 +301,6 @@ const bareSuggestions = (
         pushToken(text, "folder", "in this folder or any subfolder");
       }
     });
-
-  // The "~" top-level shortcut, offered on an empty fragment or "~".
-  if ("~".startsWith(prefix)) {
-    for (const key of ["folder", "folder_strict"]) {
-      const text = `${neg}${key}:"~"`;
-      if (!existing.has(`${key}:~`)) {
-        pushToken(
-          text,
-          "folder",
-          key === "folder" ? "top-level folders" : "top-level folders directly",
-        );
-      }
-    }
-  }
 
   // Number-ish fragments also surface date/number templates across keys.
   if (/^[<>=]?\d/.test(prefix)) {

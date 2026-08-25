@@ -127,20 +127,26 @@ describe("engine — text keys", () => {
     expect(matches('-folder:"Projects"', mkBookmark({ id: "11" }))).toBe(false);
   });
 
-  test("~ matches top-level folders", () => {
+  test('"" and "/" match the root level; "/" anchors chains at the top', () => {
     const rootCtx = mkCtx({
       rootFolderIds: new Set(["1"]), // "Bookmarks Bar" is top-level
     });
     // bookmark 10's parent is folder 5 (Projects, not a root folder)
     expect(
-      matches('folder_strict:"~"', mkBookmark({ id: "10" }), rootCtx),
+      matches('folder_strict:""', mkBookmark({ id: "10" }), rootCtx),
     ).toBe(false);
     // bookmark directly inside Bookmarks Bar
     expect(
-      matches('folder_strict:"~"', mkBookmark({ id: "20", parentId: "1" }), rootCtx),
+      matches('folder_strict:""', mkBookmark({ id: "20", parentId: "1" }), rootCtx),
     ).toBe(true);
-    // recursive variant reaches deeper bookmarks of a root folder
-    expect(matches('in:"~"', mkBookmark({ id: "11" }), rootCtx)).toBe(true);
+    // bare "/" is equivalent to ""
+    expect(matches('folder:"/"', mkBookmark({ id: "11" }), rootCtx)).toBe(true);
+    // anchored chain must spell the path from the very top
+    expect(
+      matches('folder:"/Bookmarks Bar/Projects"', mkBookmark({ id: "11" }), rootCtx),
+    ).toBe(true);
+    // unanchored still finds it anywhere
+    expect(matches('folder:"Projects"', mkBookmark({ id: "11" }), rootCtx)).toBe(true);
     // a folder literally named "root" is an ordinary name again
     const namedRoot = mkCtx({
       ...rootCtx,

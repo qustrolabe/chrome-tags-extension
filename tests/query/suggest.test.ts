@@ -231,16 +231,21 @@ describe("suggest — token actions (caret inside existing token)", () => {
     expect(s2.map((x) => x.insert)).toContain("visits:>10");
   });
 
-  test("typing ~ suggests the top-level folder token", () => {
-    // bare "~"
-    const s = suggest("~", 1, DATA);
-    expect(s.some((x) => x.insert === 'folder:"~"')).toBe(true);
-    // after folder_strict: (empty value)
+  test('empty value and "/" suggest the root level', () => {
+    // empty partial inside folder_strict offers the root token
     const s2 = suggest('folder_strict:"', 15, DATA);
-    expect(s2.some((x) => x.insert === 'folder_strict:"~"')).toBe(true);
-    // caret after the closed quote -> completed token, next-token mode
-    const s3 = suggest('folder_strict:"~"', 17, DATA);
-    expect(s3[0].type).toBe("key");
+    expect(s2.some((x) => x.insert === 'folder_strict:""')).toBe(true);
+    expect(
+      s2.find((x) => x.insert === 'folder_strict:""')!.comment,
+    ).toContain("top-level");
+  });
+
+  test('typing "/" lists folders in root (anchored)', () => {
+    const s = suggest('folder:"/', 9, DATA);
+    const inserts = s.map((x) => x.insert);
+    // only top-level folders, NOT deeper names
+    expect(inserts).toContain('folder:"/Projects"');
+    expect(inserts).not.toContain('folder:"/dev"');
   });
 
   test("first two suggestions are invert & remove", () => {

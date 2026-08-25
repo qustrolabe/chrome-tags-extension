@@ -51,19 +51,24 @@ const matchFolderChain = (
   ctx: MatchContext,
   strict: boolean,
 ): boolean => {
-  // Special value "~": the top-level folders (Bookmarks Bar etc.).
-  // Deliberately not "root" — a user folder could legitimately be named
-  // that, and "~" can't collide with a real name.
-  if (value.trim() === "~") {
+  const raw = value.trim();
+  // Leading "/" anchors the chain at the very top of the tree.
+  const anchored = raw.startsWith("/");
+  const inner = anchored ? raw.slice(1) : raw;
+
+  const rootMatch = (): boolean => {
     const rootIds = ctx.rootFolderIds;
     if (!rootIds || rootIds.size === 0) return false;
     if (strict) {
       return bookmark.parentId !== undefined && rootIds.has(bookmark.parentId);
     }
     return ctx.ancestorIdsOf(bookmark).some((id) => rootIds.has(id));
-  }
+  };
 
-  const segments = splitSegments(value);
+  // Empty value or bare "/" = the root level.
+  if (inner.trim() === "") return rootMatch();
+
+  const segments = splitSegments(inner);
   if (segments.length === 0) return false;
 
   const ancestorIds = ctx.ancestorIdsOf(bookmark);
@@ -72,7 +77,14 @@ const matchFolderChain = (
     .filter((n): n is string => n !== undefined);
 
   // Try to anchor the chain at each position of the ancestry path.
+  // Anchored values may only start at a top-level folder.
   for (let offset = 0; offset <= names.length - segments.length; offset++) {
+    if (
+      anchored &&
+      !(ancestorIds[offset] && ctx.rootFolderIds?.has(ancestorIds[offset]))
+    ) {
+      continue; // anchored chains must start at a top-level folder
+    }
     const ok = segments.every(
       (segment, i) => patternMatch(segment, names[offset + i] ?? ""),
     );
