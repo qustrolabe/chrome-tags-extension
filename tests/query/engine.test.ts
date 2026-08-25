@@ -126,6 +126,22 @@ describe("engine — text keys", () => {
   test("negated folder excludes subtree", () => {
     expect(matches('-folder:"Projects"', mkBookmark({ id: "11" }))).toBe(false);
   });
+
+  test("root matches top-level folders", () => {
+    const rootCtx = mkCtx({
+      rootFolderIds: new Set(["1"]), // "Bookmarks Bar" is top-level
+    });
+    // bookmark 10's parent is folder 5 (Projects, not a root folder)
+    expect(
+      matches('folder_strict:"root"', mkBookmark({ id: "10" }), rootCtx),
+    ).toBe(false);
+    // bookmark directly inside Bookmarks Bar
+    expect(
+      matches('folder_strict:"root"', mkBookmark({ id: "20", parentId: "1" }), rootCtx),
+    ).toBe(true);
+    // recursive variant reaches deeper bookmarks of a root folder
+    expect(matches('in:"root"', mkBookmark({ id: "11" }), rootCtx)).toBe(true);
+  });
 });
 
 describe("engine — dates", () => {

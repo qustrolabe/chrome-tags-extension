@@ -49,6 +49,8 @@ export interface MatchContext {
   tagsOf: (bookmark: BookmarkLike) => string[];
   /** Folder id chain from root to immediate parent (exclusive of the node itself). */
   ancestorIdsOf: (bookmark: BookmarkLike) => string[];
+  /** Ids of top-level folders (direct children of the browser root). */
+  rootFolderIds?: Set<string>;
   /** Folder name lookup by id. */
   folderNameById: Map<string, string>;
   stats: Record<string, { visits: number; score: number; lastVisited: number }>;

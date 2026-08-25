@@ -203,6 +203,15 @@ const valueSuggestions = (
         .forEach((name) =>
           push(chainPrefix + name, spec.description),
         );
+
+      // "root" reaches top-level folders, which have no usable name match.
+      if (
+        completed.length === 0 &&
+        !folderConstraintNodes &&
+        (partial === "" || "root".startsWith(partial))
+      ) {
+        push("root", "top-level folders");
+      }
     } else {
       // url/title: no meaningful static sources; offer wildcard hint.
       if (prefix === "") {

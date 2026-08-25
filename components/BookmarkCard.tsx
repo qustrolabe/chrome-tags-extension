@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Tooltip } from "radix-ui";
+import { extractTags } from "@/utils/query/tags.ts";
+import { faviconURL } from "@/utils/favicon.ts";
 
 type Bookmark = chrome.bookmarks.BookmarkTreeNode;
 
@@ -21,21 +23,6 @@ interface BookmarkCardProps {
     onAddTagFilter?: (tag: string, negative: boolean) => void;
     onEdit?: (id: string, title: string) => void;
     allBookmarks?: Bookmark[]; // Needed for path calculation if in preview
-}
-
-function faviconURL(u: string) {
-    try {
-        if (import.meta.env.FIREFOX) {
-            const domain = new URL(u).hostname;
-            return `https://www.google.com/s2/favicons?domain=${domain}&sz=16`;
-        }
-        const url = new URL((browser.runtime.getURL as (p: string) => string)("/_favicon/"));
-        url.searchParams.set("pageUrl", u);
-        url.searchParams.set("size", "16");
-        return url.toString();
-    } catch {
-        return "";
-    }
 }
 
 const formatDateTime = (date: number | undefined): string => {
@@ -133,7 +120,9 @@ export default function BookmarkCard({
         return p;
     })();
 
-    const tags = bookmark.title.match(/#(\w+)/g)?.map((tag) => tag.slice(1));
+    const tags = extractTags(bookmark.title)
+        .map((tag) => tag.toLowerCase())
+        .filter((tag, i, arr) => arr.indexOf(tag) === i);
 
     return (
         <div

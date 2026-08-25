@@ -28,8 +28,16 @@ export const createMatchContext = (
   const ancestorsByNodeId = new Map<string, string[]>();
   const byId = new Map(allBookmarks.map((node) => [node.id, node]));
 
+  // Top-level folders = direct children of the browser root node ("0").
+  const rootFolderIds = new Set(
+    allBookmarks
+      .filter((b) => b.url === undefined && b.parentId === "0")
+      .map((b) => b.id),
+  );
+
   return {
     now,
+    rootFolderIds,
     tagsOf: (b) => extractTags(b.title),
     ancestorIdsOf: (b) => {
       const cached = ancestorsByNodeId.get(b.id);

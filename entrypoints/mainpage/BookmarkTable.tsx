@@ -14,6 +14,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { useBookmarks } from "@/context/BookmarksContext";
 import { useTracking } from "@/context/TrackingContext";
 import { computeFrecency } from "@/utils/tracking";
+import { faviconURL } from "@/utils/favicon.ts";
 
 type Bookmark = chrome.bookmarks.BookmarkTreeNode;
 
@@ -64,6 +65,7 @@ export default function BookmarkTable() {
   const { stats, settings } = useTracking();
 
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
+    icon: true,
     tags: true,
     path: false,
     lastUsed: true,
@@ -91,6 +93,33 @@ export default function BookmarkTable() {
   const data = useMemo(() => displayBookmarks, [displayBookmarks]);
 
   const columns = useMemo<ColumnDef<Bookmark>[]>(() => [
+    {
+      id: "icon",
+      header: "",
+      enableSorting: false,
+      enableResizing: false,
+      cell: (info) => {
+        const url = info.row.original.url;
+        return (
+          <div className="flex size-4 items-center">
+            {url
+              ? (
+                  <img
+                    loading="lazy"
+                    className="size-4 rounded-sm bg-muted"
+                    src={faviconURL(url)}
+                    alt=""
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.visibility = "hidden";
+                    }}
+                  />
+                )
+              : null}
+          </div>
+        );
+      },
+      size: 32,
+    },
     {
       id: "title",
       header: "Title",
