@@ -2,12 +2,12 @@
 
 /* background-color displayed before react app is loaded */
 :root {
-    background-color: oklch(98% 0 0);
+    background-color: oklch(97% 0 0);
     color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
     :root {
-        background-color: oklch(15% 0.02 270);
+        background-color: oklch(12% 0 0);
         color-scheme: dark;
     }
 }
@@ -66,32 +66,32 @@
     font-size: 16px;
     scrollbar-color: var(--color-muted-foreground) var(--color-muted);
 
-    --background: oklch(98% 0 0);
-    --foreground: oklch(20% 0.01 270);
+    --background: oklch(97% 0 0);
+    --foreground: oklch(15% 0 0);
 
     --card: oklch(100% 0 0);
-    --card-foreground: oklch(20% 0.01 270);
+    --card-foreground: oklch(15% 0 0);
 
     --popover: oklch(100% 0 0);
-    --popover-foreground: oklch(20% 0.01 270);
+    --popover-foreground: oklch(15% 0 0);
 
     --primary: oklch(60% 0.15 270);
     --primary-foreground: oklch(98% 0 0);
 
-    --secondary: oklch(95% 0.02 270);
-    --secondary-foreground: oklch(40% 0.05 270);
+    --secondary: oklch(94% 0 0);
+    --secondary-foreground: oklch(35% 0 0);
 
-    --muted: oklch(95% 0.02 270);
-    --muted-foreground: oklch(50% 0.02 270);
+    --muted: oklch(94% 0 0);
+    --muted-foreground: oklch(48% 0 0);
 
-    --accent: oklch(95% 0.02 270);
-    --accent-foreground: oklch(20% 0.01 270);
+    --accent: oklch(94% 0 0);
+    --accent-foreground: oklch(15% 0 0);
 
     --destructive: oklch(60% 0.25 25);
     --destructive-foreground: oklch(98% 0 0);
 
-    --border: oklch(90% 0.02 270);
-    --input: oklch(90% 0.02 270);
+    --border: oklch(88% 0 0);
+    --input: oklch(91% 0 0);
     --ring: oklch(60% 0.15 270);
 
     --radius: 0.5rem;
@@ -109,32 +109,32 @@
 
 /* Dark Theme */
 @variant dark {
-    --background: oklch(15% 0.02 270);
-    --foreground: oklch(95% 0.01 270);
+    --background: oklch(12% 0 0);
+    --foreground: oklch(93% 0 0);
 
-    --card: oklch(18% 0.02 270);
-    --card-foreground: oklch(95% 0.01 270);
+    --card: oklch(16% 0 0);
+    --card-foreground: oklch(93% 0 0);
 
-    --popover: oklch(18% 0.02 270);
-    --popover-foreground: oklch(95% 0.01 270);
+    --popover: oklch(17% 0 0);
+    --popover-foreground: oklch(93% 0 0);
 
     --primary: oklch(65% 0.15 270);
-    --primary-foreground: oklch(15% 0.02 270);
+    --primary-foreground: oklch(12% 0 0);
 
-    --secondary: oklch(25% 0.03 270);
-    --secondary-foreground: oklch(95% 0.01 270);
+    --secondary: oklch(22% 0 0);
+    --secondary-foreground: oklch(93% 0 0);
 
-    --muted: oklch(25% 0.03 270);
-    --muted-foreground: oklch(70% 0.02 270);
+    --muted: oklch(22% 0 0);
+    --muted-foreground: oklch(68% 0 0);
 
-    --accent: oklch(25% 0.03 270);
-    --accent-foreground: oklch(95% 0.01 270);
+    --accent: oklch(22% 0 0);
+    --accent-foreground: oklch(93% 0 0);
 
     --destructive: oklch(40% 0.2 25);
     --destructive-foreground: oklch(95% 0 0);
 
-    --border: oklch(30% 0.03 270);
-    --input: oklch(30% 0.03 270);
+    --border: oklch(26% 0 0);
+    --input: oklch(24% 0 0);
     --ring: oklch(50% 0.15 270);
 
     --radius: 0.5rem;

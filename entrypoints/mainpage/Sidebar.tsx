@@ -27,7 +27,7 @@ export default function Sidebar() {
                         <button
                             key={tab.id}
                             onClick={() => setMode(tab.id)}
-                            className={`flex flex-1 cursor-pointer items-center justify-center gap-1.5 px-2 py-2.5 text-sm font-medium transition-colors ${
+                            className={`flex flex-1 cursor-pointer items-center justify-center gap-1.5 px-2 py-1 text-sm font-medium transition-colors ${
                                 isActive
                                     ? "-mb-px border-b-2 border-primary bg-primary/10 text-primary"
                                     : "text-muted-foreground hover:bg-muted hover:text-foreground"

@@ -270,6 +270,13 @@ export default function SearchBar() {
                   e.preventDefault();
                   acceptSuggestion(suggestion);
                 }}
+                ref={(el) => {
+                  // Keep the highlighted option visible while arrowing
+                  // through a scrolled list.
+                  if (index === activeIndex && el) {
+                    el.scrollIntoView({ block: "nearest" });
+                  }
+                }}
               >
                 {suggestion.category && (
                   <span
