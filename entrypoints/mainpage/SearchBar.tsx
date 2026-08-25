@@ -142,6 +142,9 @@ export default function SearchBar() {
       }
     } else if (e.key === "Escape") {
       setDismissed(true);
+      // Deactivate the field entirely: blur so suggestions stay hidden
+      // until the user deliberately focuses again.
+      inputRef.current?.blur();
     }
   };
 
