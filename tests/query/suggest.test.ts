@@ -132,6 +132,36 @@ describe("suggest — values from real data", () => {
 });
 
 describe("suggest — token actions (caret inside existing token)", () => {
+  test("caret at token start counts as inside the token", () => {
+    const s = suggest('tag:"random"', 0, DATA);
+    expect(s[0].type).toBe("action");
+    expect(s[0].action).toBe("invert");
+    expect(s[1].action).toBe("remove");
+  });
+
+  test("caret right after a closed quote assumes a NEW token", () => {
+    const query = 'tag:"random"';
+    const s = suggest(query, query.length, DATA);
+    expect(s[0].type).toBe("key");
+    const url = s.find((x) => x.label === "url:")!;
+    // separating space is included in the insertion
+    expect(url.insert).toBe(' url:"');
+    expect(url.replaceFrom).toBe(query.length);
+    expect(url.replaceTo).toBe(query.length);
+  });
+
+  test("caret inside an OPEN quote keeps completion mode", () => {
+    const s = suggest('in:"dev/de', 10, DATA);
+    expect(s[0].type).toBe("value");
+    expect(s[0].insert).toBe('in:"dev/design"');
+  });
+
+  test("caret at end of UNQUOTED value keeps completion mode", () => {
+    const s = suggest("tag:new", 7, DATA);
+    expect(s[0].type).toBe("value");
+    expect(s.some((x) => x.insert?.includes("new_notes"))).toBe(true);
+  });
+
   test("first two suggestions are invert & remove", () => {
     const query = 'tag:"tech" url:x';
     const caret = 6; // inside first token

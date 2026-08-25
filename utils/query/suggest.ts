@@ -211,9 +211,10 @@ export const suggest = (
 ): Suggestion[] => {
   const parsed: ParsedQuery = parseQuery(query);
 
-  // 1. Token under caret (caret strictly inside, not at very end of query)?
+  // 1. Token under caret: caret anywhere from token start up to (but not
+  // including) its end counts as inside -> actions + completions.
   const covering = parsed.tokens.find(
-    (token) => caret > token.start && caret < token.end,
+    (token) => caret >= token.start && caret < token.end,
   );
 
   if (covering && covering.kind === "filter") {
@@ -264,7 +265,18 @@ export const suggest = (
   // 2. Fragment currently being typed (empty -> suggest all keys).
   const fragment = activeFragment(query, caret);
 
-  if (fragment.text === "") {
+  // Caret right after a fully quoted value means the token is complete:
+  // assume the user is starting a NEW token (insert with a space).
+  // Unquoted values keep completion mode — the user is probably typing.
+  const afterQuotedToken = parsed.tokens.some(
+    (token) =>
+      token.kind === "filter" &&
+      token.quoted &&
+      caret === token.end &&
+      query.charAt(caret - 1) === '"',
+  );
+
+  if (fragment.text === "" || afterQuotedToken) {
     return keySuggestions({
       negated: false,
       key: null,
@@ -274,6 +286,7 @@ export const suggest = (
       ...s,
       replaceFrom: caret,
       replaceTo: caret,
+      insert: (afterQuotedToken && fragment.text !== "" ? " " : "") + s.insert,
     }));
   }
 
