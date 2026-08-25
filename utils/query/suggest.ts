@@ -1,6 +1,6 @@
 import { parseQuery } from "./parser.ts";
 import { getKeySpec, KEY_SPECS } from "./registry.ts";
-import type { ParsedQuery } from "./types.ts";
+import type { FilterToken, ParsedQuery } from "./types.ts";
 
 /**
  * Caret-aware suggestion engine.
@@ -260,7 +260,7 @@ export const suggest = (
     // Existing key:value pairs, excluding the token under the caret itself.
     const existing = new Set(
       parsed.tokens
-        .filter((t) => t.kind === "filter" && t !== covering)
+        .filter((t): t is FilterToken => t.kind === "filter" && t !== covering)
         .map((t) => `${t.key}:${t.value.toLowerCase()}`),
     );
 

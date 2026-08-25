@@ -1,4 +1,4 @@
-import { globMatch, splitSegments } from "./glob.ts";
+import { globMatch, patternMatch, splitSegments } from "./glob.ts";
 import { matchesBounds, parseBounds } from "./bounds.ts";
 import type {
   BookmarkLike,
@@ -24,8 +24,17 @@ export interface KeySpec {
   validate?: (value: string) => boolean;
 }
 
+/** Substring/glob match against any candidate (url:, title:). */
 const textMatch = (pattern: string, candidates: string[]): boolean =>
   candidates.some((candidate) => globMatch(pattern, candidate));
+
+/**
+ * Name-like exact/glob match against any candidate (tag:, folder keys).
+ * Plain values must equal a candidate exactly (case-insensitive);
+ * `*` enables full-string wildcard matching.
+ */
+const nameMatch = (pattern: string, candidates: string[]): boolean =>
+  candidates.some((candidate) => patternMatch(pattern, candidate));
 
 /**
  * Match a "/"-separated folder pattern chain against a bookmark's ancestry.
@@ -53,7 +62,7 @@ const matchFolderChain = (
   // Try to anchor the chain at each position of the ancestry path.
   for (let offset = 0; offset <= names.length - segments.length; offset++) {
     const ok = segments.every(
-      (segment, i) => globMatch(segment, names[offset + i] ?? ""),
+      (segment, i) => patternMatch(segment, names[offset + i] ?? ""),
     );
     if (!ok) continue;
 
@@ -91,7 +100,7 @@ export const KEY_SPECS: KeySpec[] = [
     label: "tag",
     description: "bookmark tagged #tag in its title",
     kind: "text",
-    match: (b, v, ctx) => textMatch(v, ctx.tagsOf(b)),
+    match: (b, v, ctx) => nameMatch(v, ctx.tagsOf(b)),
   },
   {
     key: "url",

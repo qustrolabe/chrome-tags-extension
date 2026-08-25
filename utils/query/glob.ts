@@ -26,3 +26,16 @@ export const globMatch = (pattern: string, text: string): boolean => {
  */
 export const splitSegments = (value: string): string[] =>
   value.split("/").map((s) => s.trim()).filter((s) => s.length > 0);
+
+/**
+ * Name-like matching: `*` patterns are full-string globs,
+ * plain values must match EXACTLY (case-insensitive).
+ * Used by tag:, folder:, folder_strict: — unlike url:/title: which
+ * stay substring-based.
+ */
+export const patternMatch = (pattern: string, text: string): boolean => {
+  if (!pattern.includes("*")) {
+    return pattern.toLowerCase() === text.toLowerCase();
+  }
+  return globMatch(pattern, text);
+};

@@ -75,6 +75,24 @@ describe("engine — text keys", () => {
     expect(matches("tag:a tag:c", b)).toBe(false);
   });
 
+  test("tag matching is exact per name, not substring", () => {
+    expect(matches("tag:game", mkBookmark({ title: "x #gamedev" }))).toBe(false);
+    expect(matches("tag:gamedev", mkBookmark({ title: "x #gamedev" }))).toBe(true);
+    // wildcard reaches partial names
+    expect(matches("tag:game*", mkBookmark({ title: "x #gamedev" }))).toBe(true);
+  });
+
+  test("tags are case-insensitive and flat (slash is a normal char)", () => {
+    const b = mkBookmark({ title: "x #Godot #gamedev/abc" });
+    expect(matches("tag:godot", b)).toBe(true);
+    expect(matches("tag:GODOT", b)).toBe(true);
+    expect(matches('tag:"gamedev/abc"', b)).toBe(true);
+    // flat model: parent name does NOT match child tag
+    expect(matches("tag:gamedev", b)).toBe(false);
+    // glob escape hatch reaches children
+    expect(matches('tag:"gamedev/*"', b)).toBe(true);
+  });
+
   test("url and title substring + glob", () => {
     expect(matches("url:example.com", mkBookmark())).toBe(true);
     expect(matches("url:*page", mkBookmark())).toBe(true);

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useTracking } from "@/context/TrackingContext";
 import { computeFrecency } from "@/utils/tracking";
+import { buildTagIndex } from "@/utils/query/tags.ts";
 import {
   applyQuery,
   createMatchContext,
@@ -145,17 +146,10 @@ export const BookmarksManagerProvider = (
     );
   }, [allBookmarksFlat, sortOption, sortDirection, query, stats, matchContext]);
 
-  // Get all available tags from currently displayed bookmarks
-  // (used in displaying tag search suggestion)
-  const availableTags = displayBookmarks
-    .map((b) => b.title)
-    .flatMap((title) => title.split(" "))
-    .filter((word) => word.startsWith("#"))
-    .map((word) => word.slice(1))
-    .reduce((acc, tag) => {
-      acc[tag] = (acc[tag] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+  // Get all available tags from currently displayed bookmarks.
+  // Case-merged: "Godot" and "godot" are one entry (most common casing)
+  // with a combined count.
+  const availableTags = buildTagIndex(displayBookmarks);
 
   const fetchBookmarks = () => {
     browser.bookmarks.getTree().then((bookmarkTreeNodes) => {

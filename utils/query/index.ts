@@ -10,6 +10,7 @@ export * from "./editing.ts";
 import type { BookmarkLike, MatchContext } from "./types.ts";
 import { parseQuery } from "./parser.ts";
 import { matchBookmark } from "./engine.ts";
+import { extractTags } from "./tags.ts";
 import type { SuggestData, Suggestion } from "./suggest.ts";
 import { suggest } from "./suggest.ts";
 
@@ -25,10 +26,6 @@ export const createMatchContext = (
       .map((b) => [b.id, b.title]),
   );
   const ancestorsByNodeId = new Map<string, string[]>();
-
-  const extractTags = (title: string): string[] =>
-    title.split(/\s+/).filter((word) => word.startsWith("#"))
-      .map((word) => word.slice(1));
 
   return {
     now,
