@@ -204,13 +204,14 @@ const valueSuggestions = (
           push(chainPrefix + name, spec.description),
         );
 
-      // "root" reaches top-level folders, which have no usable name match.
+      // "~" reaches top-level folders; it cannot collide with a real
+      // folder name and isn't reachable via glob matching.
       if (
         completed.length === 0 &&
         !folderConstraintNodes &&
-        (partial === "" || "root".startsWith(partial))
+        partial === ""
       ) {
-        push("root", "top-level folders");
+        push("~", "top-level folders");
       }
     } else {
       // url/title: no meaningful static sources; offer wildcard hint.

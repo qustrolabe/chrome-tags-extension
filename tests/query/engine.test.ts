@@ -127,20 +127,29 @@ describe("engine — text keys", () => {
     expect(matches('-folder:"Projects"', mkBookmark({ id: "11" }))).toBe(false);
   });
 
-  test("root matches top-level folders", () => {
+  test("~ matches top-level folders", () => {
     const rootCtx = mkCtx({
       rootFolderIds: new Set(["1"]), // "Bookmarks Bar" is top-level
     });
     // bookmark 10's parent is folder 5 (Projects, not a root folder)
     expect(
-      matches('folder_strict:"root"', mkBookmark({ id: "10" }), rootCtx),
+      matches('folder_strict:"~"', mkBookmark({ id: "10" }), rootCtx),
     ).toBe(false);
     // bookmark directly inside Bookmarks Bar
     expect(
-      matches('folder_strict:"root"', mkBookmark({ id: "20", parentId: "1" }), rootCtx),
+      matches('folder_strict:"~"', mkBookmark({ id: "20", parentId: "1" }), rootCtx),
     ).toBe(true);
     // recursive variant reaches deeper bookmarks of a root folder
-    expect(matches('in:"root"', mkBookmark({ id: "11" }), rootCtx)).toBe(true);
+    expect(matches('in:"~"', mkBookmark({ id: "11" }), rootCtx)).toBe(true);
+    // a folder literally named "root" is an ordinary name again
+    const namedRoot = mkCtx({
+      ...rootCtx,
+      folderNameById: new Map([...rootCtx.folderNameById, ["9", "root"]]),
+      ancestorIdsOf: (b) => (b.id === "30" ? ["9"] : rootCtx.ancestorIdsOf(b)),
+    });
+    expect(
+      matches('folder_strict:"root"', mkBookmark({ id: "30", parentId: "9" }), namedRoot),
+    ).toBe(true);
   });
 });
 

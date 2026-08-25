@@ -51,8 +51,10 @@ const matchFolderChain = (
   ctx: MatchContext,
   strict: boolean,
 ): boolean => {
-  // Special value "root": the top-level folders (Bookmarks Bar etc.).
-  if (value.trim().toLowerCase() === "root") {
+  // Special value "~": the top-level folders (Bookmarks Bar etc.).
+  // Deliberately not "root" — a user folder could legitimately be named
+  // that, and "~" can't collide with a real name.
+  if (value.trim() === "~") {
     const rootIds = ctx.rootFolderIds;
     if (!rootIds || rootIds.size === 0) return false;
     if (strict) {
