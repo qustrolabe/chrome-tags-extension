@@ -71,14 +71,16 @@ export default function SearchBar() {
       ? highlightedIndex
       : -1;
   const updateQuery = (next: string, caretAfter?: number) => {
+    // Compute the final caret synchronously and clamp it: the suggestion
+    // memo must never recompute with a stale or out-of-range caret.
+    const pos = Math.min(caretAfter ?? next.length, next.length);
     setQuery(next);
+    setCaret(pos);
     setDismissed(false);
     requestAnimationFrame(() => {
       const input = inputRef.current;
       if (!input) return;
-      const pos = caretAfter ?? next.length;
       input.setSelectionRange(pos, pos);
-      setCaret(pos);
       input.focus();
     });
   };
@@ -100,7 +102,10 @@ export default function SearchBar() {
         query.slice(0, suggestion.replaceFrom) +
         suggestion.insert +
         query.slice(suggestion.replaceTo);
-      updateQuery(next, suggestion.replaceFrom + suggestion.insert.length + 1);
+      updateQuery(
+        next,
+        suggestion.replaceFrom + suggestion.insert.length,
+      );
     }
   };
 
