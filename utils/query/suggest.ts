@@ -209,7 +209,7 @@ const valueSuggestions = (
       if (
         completed.length === 0 &&
         !folderConstraintNodes &&
-        partial === ""
+        "~".startsWith(partial)
       ) {
         push("~", "top-level folders");
       }
@@ -291,6 +291,20 @@ const bareSuggestions = (
         pushToken(text, "folder", "in this folder or any subfolder");
       }
     });
+
+  // The "~" top-level shortcut, offered on an empty fragment or "~".
+  if ("~".startsWith(prefix)) {
+    for (const key of ["folder", "folder_strict"]) {
+      const text = `${neg}${key}:"~"`;
+      if (!existing.has(`${key}:~`)) {
+        pushToken(
+          text,
+          "folder",
+          key === "folder" ? "top-level folders" : "top-level folders directly",
+        );
+      }
+    }
+  }
 
   // Number-ish fragments also surface date/number templates across keys.
   if (/^[<>=]?\d/.test(prefix)) {
@@ -387,16 +401,17 @@ export const suggest = (
     // Other folder tokens in the query scope folder suggestions to their
     // subtree (e.g. with folder:"Projects" present, suggest only subfolders
     // of Projects).
-    const folderConstraintNodes = resolveChain(
-      allNodes(data.folderTree),
-      parsed.tokens.flatMap((t) =>
-        t.kind === "filter" &&
-        t !== covering &&
-        (t.key === "folder" || t.key === "folder_strict")
-          ? splitSegments(t.value)
-          : [],
-      ),
+    const constraintSegments = parsed.tokens.flatMap((t) =>
+      t.kind === "filter" &&
+      t !== covering &&
+      (t.key === "folder" || t.key === "folder_strict")
+        ? splitSegments(t.value)
+        : [],
     );
+    const folderConstraintNodes =
+      constraintSegments.length > 0
+        ? resolveChain(allNodes(data.folderTree), constraintSegments)
+        : null;
 
     // Value completions for the partial value inside this token.
     const innerCaret = caret - covering.start;
@@ -482,16 +497,17 @@ export const suggest = (
   );
 
   // Folder tokens in the query scope folder suggestions to their subtree.
-  const folderConstraintNodes = resolveChain(
-    allNodes(data.folderTree),
-    parsed.tokens.flatMap((t) =>
-      t.kind === "filter" &&
-      notBeingEdited(t) &&
-      (t.key === "folder" || t.key === "folder_strict")
-        ? splitSegments(t.value)
-        : [],
-    ),
+  const constraintSegments = parsed.tokens.flatMap((t) =>
+    t.kind === "filter" &&
+    notBeingEdited(t) &&
+    (t.key === "folder" || t.key === "folder_strict")
+      ? splitSegments(t.value)
+      : [],
   );
+  const folderConstraintNodes =
+    constraintSegments.length > 0
+      ? resolveChain(allNodes(data.folderTree), constraintSegments)
+      : null;
 
   if (frag.key === null) {
     return bareSuggestions(frag, data, existing).map((s) => ({

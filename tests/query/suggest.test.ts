@@ -231,6 +231,18 @@ describe("suggest — token actions (caret inside existing token)", () => {
     expect(s2.map((x) => x.insert)).toContain("visits:>10");
   });
 
+  test("typing ~ suggests the top-level folder token", () => {
+    // bare "~"
+    const s = suggest("~", 1, DATA);
+    expect(s.some((x) => x.insert === 'folder:"~"')).toBe(true);
+    // after folder_strict: (empty value)
+    const s2 = suggest('folder_strict:"', 15, DATA);
+    expect(s2.some((x) => x.insert === 'folder_strict:"~"')).toBe(true);
+    // caret after the closed quote -> completed token, next-token mode
+    const s3 = suggest('folder_strict:"~"', 17, DATA);
+    expect(s3[0].type).toBe("key");
+  });
+
   test("first two suggestions are invert & remove", () => {
     const query = 'tag:"tech" url:x';
     const caret = 6; // inside first token
