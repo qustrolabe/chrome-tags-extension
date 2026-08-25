@@ -47,7 +47,7 @@ const tokenStyle = (token: FilterToken): string => {
   // after it (negative margin cancels the padding's layout advance),
   // which keeps the mirror layer aligned with the real input text.
   const base = TOKEN_COLORS[token.key] ?? "bg-neutral-500/15";
-  const shape = "rounded-[5px] px-1 -mx-1";
+  const shape = "rounded-[5px] px-0.5 -mx-0.5 -my-1 py-1.5";
   return token.negated
     ? `${base} ${shape} line-through opacity-80`
     : `${base} ${shape}`;
