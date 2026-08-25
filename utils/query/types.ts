@@ -25,6 +25,11 @@ export type FilterToken = {
   negated: boolean;
   /** Original value was quoted; keep quoting on re-serialization. */
   quoted?: boolean;
+  /**
+   * Unterminated quoted value (e.g. typing `tag:"new`). Incomplete
+   * tokens never filter anything and never trigger token-actions.
+   */
+  incomplete?: boolean;
   start: number;
   end: number;
 };

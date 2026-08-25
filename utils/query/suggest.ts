@@ -220,8 +220,7 @@ export const suggest = (
 
   /** A token is complete when it isn't an unterminated quoted value. */
   const isCompleteToken = (token: ParsedQuery["tokens"][number]) =>
-    !(token.kind === "filter" && token.quoted) ||
-    query.charAt(token.end - 1) === '"';
+    !(token.kind === "filter" && token.incomplete);
 
   // 1. Token under caret: caret anywhere from token start up to (but not
   // including) its end counts as inside -> actions + completions.
@@ -309,17 +308,14 @@ export const suggest = (
 
   // Caret right after a fully quoted value means the token is complete:
   // assume the user is starting a NEW token (insert with a space).
-  // Distinguish closing quote from opening quote: a completed quoted
-  // value's raw text contains BOTH quotes (`tag:"x"` vs `tag:"`).
-  // Unquoted values keep completion mode — the user is probably typing.
-  const afterQuotedToken = parsed.tokens.some((token) => {
-    if (token.kind !== "filter" || !token.quoted || caret !== token.end) {
-      return false;
-    }
-    if (query.charAt(caret - 1) !== '"') return false;
-    const rawText = query.slice(token.start, token.end);
-    return (rawText.match(/"/g)?.length ?? 0) >= 2;
-  });
+  // Unterminated quoted tokens are mid-typing -> completion mode instead.
+  const afterQuotedToken = parsed.tokens.some(
+    (token) =>
+      token.kind === "filter" &&
+      token.quoted &&
+      !token.incomplete &&
+      caret === token.end,
+  );
 
   if (fragment.text === "" || afterQuotedToken) {
     return keySuggestions({

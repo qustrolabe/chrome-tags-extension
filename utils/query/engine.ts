@@ -11,6 +11,8 @@ const matchToken = (
   bookmark: BookmarkLike,
   ctx: MatchContext,
 ): boolean => {
+  // Incomplete tokens (unterminated quote) never filter anything.
+  if (token.kind === "filter" && token.incomplete) return true;
   const positive =
     token.kind === "term"
       ? (bookmark.title.toLowerCase().includes(token.text.toLowerCase()) ||

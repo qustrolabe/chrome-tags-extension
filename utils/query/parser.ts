@@ -19,6 +19,8 @@ interface RawToken {
   value: string;
   /** Value was written in quotes; preserved on re-serialization. */
   quoted: boolean;
+  /** Unterminated quote — token is still being typed. */
+  incomplete: boolean;
   start: number;
   end: number;
 }
@@ -49,14 +51,16 @@ export const scan = (query: string): RawToken[] => {
       i += keyMatch[0].length + 1; // skip ':'
     }
 
-    let value: string;
-    let quoted: boolean;
+    let value = "";
+    let quoted = false;
+    let incomplete = false;
     if (query[i] === '"') {
       quoted = true;
       const close = query.indexOf('"', i + 1);
       if (close === -1) {
         // Unterminated quote: take the rest.
         value = query.slice(i + 1);
+        incomplete = true;
         i = query.length;
       } else {
         value = query.slice(i + 1, close);
@@ -68,10 +72,11 @@ export const scan = (query: string): RawToken[] => {
       if (!bareMatch) continue; // lone '-' or 'key:' — no value
       value = bareMatch[0];
       quoted = false;
+      incomplete = false;
       i += bareMatch[0].length;
     }
 
-    tokens.push({ negated, key, value, quoted, start, end: i });
+    tokens.push({ negated, key, value, quoted, incomplete, start, end: i });
   }
 
   return tokens;
@@ -91,6 +96,7 @@ export const parseQuery = (query: string): ParsedQuery => {
         value: raw.value,
         negated: raw.negated,
         quoted: raw.quoted,
+        incomplete: raw.incomplete,
         start: raw.start,
         end: raw.end,
       } satisfies FilterToken;
@@ -115,6 +121,7 @@ export const serializeValue = (value: string): string =>
 export const serializeToken = (token: QueryToken): string => {
   const prefix = token.negated ? "-" : "";
   if (token.kind === "term") return `${prefix}${token.text}`;
+  if (token.incomplete) return `${prefix}${token.key}:"${token.value}`;
   const needsQuotes =
     token.quoted || /[\s]/.test(token.value) || token.value === "";
   const value = needsQuotes ? `"${token.value}"` : token.value;

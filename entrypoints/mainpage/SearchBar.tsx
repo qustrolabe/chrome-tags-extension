@@ -159,9 +159,10 @@ export default function SearchBar() {
 
   /** Active filter tokens shown as removable chips under the input. */
   const chips = useMemo(
-    () => parseQuery(query).tokens.filter(
-      (t): t is FilterToken => t.kind === "filter",
-    ),
+    () =>
+      parseQuery(query).tokens.filter(
+        (t): t is FilterToken => t.kind === "filter" && !t.incomplete,
+      ),
     [query],
   );
 
@@ -219,7 +220,7 @@ export default function SearchBar() {
               >
                 {suggestion.category && (
                   <span
-                    className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${capsuleStyle(suggestion.category)}`}
+                    className={`shrink-0 rounded-[3px] px-1.5 py-0.5 text-[10px] font-medium ${capsuleStyle(suggestion.category)}`}
                   >
                     {suggestion.category}
                   </span>
@@ -243,7 +244,7 @@ export default function SearchBar() {
           {chips.map((token) => (
             <span
               key={`${token.start}-${token.key}-${token.value}`}
-              className={`flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs select-none ${
+              className={`flex items-center gap-1 rounded-[3px] px-1.5 py-0.5 text-xs select-none ${
                 token.negated
                   ? `${capsuleStyle(token.key)} line-through opacity-70 outline-1 outline-destructive`
                   : capsuleStyle(token.key)
