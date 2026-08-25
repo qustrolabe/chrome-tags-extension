@@ -80,11 +80,11 @@ describe("suggest — values from real data", () => {
   test("tags filtered by prefix, sorted by count, with comment", () => {
     const s = suggest("tag:new", 7, DATA);
     const labels = s.map((x) => x.label);
-    expect(labels).toContain("tag:new_notes");
-    expect(labels).toContain("tag:new_ideas");
+    expect(labels).toContain('tag:"new_notes"');
+    expect(labels).toContain('tag:"new_ideas"');
     // sorted by count desc
-    const notesIdx = labels.indexOf("tag:new_notes");
-    const ideasIdx = labels.indexOf("tag:new_ideas");
+    const notesIdx = labels.indexOf('tag:"new_notes"');
+    const ideasIdx = labels.indexOf('tag:"new_ideas"');
     expect(notesIdx).toBeLessThan(ideasIdx);
     expect(s[0].comment).toMatch(/\d+ bookmarks/);
   });

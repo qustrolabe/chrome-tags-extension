@@ -113,14 +113,20 @@ export default function SearchBar() {
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setDismissed(false);
-      setHighlightedIndex((prev) =>
-        prev === suggestions.length - 1 ? 0 : prev + 1,
-      );
+      setHighlightedIndex((prev) => {
+        const len = suggestions.length;
+        if (len === 0) return -1;
+        const next = Math.max(prev, -1) + 1;
+        return next >= len ? 0 : next;
+      });
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      setHighlightedIndex((prev) =>
-        prev <= 0 ? suggestions.length - 1 : prev - 1,
-      );
+      setHighlightedIndex((prev) => {
+        const len = suggestions.length;
+        if (len === 0) return -1;
+        const next = Math.min(prev, len) - 1;
+        return next < 0 ? len - 1 : next;
+      });
     } else if (e.key === "Enter" || e.key === "Tab") {
       const index = e.key === "Enter"
         ? activeIndex
@@ -189,8 +195,11 @@ export default function SearchBar() {
                     ? "bg-muted"
                     : "hover:bg-muted"
                 }`}
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => acceptSuggestion(suggestion)}
+                onMouseDown={(e) => {
+                  // Accept on mousedown: immune to blur/dismiss races.
+                  e.preventDefault();
+                  acceptSuggestion(suggestion);
+                }}
               >
                 {suggestion.category && (
                   <span

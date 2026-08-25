@@ -102,11 +102,14 @@ const parseFragment = (text: string): Fragment => {
 };
 
 const buildFilterText = (
+  specKind: string,
   frag: Fragment,
   key: string,
   value: string,
 ): string => {
-  const needsQuotes = frag.quoted || /[\s]/.test(value) || value === "";
+  // Text values default to quoted form; date/number templates stay bare.
+  const needsQuotes =
+    specKind === "text" || frag.quoted || /[\s]/.test(value) || value === "";
   const serialized = needsQuotes ? `"${value}"` : value;
   return `${frag.negated ? "-" : ""}${key}:${serialized}`;
 };
@@ -129,12 +132,12 @@ const valueSuggestions = (
   ) => {
     out.push({
       type: "value",
-      label: buildFilterText(frag, key, value),
+      label: buildFilterText(spec.kind, frag, key, value),
       category,
       comment,
       replaceFrom: -1, // filled by caller
       replaceTo: -1,
-      insert: buildFilterText(frag, key, value),
+      insert: buildFilterText(spec.kind, frag, key, value),
     });
   };
 
@@ -211,10 +214,20 @@ export const suggest = (
 ): Suggestion[] => {
   const parsed: ParsedQuery = parseQuery(query);
 
+  /** A token is complete when it isn't an unterminated quoted value. */
+  const isCompleteToken = (token: ParsedQuery["tokens"][number]) =>
+    !(token.kind === "filter" && token.quoted) ||
+    query.charAt(token.end - 1) === '"';
+
   // 1. Token under caret: caret anywhere from token start up to (but not
   // including) its end counts as inside -> actions + completions.
+  // Incomplete tokens (e.g. typing inside `tag:"new`) are NOT "inside":
+  // the user is mid-typing, so fragment/value completion mode applies.
   const covering = parsed.tokens.find(
-    (token) => caret >= token.start && caret < token.end,
+    (token) =>
+      caret >= token.start &&
+      caret < token.end &&
+      isCompleteToken(token),
   );
 
   if (covering && covering.kind === "filter") {
