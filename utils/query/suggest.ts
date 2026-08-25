@@ -1,5 +1,14 @@
 import { parseQuery } from "./parser.ts";
 import { getKeySpec, KEY_SPECS } from "./registry.ts";
+import { patternMatch, splitSegments } from "./glob.ts";
+import {
+  allNodes,
+  childNames,
+  descendantNames,
+  resolveChain,
+  type FolderSuggestNode,
+} from "./folders.ts";
+import type { FilterToken, ParsedQuery } from "./types.ts";
 import type { FilterToken, ParsedQuery } from "./types.ts";
 
 /**
@@ -14,10 +23,10 @@ import type { FilterToken, ParsedQuery } from "./types.ts";
  */
 
 export interface SuggestData {
-  /** tag -> bookmark count */
+  /** tag -> bookmark count (keys are display casings) */
   tags: Record<string, number>;
-  /** All distinct folder names in the tree. */
-  folderNames: string[];
+  /** Folder tree for folder:/folder_strict: suggestions. */
+  folderTree: FolderSuggestNode[];
 }
 
 export interface Suggestion {
@@ -121,6 +130,8 @@ const valueSuggestions = (
   data: SuggestData,
   /** Existing "key:value" pairs in the query (lowercased) to skip. */
   existing: Set<string>,
+  /** Folder nodes that other folder tokens constrain suggestions to. */
+  folderConstraintNodes: FolderSuggestNode[] | null,
 ): Suggestion[] => {
   const spec = getKeySpec(key);
   if (!spec) return [];
@@ -147,9 +158,6 @@ const valueSuggestions = (
 
   if (spec.kind === "text") {
     const isFolderKey = key === "folder" || key === "folder_strict";
-    // Multi-segment chains: only complete the last segment.
-    const segments = frag.valuePrefix.split("/");
-    const lastSegment = (segments[segments.length - 1] ?? "").toLowerCase();
 
     if (key === "tag") {
       Object.entries(data.tags)
@@ -159,11 +167,38 @@ const valueSuggestions = (
           push(tag, `${count} bookmarks`),
         );
     } else if (isFolderKey) {
-      // Complete against the accumulated chain prefix.
+      // Split into completed chain segments + the partial segment being
+      // typed (a trailing "/" means an empty partial).
+      const endsWithSlash = frag.valuePrefix.endsWith("/");
+      const segments = splitSegments(frag.valuePrefix);
+      const partial = endsWithSlash
+        ? ""
+        : (segments[segments.length - 1] ?? "").toLowerCase();
+      const completed = endsWithSlash ? segments : segments.slice(0, -1);
       const chainPrefix =
-        segments.length > 1 ? segments.slice(0, -1).join("/") + "/" : "";
-      data.folderNames
-        .filter((name) => name.toLowerCase().startsWith(lastSegment))
+        completed.length > 0 ? completed.join("/") + "/" : "";
+
+      // Scope candidates:
+      // - inside a chain -> children of the resolved chain (anchored
+      //   anywhere in the tree),
+      // - constrained by another folder token -> children of those nodes,
+      // - otherwise -> every folder name in the tree.
+      let candidateNames: string[];
+      if (completed.length > 0 || folderConstraintNodes) {
+        const bases =
+          completed.length > 0
+            ? resolveChain(
+                folderConstraintNodes ?? allNodes(data.folderTree),
+                completed,
+              )
+            : folderConstraintNodes ?? [];
+        candidateNames = childNames(bases);
+      } else {
+        candidateNames = descendantNames(data.folderTree);
+      }
+
+      candidateNames
+        .filter((name) => name.toLowerCase().startsWith(partial))
         .sort()
         .forEach((name) =>
           push(chainPrefix + name, spec.description),
@@ -263,6 +298,20 @@ export const suggest = (
         .map((t) => `${t.key}:${t.value.toLowerCase()}`),
     );
 
+    // Other folder tokens in the query scope folder suggestions to their
+    // subtree (e.g. with folder:"Projects" present, suggest only subfolders
+    // of Projects).
+    const folderConstraintNodes = resolveChain(
+      allNodes(data.folderTree),
+      parsed.tokens.flatMap((t) =>
+        t.kind === "filter" &&
+        t !== covering &&
+        (t.key === "folder" || t.key === "folder_strict")
+          ? splitSegments(t.value)
+          : [],
+      ),
+    );
+
     // Value completions for the partial value inside this token.
     const innerCaret = caret - covering.start;
     const tokenText = query.slice(covering.start, covering.end);
@@ -280,6 +329,7 @@ export const suggest = (
       virtualFrag,
       data,
       existing,
+      folderConstraintNodes,
     ).map((s) => ({
       ...s,
       replaceFrom: covering.start,
@@ -333,11 +383,28 @@ export const suggest = (
 
   const frag = parseFragment(fragment.text);
 
+  // Tokens overlapping the fragment being typed are mid-edit — they must
+  // not act as constraints or dedupe sources.
+  const notBeingEdited = (t: FilterToken) =>
+    t.start >= caret || t.end <= fragment.start;
+
   // Exclude values already present anywhere else in the query.
   const existing = new Set(
     parsed.tokens
-      .filter((t) => t.kind === "filter")
+      .filter((t): t is FilterToken => t.kind === "filter" && notBeingEdited(t))
       .map((t) => `${t.key}:${t.value.toLowerCase()}`),
+  );
+
+  // Folder tokens in the query scope folder suggestions to their subtree.
+  const folderConstraintNodes = resolveChain(
+    allNodes(data.folderTree),
+    parsed.tokens.flatMap((t) =>
+      t.kind === "filter" &&
+      notBeingEdited(t) &&
+      (t.key === "folder" || t.key === "folder_strict")
+        ? splitSegments(t.value)
+        : [],
+    ),
   );
 
   if (frag.key === null) {
@@ -348,7 +415,7 @@ export const suggest = (
     }));
   }
 
-  return valueSuggestions(frag.key, frag, data, existing).map((s) => ({
+  return valueSuggestions(frag.key, frag, data, existing, folderConstraintNodes).map((s) => ({
     ...s,
     replaceFrom: fragment.start,
     replaceTo: caret,

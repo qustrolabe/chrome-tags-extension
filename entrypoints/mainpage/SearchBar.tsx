@@ -2,6 +2,7 @@ import React, { useMemo, useRef, useState } from "react";
 import { useBookmarks } from "@/context/BookmarksContext.tsx";
 import { parseQuery } from "@/utils/query/parser.ts";
 import type { FilterToken } from "@/utils/query/types.ts";
+import { buildFolderTree } from "@/utils/query/folders.ts";
 import {
   invertTokenAt,
   removeTokenAt,
@@ -46,13 +47,8 @@ export default function SearchBar() {
   const [dismissed, setDismissed] = useState(false);
   const [focused, setFocused] = useState(false);
 
-  const folderNames = useMemo(
-    () =>
-      [...new Set(
-        allBookmarks
-          .filter((b) => b.url === undefined && b.title)
-          .map((b) => b.title),
-      )].sort(),
+  const folderTree = useMemo(
+    () => buildFolderTree(allBookmarks),
     [allBookmarks],
   );
 
@@ -60,9 +56,9 @@ export default function SearchBar() {
   const suggestions: Suggestion[] = useMemo(
     () =>
       focused && !dismissed
-        ? suggestFor(query, caret, { tags: availableTags, folderNames })
+        ? suggestFor(query, caret, { tags: availableTags, folderTree })
         : [],
-    [query, caret, availableTags, folderNames, dismissed, focused],
+    [query, caret, availableTags, folderTree, dismissed, focused],
   );
 
   // Derived: keep the highlight within bounds instead of resetting via effect.

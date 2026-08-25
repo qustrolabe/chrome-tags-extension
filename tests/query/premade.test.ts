@@ -17,7 +17,7 @@ const BOOKMARKS = [
 const CTX = createMatchContext(BOOKMARKS, {}, 1_800_000_000_000);
 const DATA = {
   tags: { godot: 1, gamedev: 1, rust: 1, lang: 1, news: 1 },
-  folderNames: ["Bookmarks Bar"],
+  folderTree: [{ name: "Bookmarks Bar", children: [] }],
 };
 
 const results = (query: string) =>

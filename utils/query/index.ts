@@ -26,16 +26,16 @@ export const createMatchContext = (
       .map((b) => [b.id, b.title]),
   );
   const ancestorsByNodeId = new Map<string, string[]>();
+  const byId = new Map(allBookmarks.map((node) => [node.id, node]));
 
   return {
     now,
     tagsOf: (b) => extractTags(b.title),
     ancestorIdsOf: (b) => {
-      let ids = ancestorsByNodeId.get(b.id);
-      if (ids) return ids;
-      // Lazily walk parents.
-      const byId = new Map(allBookmarks.map((node) => [node.id, node]));
-      ids = [];
+      const cached = ancestorsByNodeId.get(b.id);
+      if (cached) return cached;
+      // Walk parents via the hoisted lookup (built once per snapshot).
+      const ids: string[] = [];
       let current = b.parentId ? byId.get(b.parentId) : undefined;
       while (current) {
         ids.push(current.id);
