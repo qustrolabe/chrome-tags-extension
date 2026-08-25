@@ -184,10 +184,12 @@ export default function SidebarFolderTree() {
     const getFilterState = (
         folder: FolderNode,
     ): "positive" | "negative" | "strict" | null => {
-        const recursiveState = tokenState(query, "in", folder.title);
+        const recursiveState = tokenState(query, "folder", folder.title);
         if (recursiveState === "negative") return "negative";
         if (recursiveState === "positive") return "positive";
-        if (tokenState(query, "folder", folder.title) !== null) return "strict";
+        if (tokenState(query, "folder_strict", folder.title) !== null) {
+            return "strict";
+        }
         return null;
     };
 
@@ -197,9 +199,9 @@ export default function SidebarFolderTree() {
         strict: boolean,
     ) => {
         // Clear both variants first, then set the requested one.
-        let next = setTokenState(query, "in", folder.title, null);
-        next = setTokenState(next, "folder", folder.title, null);
-        const key = strict ? "folder" : "in";
+        let next = setTokenState(query, "folder", folder.title, null);
+        next = setTokenState(next, "folder_strict", folder.title, null);
+        const key = strict ? "folder_strict" : "folder";
         next = setTokenState(
             next,
             key,

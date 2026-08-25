@@ -82,31 +82,31 @@ describe("engine — text keys", () => {
     expect(matches("title:Some*", mkBookmark())).toBe(true);
   });
 
-  test("folder strict — direct parent only", () => {
+  test("folder_strict — direct parent only", () => {
     // bookmark 10 sits directly in folder 5 ("Projects")
-    expect(matches('folder:"Projects"', mkBookmark({ id: "10" }))).toBe(true);
+    expect(matches('folder_strict:"Projects"', mkBookmark({ id: "10" }))).toBe(true);
     // bookmark 11 is deeper (inside dev inside Projects)
-    expect(matches('folder:"Projects"', mkBookmark({ id: "11" }))).toBe(false);
+    expect(matches('folder_strict:"Projects"', mkBookmark({ id: "11" }))).toBe(false);
     expect(
-      matches('folder:"Projects/dev"', mkBookmark({ id: "11" })),
+      matches('folder_strict:"Projects/dev"', mkBookmark({ id: "11" })),
     ).toBe(true);
   });
 
-  test("in — recursive", () => {
-    expect(matches('in:"Projects"', mkBookmark({ id: "10" }))).toBe(true);
-    expect(matches('in:"Projects"', mkBookmark({ id: "11" }))).toBe(true);
-    expect(matches('in:"dev"', mkBookmark({ id: "11" }))).toBe(true);
-    expect(matches('in:"dev"', mkBookmark({ id: "10" }))).toBe(false);
+  test("folder — recursive", () => {
+    expect(matches('folder:"Projects"', mkBookmark({ id: "10" }))).toBe(true);
+    expect(matches('folder:"Projects"', mkBookmark({ id: "11" }))).toBe(true);
+    expect(matches('folder:"dev"', mkBookmark({ id: "11" }))).toBe(true);
+    expect(matches('folder:"dev"', mkBookmark({ id: "10" }))).toBe(false);
   });
 
-  test("folder/in support wildcards", () => {
-    expect(matches('folder:"Pro*"', mkBookmark({ id: "10" }))).toBe(true);
-    expect(matches('in:"Pro*"', mkBookmark({ id: "11" }))).toBe(true);
-    expect(matches('in:"*jects"', mkBookmark({ id: "10" }))).toBe(true);
+  test("folder/folder_strict support wildcards", () => {
+    expect(matches('folder_strict:"Pro*"', mkBookmark({ id: "10" }))).toBe(true);
+    expect(matches('folder:"Pro*"', mkBookmark({ id: "11" }))).toBe(true);
+    expect(matches('folder:"*jects"', mkBookmark({ id: "10" }))).toBe(true);
   });
 
   test("negated folder excludes subtree", () => {
-    expect(matches('-in:"Projects"', mkBookmark({ id: "11" }))).toBe(false);
+    expect(matches('-folder:"Projects"', mkBookmark({ id: "11" }))).toBe(false);
   });
 });
 
@@ -161,7 +161,7 @@ describe("engine — numbers & stats", () => {
 describe("engine — combinations", () => {
   test("full realistic query", () => {
     const query =
-      'url:"example" tag:"tech" -tag:"web" in:"Projects" last_used:<1w visits:>5';
+      'url:"example" tag:"tech" -tag:"web" folder:"Projects" last_used:<1w visits:>5';
     expect(matches(query, mkBookmark())).toBe(true);
 
     const failing = 'url:"example" tag:"tech" -tag:"web" title:"zzz"';

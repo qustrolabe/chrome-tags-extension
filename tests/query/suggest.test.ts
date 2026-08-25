@@ -90,20 +90,21 @@ describe("suggest — values from real data", () => {
   });
 
   test("folders suggest names with depth description comment", () => {
-    const sIn = suggest('in:"Pro', 7, DATA);
+    const sIn = suggest('folder:"Pro', 11, DATA);
     expect(sIn.some((x) => x.insert?.includes("Projects"))).toBe(true);
     expect(sIn[0].comment).toContain("subfolder");
 
-    const sFolder = suggest('folder:"Pro', 11, DATA);
+    const sFolder = suggest('folder_strict:"Pro', 19, DATA);
     expect(sFolder.some((x) => x.insert?.includes("Projects"))).toBe(true);
     expect(sFolder[0].comment).toContain("directly");
   });
 
   test("multi-segment chain completes last segment", () => {
-    // user typed in:"dev/ — should complete subfolder names under dev
-    const s = suggest('in:"dev/de', 10, DATA);
+    // user typed folder:"dev/de — should complete subfolder names under dev
+    const query = 'folder:"dev/de';
+    const s = suggest(query, query.length, DATA);
     expect(s.length).toBeGreaterThan(0);
-    expect(s[0].insert).toBe('in:"dev/design"');
+    expect(s[0].insert).toBe('folder:"dev/design"');
   });
 
   test("dates get premade templates with grey comments", () => {
@@ -151,9 +152,10 @@ describe("suggest — token actions (caret inside existing token)", () => {
   });
 
   test("caret inside an OPEN quote keeps completion mode", () => {
-    const s = suggest('in:"dev/de', 10, DATA);
+    const query = 'folder:"dev/de';
+    const s = suggest(query, query.length, DATA);
     expect(s[0].type).toBe("value");
-    expect(s[0].insert).toBe('in:"dev/design"');
+    expect(s[0].insert).toBe('folder:"dev/design"');
   });
 
   test("caret at end of UNQUOTED value keeps completion mode", () => {
@@ -204,3 +206,4 @@ describe("suggest — token actions (caret inside existing token)", () => {
     ).not.toBe('tag:"new"'.slice(0, caret));
   });
 });
+

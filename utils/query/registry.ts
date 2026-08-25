@@ -160,16 +160,16 @@ export const KEY_SPECS: KeySpec[] = [
   {
     key: "folder",
     label: "folder",
-    description: 'in this folder directly, not deeper',
-    kind: "text",
-    match: (b, v, ctx) => matchFolderChain(b, v, ctx, true),
-  },
-  {
-    key: "in",
-    label: "in",
-    description: 'in this folder or any subfolder',
+    description: "in this folder or any subfolder",
     kind: "text",
     match: (b, v, ctx) => matchFolderChain(b, v, ctx, false),
+  },
+  {
+    key: "folder_strict",
+    label: "folder",
+    description: "in this folder directly, not deeper",
+    kind: "text",
+    match: (b, v, ctx) => matchFolderChain(b, v, ctx, true),
   },
 ];
 

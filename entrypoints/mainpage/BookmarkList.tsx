@@ -34,7 +34,7 @@ export default function BookmarkList() {
             setQuery(
               setTokenState(
                 query,
-                strict ? "folder" : "in",
+                strict ? "folder_strict" : "folder",
                 folder.title,
                 negative ? "negative" : "positive",
               ),

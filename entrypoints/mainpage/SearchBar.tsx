@@ -25,7 +25,6 @@ const CATEGORY_STYLES: Record<string, string> = {
   url: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100",
   title: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100",
   folder: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100",
-  in: "bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-100",
   date: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100",
   action: "bg-neutral-200 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-100",
 };
@@ -155,7 +154,7 @@ export default function SearchBar() {
         <input
           ref={inputRef}
           type="text"
-          placeholder='Search — tag:"tech" url:"google" last_used:<1w -in:"Archive"'
+          placeholder='Search — tag:"tech" url:"google" last_used:<1w -folder:"Archive"'
           className="w-full min-w-[100px] grow bg-transparent p-1 align-middle focus:outline-none"
           value={query}
           onChange={(e) => {

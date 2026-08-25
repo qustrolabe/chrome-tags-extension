@@ -139,7 +139,7 @@ const valueSuggestions = (
   };
 
   if (spec.kind === "text") {
-    const isFolderKey = key === "folder" || key === "in";
+    const isFolderKey = key === "folder" || key === "folder_strict";
     // Multi-segment chains: only complete the last segment.
     const segments = frag.valuePrefix.split("/");
     const lastSegment = (segments[segments.length - 1] ?? "").toLowerCase();
