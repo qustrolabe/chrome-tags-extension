@@ -151,6 +151,13 @@ describe("suggest — token actions (caret inside existing token)", () => {
     expect(url.replaceTo).toBe(query.length);
   });
 
+  test("caret right after an OPENING quote keeps completion mode", () => {
+    // user just accepted folder: -> folder:" with caret inside the quotes
+    const s = suggest('folder:"', 8, DATA);
+    expect(s[0].type).toBe("value");
+    expect(s.some((x) => x.insert === 'folder:"Projects"')).toBe(true);
+  });
+
   test("caret inside an OPEN quote keeps completion mode", () => {
     const query = 'folder:"dev/de';
     const s = suggest(query, query.length, DATA);

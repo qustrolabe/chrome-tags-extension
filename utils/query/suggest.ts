@@ -280,14 +280,17 @@ export const suggest = (
 
   // Caret right after a fully quoted value means the token is complete:
   // assume the user is starting a NEW token (insert with a space).
+  // Distinguish closing quote from opening quote: a completed quoted
+  // value's raw text contains BOTH quotes (`tag:"x"` vs `tag:"`).
   // Unquoted values keep completion mode — the user is probably typing.
-  const afterQuotedToken = parsed.tokens.some(
-    (token) =>
-      token.kind === "filter" &&
-      token.quoted &&
-      caret === token.end &&
-      query.charAt(caret - 1) === '"',
-  );
+  const afterQuotedToken = parsed.tokens.some((token) => {
+    if (token.kind !== "filter" || !token.quoted || caret !== token.end) {
+      return false;
+    }
+    if (query.charAt(caret - 1) !== '"') return false;
+    const rawText = query.slice(token.start, token.end);
+    return (rawText.match(/"/g)?.length ?? 0) >= 2;
+  });
 
   if (fragment.text === "" || afterQuotedToken) {
     return keySuggestions({
