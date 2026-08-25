@@ -196,6 +196,18 @@ describe("suggest — token actions (caret inside existing token)", () => {
     expect(s.some((x) => x.insert?.includes("tech"))).toBe(false);
   });
 
+  test("current value is NOT duplicated in the completion list", () => {
+    // "tech" exists in DATA with a count, so without dedupe it would
+    // appear both as "current value" and as a data completion.
+    const query = 'tag:"tech"';
+    const s = suggest(query, 6, { ...DATA, tags: { ...DATA.tags, tech: 246 } });
+    const techEntries = s.filter(
+      (x) => x.type === "value" && x.insert === 'tag:"tech"',
+    );
+    expect(techEntries).toHaveLength(1);
+    expect(techEntries[0].comment).toBe("current value");
+  });
+
   test("first two suggestions are invert & remove", () => {
     const query = 'tag:"tech" url:x';
     const caret = 6; // inside first token

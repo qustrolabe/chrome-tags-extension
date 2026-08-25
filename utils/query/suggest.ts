@@ -291,10 +291,12 @@ export const suggest = (
         replaceTo: covering.end,
       },
     ];
-    // Existing key:value pairs, excluding the token under the caret itself.
+    // Existing key:value pairs — INCLUDING the token under the caret,
+    // whose value is already offered explicitly as the "current value"
+    // suggestion below; without this it would appear twice.
     const existing = new Set(
       parsed.tokens
-        .filter((t): t is FilterToken => t.kind === "filter" && t !== covering)
+        .filter((t): t is FilterToken => t.kind === "filter")
         .map((t) => `${t.key}:${t.value.toLowerCase()}`),
     );
 
