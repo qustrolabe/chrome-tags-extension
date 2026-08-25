@@ -12,31 +12,38 @@
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
     "compile": "tsc --noEmit",
+    "lint": "eslint .",
     "test": "bun test",
     "test:watch": "bun test --watch",
     "postinstall": "wxt prepare",
     "release": "bun scripts/release.ts"
   },
   "dependencies": {
-    "@tailwindcss/vite": "^4.1.18",
+    "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-table": "^8.21.3",
-    "@tanstack/react-virtual": "^3.13.23",
+    "@tanstack/react-virtual": "^3.14.10",
     "cmdk": "^1.1.1",
-    "radix-ui": "^1.4.3",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
-    "react-icons": "^5.5.0",
-    "react-window": "^2.2.5",
-    "tailwindcss": "^4.1.18",
-    "zod": "^4.3.5"
+    "radix-ui": "^1.6.7",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-icons": "^5.7.0",
+    "react-window": "^2.3.0",
+    "tailwindcss": "^4.3.3",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@types/chrome": "^0.1.33",
-    "@types/react": "^19.2.8",
-    "@types/react-dom": "^19.2.3",
-    "@wxt-dev/module-react": "^1.1.5",
-    "commit-and-tag-version": "^12.6.1",
+    "@eslint/js": "^10.0.1",
+    "@types/chrome": "^0.2.7",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "@wxt-dev/module-react": "^1.2.2",
+    "commit-and-tag-version": "^13.1.2",
+    "eslint": "^10.9.1",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-tailwindcss": "^4.4.0",
+    "globals": "^17.11.0",
     "typescript": "^5.9.3",
-    "wxt": "^0.20.13"
+    "typescript-eslint": "^8.68.0",
+    "wxt": "^0.21.4"
   }
 }

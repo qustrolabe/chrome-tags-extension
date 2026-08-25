@@ -10,9 +10,9 @@ interface GeneralTabProps {
 
 export default function GeneralTab({ theme, setTheme }: GeneralTabProps) {
     return (
-        <section className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <section className="animate-in fade-in slide-in-from-bottom-4 space-y-8 duration-500">
             <div>
-                <h2 className="text-2xl font-bold mb-2">General</h2>
+                <h2 className="mb-2 text-2xl font-bold">General</h2>
                 <p className="text-muted-foreground">
                     Manage your extension's core behavior and appearance.
                 </p>
@@ -26,42 +26,42 @@ export default function GeneralTab({ theme, setTheme }: GeneralTabProps) {
                     <div className="flex gap-4">
                         <button
                             onClick={() => setTheme("light")}
-                            className={`flex-1 group relative p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                            className={`group relative flex-1 cursor-pointer rounded-xl border-2 p-4 transition-all ${
                                 theme === "light"
                                     ? "border-primary bg-primary/5"
                                     : "border-border hover:border-muted-foreground/30"
                             }`}
                         >
-                            <div className="aspect-video mb-3 rounded-lg bg-white border border-neutral-200 flex items-center justify-center">
-                                <AiOutlineSun className="w-8 h-8 text-yellow-500" />
+                            <div className="mb-3 flex aspect-video items-center justify-center rounded-lg border border-neutral-200 bg-white">
+                                <AiOutlineSun className="size-8 text-yellow-500" />
                             </div>
-                            <span className="font-medium text-sm">
+                            <span className="text-sm font-medium">
                                 Light Mode
                             </span>
                             {theme === "light" && (
-                                <div className="absolute top-2 right-2 w-5 h-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center scale-90">
-                                    <AiOutlineCheck className="w-3 h-3" />
+                                <div className="absolute top-2 right-2 flex size-5 scale-90 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                                    <AiOutlineCheck className="size-3" />
                                 </div>
                             )}
                         </button>
 
                         <button
                             onClick={() => setTheme("dark")}
-                            className={`flex-1 group relative p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                            className={`group relative flex-1 cursor-pointer rounded-xl border-2 p-4 transition-all ${
                                 theme === "dark"
                                     ? "border-primary bg-primary/5"
                                     : "border-border hover:border-muted-foreground/30"
                             }`}
                         >
-                            <div className="aspect-video mb-3 rounded-lg bg-neutral-900 border border-neutral-800 flex items-center justify-center">
-                                <AiOutlineMoon className="w-8 h-8 text-primary" />
+                            <div className="mb-3 flex aspect-video items-center justify-center rounded-lg border border-neutral-800 bg-neutral-900">
+                                <AiOutlineMoon className="size-8 text-primary" />
                             </div>
-                            <span className="font-medium text-sm">
+                            <span className="text-sm font-medium">
                                 Dark Mode
                             </span>
                             {theme === "dark" && (
-                                <div className="absolute top-2 right-2 w-5 h-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center scale-90">
-                                    <AiOutlineCheck className="w-3 h-3" />
+                                <div className="absolute top-2 right-2 flex size-5 scale-90 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                                    <AiOutlineCheck className="size-3" />
                                 </div>
                             )}
                         </button>

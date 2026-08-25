@@ -81,7 +81,7 @@ export default function SidebarTagList() {
 
     if (sortedTags.length === 0) {
         return (
-            <div className="p-4 text-sm text-muted-foreground text-center">
+            <div className="p-4 text-center text-sm text-muted-foreground">
                 No tags found in current results
             </div>
         );
@@ -89,7 +89,7 @@ export default function SidebarTagList() {
 
     return (
         <div className="p-2">
-            <div className="text-xs text-muted-foreground px-2 py-1 mb-1">
+            <div className="mb-1 px-2 py-1 text-xs text-muted-foreground">
                 Click to filter • Shift+Click to exclude
             </div>
             <div className="flex flex-col gap-0.5">
@@ -99,24 +99,24 @@ export default function SidebarTagList() {
                         <button
                             key={tag}
                             onClick={(e) => handleTagClick(tag, e)}
-                            className={`flex items-center gap-1.5 px-2 py-1.5 rounded-md text-sm transition-colors cursor-pointer text-left border-2 ${
+                            className={`flex cursor-pointer items-center gap-1.5 rounded-md border-2 px-2 py-1.5 text-left text-sm transition-colors ${
                                 state === "positive"
-                                    ? "bg-green-500/20 text-green-700 dark:text-green-300 border-green-500 font-medium"
+                                    ? "border-green-500 bg-green-500/20 font-medium text-green-700 dark:text-green-300"
                                     : state === "negative"
-                                    ? "bg-red-500/20 text-red-700 dark:text-red-300 border-red-500 line-through opacity-70"
-                                    : "hover:bg-muted text-foreground border-transparent"
+                                    ? "border-red-500 bg-red-500/20 text-red-700 line-through opacity-70 dark:text-red-300"
+                                    : "border-transparent text-foreground hover:bg-muted"
                             }`}
                         >
                             {/* State indicator icon */}
                             {state === "positive" && (
-                                <AiOutlineCheck className="w-3.5 h-3.5 text-green-600 dark:text-green-400 shrink-0" />
+                                <AiOutlineCheck className="size-3.5 shrink-0 text-green-600 dark:text-green-400" />
                             )}
                             {state === "negative" && (
-                                <AiOutlineClose className="w-3.5 h-3.5 text-red-600 dark:text-red-400 shrink-0" />
+                                <AiOutlineClose className="size-3.5 shrink-0 text-red-600 dark:text-red-400" />
                             )}
-                            <span className="truncate flex-1">#{tag}</span>
+                            <span className="flex-1 truncate">#{tag}</span>
                             {!state && (
-                                <span className="shrink-0 text-xs px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+                                <span className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
                                     {count}
                                 </span>
                             )}

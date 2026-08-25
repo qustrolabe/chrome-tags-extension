@@ -285,7 +285,7 @@ export default function BookmarkTable() {
   const gridTemplateColumns = columnSizes.map((size) => `${size}px`).join(" ");
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex h-full flex-col">
       <div ref={parentRef} className="flex-1 overflow-auto">
         <div className="min-w-full">
           <div
@@ -294,7 +294,7 @@ export default function BookmarkTable() {
           >
             <div
               role="rowgroup"
-              className="sticky top-0 z-10 bg-background border-b border-border"
+              className="sticky top-0 z-10 border-b border-border bg-background"
               onContextMenu={(event) => {
                 event.preventDefault();
                 setContextMenu({ x: event.clientX, y: event.clientY });
@@ -314,7 +314,7 @@ export default function BookmarkTable() {
                       <div
                         role="columnheader"
                         key={header.id}
-                        className={`relative px-3 py-2 border-r border-border last:border-r-0 ${
+                        className={`relative border-r border-border px-3 py-2 last:border-r-0 ${
                           isSortable ? "cursor-pointer select-none" : ""
                         }`}
                         onClick={
@@ -357,7 +357,7 @@ export default function BookmarkTable() {
                               header.getResizeHandler()(event);
                             }}
                             onClick={(event) => event.stopPropagation()}
-                            className="absolute right-0 top-0 h-full w-1.5 cursor-col-resize select-none touch-none"
+                            className="absolute top-0 right-0 h-full w-1.5 cursor-col-resize touch-none select-none"
                           />
                         )}
                       </div>
@@ -369,17 +369,17 @@ export default function BookmarkTable() {
 
             {contextMenu && (
               <div
-                className="fixed z-30 w-56 rounded-md border border-border bg-popover shadow-lg p-2"
+                className="fixed z-30 w-56 rounded-md border border-border bg-popover p-2 shadow-lg"
                 style={{ top: contextMenu.y, left: contextMenu.x }}
                 onClick={(event) => event.stopPropagation()}
               >
-                <div className="text-[10px] uppercase tracking-widest text-muted-foreground px-2 pb-1">
+                <div className="px-2 pb-1 text-[10px] tracking-widest text-muted-foreground uppercase">
                   Toggle Columns
                 </div>
                 {table.getAllLeafColumns().map((column) => (
                   <label
                     key={column.id}
-                    className="flex items-center gap-2 px-2 py-1 text-xs cursor-pointer hover:bg-muted rounded"
+                    className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-xs hover:bg-muted"
                   >
                     <input
                       type="checkbox"
@@ -403,7 +403,7 @@ export default function BookmarkTable() {
                   <div
                     role="row"
                     key={row.id}
-                    className="absolute left-0 right-0 grid border-b border-border hover:bg-muted/40 text-xs text-foreground"
+                    className="absolute inset-x-0 grid border-b border-border text-xs text-foreground hover:bg-muted/40"
                     style={{
                       transform: `translateY(${virtualRow.start}px)`,
                       height: `${virtualRow.size}px`,
@@ -414,7 +414,7 @@ export default function BookmarkTable() {
                       <div
                         role="cell"
                         key={cell.id}
-                        className="px-3 py-2 border-r border-border last:border-r-0"
+                        className="border-r border-border px-3 py-2 last:border-r-0"
                       >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </div>

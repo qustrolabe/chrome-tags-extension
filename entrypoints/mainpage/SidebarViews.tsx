@@ -70,16 +70,16 @@ export default function SidebarViews() {
     };
 
     return (
-        <div className="p-2 flex flex-col gap-2">
+        <div className="flex flex-col gap-2 p-2">
             {/* Create new view */}
             {!isCreating
                 ? (
                     <button
                         onClick={() => setIsCreating(true)}
                         disabled={filters.list.length === 0}
-                        className="flex items-center gap-2 px-3 py-2 text-sm bg-primary/10 hover:bg-primary/20 text-primary rounded-md transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex cursor-pointer items-center gap-2 rounded-md bg-primary/10 px-3 py-2 text-sm text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                        <AiOutlineSave className="w-4 h-4" />
+                        <AiOutlineSave className="size-4" />
                         Save current filters as view
                     </button>
                 )
@@ -94,20 +94,20 @@ export default function SidebarViews() {
                                 if (e.key === "Escape") setIsCreating(false);
                             }}
                             placeholder="View name..."
-                            className="flex-1 px-2 py-1.5 text-sm border border-border rounded-md bg-input focus:outline-none focus:ring-1 focus:ring-ring"
+                            className="flex-1 rounded-md border border-border bg-input px-2 py-1.5 text-sm focus:ring-1 focus:ring-ring focus:outline-none"
                             autoFocus
                         />
                         <button
                             onClick={handleSave}
-                            className="p-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"
+                            className="rounded-md bg-primary p-2 text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                         >
-                            <AiOutlineCheck className="w-4 h-4" />
+                            <AiOutlineCheck className="size-4" />
                         </button>
                     </div>
                 )}
 
             {/* Current filters info */}
-            <div className="text-xs text-muted-foreground px-1">
+            <div className="px-1 text-xs text-muted-foreground">
                 Current: {filters.list.length}{" "}
                 filter{filters.list.length !== 1 ? "s" : ""}
             </div>
@@ -118,18 +118,18 @@ export default function SidebarViews() {
                     filters.clear();
                     clearActiveView();
                 }}
-                className={`flex items-center gap-2 px-2 py-2 rounded-md  group transition-colors w-full text-left ${
+                className={`group flex w-full items-center gap-2 rounded-md  p-2 text-left transition-colors ${
                     !activeViewId && filters.list.length === 0
-                        ? "bg-primary/20 border border-primary/50"
-                        : "hover:bg-muted border border-transparent"
+                        ? "border border-primary/50 bg-primary/20"
+                        : "border border-transparent hover:bg-muted"
                 }`}
             >
-                <div className="p-1.5 rounded bg-muted">
-                    <AiOutlineFilter className="w-4 h-4 text-muted-foreground" />
+                <div className="rounded bg-muted p-1.5">
+                    <AiOutlineFilter className="size-4 text-muted-foreground" />
                 </div>
                 <div className="flex-1">
                     <div className="text-sm font-medium">Clear View</div>
-                    <div className="text-xs text-muted-foreground whitespace-nowrap">
+                    <div className="text-xs whitespace-nowrap text-muted-foreground">
                         Reset all filters
                     </div>
                 </div>
@@ -138,7 +138,7 @@ export default function SidebarViews() {
             {/* Views list */}
             {views.length === 0
                 ? (
-                    <div className="text-sm text-muted-foreground text-center py-4">
+                    <div className="py-4 text-center text-sm text-muted-foreground">
                         No saved views yet
                     </div>
                 )
@@ -152,18 +152,18 @@ export default function SidebarViews() {
                             return (
                                 <div
                                     key={view.id}
-                                    className={`flex items-center gap-2 px-2 py-2 rounded-md group transition-colors ${
+                                    className={`group flex items-center gap-2 rounded-md p-2 transition-colors ${
                                         isActive
-                                            ? "bg-primary/20 border border-primary/50"
-                                            : "hover:bg-muted border border-transparent"
+                                            ? "border border-primary/50 bg-primary/20"
+                                            : "border border-transparent hover:bg-muted"
                                     }`}
                                 >
                                     {/* View info */}
                                     <button
                                         onClick={() => loadView(view.id)}
-                                        className="flex-1 text-left cursor-pointer"
+                                        className="flex-1 cursor-pointer text-left"
                                     >
-                                        <div className="text-sm font-medium truncate">
+                                        <div className="truncate text-sm font-medium">
                                             {getViewDisplayName(view)}
                                         </div>
                                         <div className="text-xs text-muted-foreground">
@@ -175,28 +175,28 @@ export default function SidebarViews() {
                                     </button>
 
                                     {/* Actions */}
-                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                                         <button
                                             onClick={() =>
                                                 duplicateView(view.id)}
-                                            className="p-1.5 rounded hover:bg-muted-foreground/20"
+                                            className="rounded p-1.5 hover:bg-muted-foreground/20"
                                             title="Duplicate"
                                         >
-                                            <AiOutlineCopy className="w-3.5 h-3.5" />
+                                            <AiOutlineCopy className="size-3.5" />
                                         </button>
                                         <button
                                             onClick={() =>
                                                 handleDelete(view.id)}
-                                            className={`p-1.5 rounded transition-colors ${
+                                            className={`rounded p-1.5 transition-colors ${
                                                 isConfirmingDelete
                                                     ? "bg-destructive text-destructive-foreground"
-                                                    : "hover:bg-destructive/20 text-destructive"
+                                                    : "text-destructive hover:bg-destructive/20"
                                             }`}
                                             title={isConfirmingDelete
                                                 ? "Click again to confirm"
                                                 : "Delete"}
                                         >
-                                            <AiOutlineDelete className="w-3.5 h-3.5" />
+                                            <AiOutlineDelete className="size-3.5" />
                                         </button>
                                     </div>
                                 </div>

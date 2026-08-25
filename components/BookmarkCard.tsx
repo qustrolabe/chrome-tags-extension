@@ -137,7 +137,7 @@ export default function BookmarkCard({
 
     return (
         <div
-            className={`min-h-[100px] flex flex-col border border-border rounded-lg p-2 bg-card text-card-foreground shadow-sm transition-shadow ${
+            className={`flex min-h-[100px] flex-col rounded-lg border border-border bg-card p-2 text-card-foreground shadow-sm transition-shadow ${
                 isSettingsPreview ? "" : "m-1 hover:shadow-md"
             }`}
         >
@@ -148,7 +148,7 @@ export default function BookmarkCard({
                             <div className="mr-2 shrink-0">
                                 <img
                                     loading="lazy"
-                                    className="rounded-sm w-4 h-4 bg-muted"
+                                    className="size-4 rounded-sm bg-muted"
                                     src={faviconURL(bookmark.url ?? "")}
                                     alt=""
                                     onError={(e) => {
@@ -160,7 +160,7 @@ export default function BookmarkCard({
                         </Tooltip.Trigger>
                         <Tooltip.Portal>
                             <Tooltip.Content side="right" className="z-100">
-                                <div className="bg-popover text-popover-foreground p-1.5 rounded-md border border-border shadow-lg text-xs font-medium">
+                                <div className="rounded-md border border-border bg-popover p-1.5 text-xs font-medium text-popover-foreground shadow-lg">
                                     ID: {bookmark.id}
                                 </div>
                             </Tooltip.Content>
@@ -176,12 +176,12 @@ export default function BookmarkCard({
                             value={title}
                             onInput={(e) => setTitle(e.currentTarget.value)}
                             onKeyDown={handleEnter}
-                            className="w-full rounded-md bg-input text-foreground border border-border px-2 text-sm"
+                            className="w-full rounded-md border border-border bg-input px-2 text-sm text-foreground"
                         />
                     )
                     : (
                         <span
-                            className="flex-1 font-bold truncate text-sm"
+                            className="flex-1 truncate text-sm font-bold"
                             title={title}
                         >
                             {title}
@@ -189,15 +189,15 @@ export default function BookmarkCard({
                     )}
                 <button
                     type="button"
-                    className="ml-2 rounded-md bg-secondary text-secondary-foreground px-2.5 py-1 text-xs font-medium hover:bg-secondary/80 transition-colors cursor-pointer"
+                    className="ml-2 cursor-pointer rounded-md bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground transition-colors hover:bg-secondary/80"
                     onClick={handleEdit}
                 >
                     {isEditing ? "Submit" : "Edit"}
                 </button>
             </div>
 
-            <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5 overflow-hidden">
-                <div className="flex items-center text-muted-foreground/60 shrink-0">
+            <div className="mt-0.5 flex items-center gap-1 overflow-hidden text-xs text-muted-foreground">
+                <div className="flex shrink-0 items-center text-muted-foreground/60">
                     {path.length > 0 && (
                         <span className="flex items-center">
                             {path.map((node) => (
@@ -206,7 +206,7 @@ export default function BookmarkCard({
                                     className="flex items-center"
                                 >
                                     <span
-                                        className="hover:text-primary transition-colors cursor-pointer"
+                                        className="cursor-pointer transition-colors hover:text-primary"
                                         onClick={(e) =>
                                             onAddFolderFilter?.(
                                                 node.id,
@@ -226,7 +226,7 @@ export default function BookmarkCard({
                     <a
                         href={isSettingsPreview ? "#" : bookmark.url}
                         onClick={(e) => isSettingsPreview && e.preventDefault()}
-                        className="hover:underline text-primary/80 hover:text-primary transition-colors"
+                        className="text-primary/80 transition-colors hover:text-primary hover:underline"
                         title={bookmark.url}
                     >
                         {bookmark.url
@@ -236,7 +236,7 @@ export default function BookmarkCard({
                 </div>
             </div>
 
-            <div className="flex flex-row flex-wrap gap-x-3 gap-y-1 mt-1.5 text-[10px] text-muted-foreground font-medium">
+            <div className="mt-1.5 flex flex-row flex-wrap gap-x-3 gap-y-1 text-[10px] font-medium text-muted-foreground">
                 <div className="flex items-center gap-1">
                     <span
                         title={bookmark.dateAdded
@@ -280,12 +280,12 @@ export default function BookmarkCard({
             {tags?.length
                 ? (
                     <div
-                        className="w-full flex truncate gap-x-1 mt-1"
+                        className="mt-1 flex w-full gap-x-1 truncate"
                         title={tags.map((tag) => `#${tag}`).join(" ")}
                     >
                         {tags?.map((tag) => (
                             <div
-                                className="select-none cursor-pointer"
+                                className="cursor-pointer select-none"
                                 onClick={(e) =>
                                     onAddTagFilter?.(tag, e.shiftKey)}
                                 key={tag}
@@ -304,7 +304,7 @@ function BookmarkTagCapsule(
     { tag }: { tag: string },
 ) {
     return (
-        <div className="rounded-md px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] font-bold hover:bg-primary/20 transition-colors">
+        <div className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary transition-colors hover:bg-primary/20">
             #{tag}
         </div>
     );

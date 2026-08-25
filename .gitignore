@@ -14,6 +14,9 @@ stats-*.json
 .wxt
 web-ext.config.ts
 
+# Placeholder icons, not final art yet
+public/icon/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

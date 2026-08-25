@@ -232,7 +232,7 @@ export default function FilterInput() {
   };
 
   return (
-    <div className="flex flex-wrap gap-1 bg-input text-foreground rounded p-1 w-full items-center focus-within:outline-none focus-within:ring focus-within:ring-focus">
+    <div className="focus-within:ring-focus flex w-full flex-wrap items-center gap-1 rounded bg-input p-1 text-foreground focus-within:ring focus-within:outline-none">
       {filters.map((filter, index) => {
         const { displayString, titleString, color } = makeFilterCapsuleData(
           filter,
@@ -240,7 +240,7 @@ export default function FilterInput() {
         );
         return (
           <span
-            className={`p-1 rounded-md cursor-pointer select-none ${color}`}
+            className={`cursor-pointer rounded-md p-1 select-none ${color}`}
             title={titleString}
             key={index}
             onClick={() => handleFilterRemove(filter)}
@@ -249,20 +249,20 @@ export default function FilterInput() {
           </span>
         );
       })}
-      <div className="flex-1 relative">
+      <div className="relative flex-1">
         <input
           type="text"
           placeholder="Search (e.g., url:, #tag, title:, -#tag, -url:)"
-          className="grow bg-transparent w-full p-1 min-w-[100px] align-middle focus:outline-none"
+          className="w-full min-w-[100px] grow bg-transparent p-1 align-middle focus:outline-none"
           value={inputValue}
           onInput={handleFilterInput}
           onKeyDown={handleKeyDown}
         />
         {suggestions.length > 0 && (
-          <ul className="absolute bg-popover text-popover-foreground border border-border rounded-md p-1 max-w-[200px] z-50 shadow-lg top-full left-0 mt-1">
+          <ul className="absolute top-full left-0 z-50 mt-1 max-w-[200px] rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-lg">
             {suggestions.map((s, index) => (
               <li
-                className={`p-1 cursor-pointer rounded-sm hover:bg-muted ${
+                className={`cursor-pointer rounded-sm p-1 hover:bg-muted ${
                   index === highlightedIndex ? "bg-muted" : ""
                 } overflow-hidden`}
                 key={s}

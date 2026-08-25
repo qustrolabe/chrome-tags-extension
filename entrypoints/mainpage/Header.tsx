@@ -17,7 +17,7 @@ function BookmarksCounter() {
     useBookmarks();
 
   return (
-    <div className="text-muted-foreground flex items-center font-medium opacity-80">
+    <div className="flex items-center font-medium text-muted-foreground opacity-80">
       <span title="Displayed filtered bookmarks">
         {displayBookmarks.length}
       </span>{" "}
@@ -35,14 +35,14 @@ function SidebarToggle() {
   return (
     <button
       onClick={toggleSidebar}
-      className={`p-2 rounded-md transition-colors cursor-pointer ${
+      className={`cursor-pointer rounded-md p-2 transition-colors ${
         isOpen
           ? "bg-primary text-primary-foreground"
-          : "hover:bg-muted text-foreground"
+          : "text-foreground hover:bg-muted"
       }`}
       title={isOpen ? "Close sidebar" : "Open sidebar"}
     >
-      <RiSideBarLine className="w-5 h-5" />
+      <RiSideBarLine className="size-5" />
     </button>
   );
 }
@@ -51,19 +51,19 @@ export default function Header() {
   const { mode, setMode } = useViewMode();
 
   return (
-    <div className="flex items-center bg-background text-foreground border-b border-border p-2 gap-2 shadow-sm z-30 relative">
+    <div className="relative z-30 flex items-center gap-2 border-b border-border bg-background p-2 text-foreground shadow-sm">
       <SidebarToggle />
-      <div className="flex space-x-2 flex-1">
+      <div className="flex flex-1 space-x-2">
         <FilterInput />
       </div>
       <div className="flex items-center gap-2">
-        <div className="flex items-center bg-secondary rounded-md p-0.5">
+        <div className="flex items-center rounded-md bg-secondary p-0.5">
           {(["list", "table"] as const).map((value) => (
             <button
               key={value}
               type="button"
               onClick={() => setMode(value)}
-              className={`px-2.5 h-7 rounded-sm text-xs font-semibold transition-colors ${
+              className={`h-7 rounded-sm px-2.5 text-xs font-semibold transition-colors ${
                 mode === value
                   ? "bg-background text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"

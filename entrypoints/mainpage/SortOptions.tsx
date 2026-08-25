@@ -24,25 +24,25 @@ const SortOptions = () => {
 
   return (
     <div
-      className="flex items-center bg-secondary rounded-md p-0.5 gap-0.5"
+      className="flex items-center gap-0.5 rounded-md bg-secondary p-0.5"
       style={{ width: "140px" }}
     >
       <Select.Root
         value={sortOption}
         onValueChange={(value) => setSortOption(value as SortOption)}
       >
-        <Select.Trigger className="flex-1 min-w-0 overflow-hidden flex items-center justify-between rounded-sm px-2 h-7 bg-inherit text-secondary-foreground hover:bg-input cursor-pointer transition-colors gap-1 outline-none">
-          <Select.Value className="text-sm truncate whitespace-nowrap" />
+        <Select.Trigger className="flex h-7 min-w-0 flex-1 cursor-pointer items-center justify-between gap-1 overflow-hidden rounded-sm bg-inherit px-2 text-secondary-foreground transition-colors outline-none hover:bg-input">
+          <Select.Value className="truncate text-sm whitespace-nowrap" />
         </Select.Trigger>
 
         <button
           type="button"
-          className="h-7 w-7 flex items-center justify-center rounded hover:bg-input cursor-pointer transition-colors"
+          className="flex size-7 cursor-pointer items-center justify-center rounded transition-colors hover:bg-input"
           onClick={toggleSortDirection}
         >
           {sortDirection === "desc"
-            ? <AiOutlineArrowDown className="w-4 h-4" />
-            : <AiOutlineArrowUp className="w-4 h-4" />}
+            ? <AiOutlineArrowDown className="size-4" />
+            : <AiOutlineArrowUp className="size-4" />}
         </button>
 
         <Select.Portal>
@@ -52,7 +52,7 @@ const SortOptions = () => {
             align="end"
             sideOffset={6}
             collisionPadding={8}
-            className="z-50 min-w-[150px] bg-popover text-popover-foreground shadow-lg rounded-md border border-border overflow-hidden"
+            className="z-50 min-w-[150px] overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-lg"
             style={{ minWidth: "var(--radix-select-trigger-width)" }}
           >
             <Select.Viewport className="p-2">
@@ -60,7 +60,7 @@ const SortOptions = () => {
                 <Select.Item
                   key={value}
                   value={value}
-                  className="relative flex items-center p-2 rounded-sm hover:bg-muted cursor-pointer transition-colors outline-none data-[state=checked]:bg-muted data-[state=checked]:font-medium mb-1 last:mb-0"
+                  className="relative mb-1 flex cursor-pointer items-center rounded-sm p-2 transition-colors outline-none last:mb-0 hover:bg-muted data-[state=checked]:bg-muted data-[state=checked]:font-medium"
                 >
                   <Select.ItemText>{label}</Select.ItemText>
                 </Select.Item>

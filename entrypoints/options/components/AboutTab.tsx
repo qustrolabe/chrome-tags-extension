@@ -3,9 +3,9 @@ import SettingsCard from "./SettingsCard";
 
 export default function AboutTab() {
     return (
-        <section className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <section className="animate-in fade-in slide-in-from-bottom-4 space-y-8 duration-500">
             <div>
-                <h2 className="text-2xl font-bold mb-2">About</h2>
+                <h2 className="mb-2 text-2xl font-bold">About</h2>
                 <p className="text-muted-foreground">
                     Chrome Tags Extension version {__APP_VERSION__}
                 </p>
@@ -25,7 +25,7 @@ export default function AboutTab() {
                                 href="https://github.com/qustrolabe/chrome-tags-extension"
                                 target="_blank"
                                 rel="noreferrer"
-                                className="px-4 py-2 bg-muted hover:bg-muted-foreground/10 rounded-lg text-sm font-medium transition-colors"
+                                className="rounded-lg bg-muted px-4 py-2 text-sm font-medium transition-colors hover:bg-muted-foreground/10"
                             >
                                 GitHub Repository
                             </a>

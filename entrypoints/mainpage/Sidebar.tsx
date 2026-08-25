@@ -17,7 +17,7 @@ export default function Sidebar() {
     const { mode, setMode } = useSidebar();
 
     return (
-        <div className="w-64 min-w-64 max-w-64 h-full flex flex-col bg-card border-r border-border overflow-hidden">
+        <div className="flex h-full w-64 max-w-64 min-w-64 flex-col overflow-hidden border-r border-border bg-card">
             {/* Mode Tabs */}
             <div className="flex border-b border-border">
                 {MODE_TABS.map((tab) => {
@@ -27,14 +27,14 @@ export default function Sidebar() {
                         <button
                             key={tab.id}
                             onClick={() => setMode(tab.id)}
-                            className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2.5 text-sm font-medium transition-colors cursor-pointer ${
+                            className={`flex flex-1 cursor-pointer items-center justify-center gap-1.5 px-2 py-2.5 text-sm font-medium transition-colors ${
                                 isActive
-                                    ? "bg-primary/10 text-primary border-b-2 border-primary -mb-px"
+                                    ? "-mb-px border-b-2 border-primary bg-primary/10 text-primary"
                                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                             }`}
                             title={tab.label}
                         >
-                            <Icon className="w-4 h-4" />
+                            <Icon className="size-4" />
                             <span className="hidden sm:inline">
                                 {tab.label}
                             </span>

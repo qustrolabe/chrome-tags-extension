@@ -26,7 +26,7 @@ export default function App() {
   ] as const;
 
   return (
-    <div className="flex h-screen bg-background text-foreground overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-background text-foreground">
       <Sidebar
         tabs={TABS}
         activeTab={activeTab}
@@ -37,7 +37,7 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-auto bg-background/50">
-        <div className="max-w-3xl mx-auto px-8 py-12">
+        <div className="mx-auto max-w-3xl px-8 py-12">
           {activeTab === "general" && (
             <GeneralTab theme={theme} setTheme={setTheme} />
           )}

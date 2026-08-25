@@ -69,36 +69,36 @@ function FolderItem({
     return (
         <div>
             <div
-                className={`flex items-center gap-1 py-1 px-1 rounded-sm group cursor-pointer border-l-3 ${
+                className={`group flex cursor-pointer items-center gap-1 rounded-sm border-l-3 p-1 ${
                     filterState === "positive"
-                        ? "bg-blue-500/20 text-blue-700 dark:text-blue-300 border-l-blue-500 font-medium"
+                        ? "border-l-blue-500 bg-blue-500/20 font-medium text-blue-700 dark:text-blue-300"
                         : filterState === "negative"
-                        ? "bg-red-500/20 text-red-700 dark:text-red-300 border-l-red-500 line-through opacity-70"
+                        ? "border-l-red-500 bg-red-500/20 text-red-700 line-through opacity-70 dark:text-red-300"
                         : filterState === "strict"
-                        ? "bg-teal-500/20 text-teal-700 dark:text-teal-300 border-l-teal-500 font-medium border-dashed"
-                        : "hover:bg-muted border-l-transparent"
+                        ? "border-dashed border-l-teal-500 bg-teal-500/20 font-medium text-teal-700 dark:text-teal-300"
+                        : "border-l-transparent hover:bg-muted"
                 }`}
                 style={{ paddingLeft: `${depth * 12 + 4}px` }}
             >
                 {/* Expand/Collapse */}
                 <button
                     onClick={() => toggleExpanded(node.id)}
-                    className={`p-0.5 rounded hover:bg-muted-foreground/20 ${
+                    className={`rounded p-0.5 hover:bg-muted-foreground/20 ${
                         !hasChildren ? "invisible" : ""
                     }`}
                 >
                     {isExpanded
-                        ? <RiArrowDownSLine className="w-4 h-4" />
-                        : <RiArrowRightSLine className="w-4 h-4" />}
+                        ? <RiArrowDownSLine className="size-4" />
+                        : <RiArrowRightSLine className="size-4" />}
                 </button>
 
                 {/* Folder Icon */}
                 {isExpanded
                     ? (
-                        <AiOutlineFolderOpen className="w-4 h-4 text-muted-foreground shrink-0" />
+                        <AiOutlineFolderOpen className="size-4 shrink-0 text-muted-foreground" />
                     )
                     : (
-                        <AiOutlineFolder className="w-4 h-4 text-muted-foreground shrink-0" />
+                        <AiOutlineFolder className="size-4 shrink-0 text-muted-foreground" />
                     )}
 
                 {/* Title */}
@@ -110,26 +110,26 @@ function FolderItem({
                 </span>
 
                 {/* Filter buttons */}
-                <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
                             onFilter(node.id, false, e.altKey);
                         }}
-                        className="p-1 rounded hover:bg-green-500/30 text-green-600 dark:text-green-400"
+                        className="rounded p-1 text-green-600 hover:bg-green-500/30 dark:text-green-400"
                         title="Add folder filter (Alt+Click for strict)"
                     >
-                        <AiOutlinePlus className="w-3 h-3" />
+                        <AiOutlinePlus className="size-3" />
                     </button>
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
                             onFilter(node.id, true, e.altKey);
                         }}
-                        className="p-1 rounded hover:bg-destructive/30 text-destructive"
+                        className="rounded p-1 text-destructive hover:bg-destructive/30"
                         title="Exclude folder (Alt+Click for strict)"
                     >
-                        <AiOutlineMinus className="w-3 h-3" />
+                        <AiOutlineMinus className="size-3" />
                     </button>
                 </div>
             </div>
@@ -226,7 +226,7 @@ export default function SidebarFolderTree() {
 
     if (tree.length === 0) {
         return (
-            <div className="p-4 text-sm text-muted-foreground text-center">
+            <div className="p-4 text-center text-sm text-muted-foreground">
                 No folders found
             </div>
         );
@@ -234,7 +234,7 @@ export default function SidebarFolderTree() {
 
     return (
         <div className="p-2">
-            <div className="text-xs text-muted-foreground px-2 py-1 mb-1">
+            <div className="mb-1 px-2 py-1 text-xs text-muted-foreground">
                 + to filter • − to exclude
             </div>
             {tree.map((node) => (

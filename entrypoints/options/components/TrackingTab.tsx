@@ -45,9 +45,9 @@ export default function TrackingTab() {
   };
 
   return (
-    <section className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <section className="animate-in fade-in slide-in-from-bottom-4 space-y-8 duration-500">
       <div>
-        <h2 className="text-2xl font-bold mb-2">Tracking</h2>
+        <h2 className="mb-2 text-2xl font-bold">Tracking</h2>
         <p className="text-muted-foreground">
           Control how bookmark visits are tracked and how frecency is calculated.
         </p>
@@ -70,7 +70,7 @@ export default function TrackingTab() {
             <button
               type="button"
               onClick={() => setEnabled(!settings.enabled)}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+              className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
                 settings.enabled
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground hover:text-foreground"
@@ -97,7 +97,7 @@ export default function TrackingTab() {
             <button
               type="button"
               onClick={() => setShowStats(!settings.showStats)}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+              className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
                 settings.showStats
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground hover:text-foreground"
@@ -114,13 +114,13 @@ export default function TrackingTab() {
         >
           <div className="space-y-4">
             <div>
-              <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+              <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
                 <span>Total score</span>
                 <span>
                   {totalScore.toFixed(2)} / {settings.maxAge}
                 </span>
               </div>
-              <div className="h-2 rounded-full bg-muted overflow-hidden">
+              <div className="h-2 overflow-hidden rounded-full bg-muted">
                 <div
                   className="h-full bg-primary transition-all"
                   style={{ width: `${progress * 100}%` }}
@@ -134,12 +134,12 @@ export default function TrackingTab() {
                 min={1}
                 value={maxAgeInput}
                 onChange={(event) => setMaxAgeInput(event.target.value)}
-                className="w-40 rounded-md bg-input text-foreground border border-border px-3 py-2 text-sm"
+                className="w-40 rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground"
               />
               <button
                 type="button"
                 onClick={applyMaxAge}
-                className="px-4 py-2 rounded-lg text-sm font-semibold bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+                className="rounded-lg bg-secondary px-4 py-2 text-sm font-semibold text-secondary-foreground transition-colors hover:bg-secondary/80"
               >
                 Apply
               </button>
@@ -156,14 +156,14 @@ export default function TrackingTab() {
                 <button
                   type="button"
                   onClick={confirmLowerMaxAge}
-                  className="px-3 py-1.5 rounded-md bg-amber-500 text-white font-semibold"
+                  className="rounded-md bg-amber-500 px-3 py-1.5 font-semibold text-white"
                 >
                   Confirm
                 </button>
                 <button
                   type="button"
                   onClick={() => setConfirmLower(null)}
-                  className="px-3 py-1.5 rounded-md bg-muted text-muted-foreground hover:text-foreground"
+                  className="rounded-md bg-muted px-3 py-1.5 text-muted-foreground hover:text-foreground"
                 >
                   Cancel
                 </button>
@@ -185,7 +185,7 @@ export default function TrackingTab() {
                 <button
                   type="button"
                   onClick={() => setClearConfirm(false)}
-                  className="px-3 py-2 rounded-lg text-xs font-semibold bg-muted text-muted-foreground hover:text-foreground"
+                  className="rounded-lg bg-muted px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground"
                 >
                   Cancel
                 </button>
@@ -193,7 +193,7 @@ export default function TrackingTab() {
               <button
                 type="button"
                 onClick={handleClear}
-                className={`px-4 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                className={`rounded-lg px-4 py-2 text-xs font-semibold transition-colors ${
                   clearConfirm
                     ? "bg-destructive text-destructive-foreground"
                     : "bg-secondary text-secondary-foreground hover:bg-secondary/80"

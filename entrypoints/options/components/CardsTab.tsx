@@ -58,9 +58,9 @@ export default function CardsTab() {
     ];
 
     return (
-        <section className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <section className="animate-in fade-in slide-in-from-bottom-4 space-y-8 duration-500">
             <div>
-                <h2 className="text-2xl font-bold mb-2">Bookmark Cards</h2>
+                <h2 className="mb-2 text-2xl font-bold">Bookmark Cards</h2>
                 <p className="text-muted-foreground">
                     Customize how your bookmarks are displayed in the main list.
                 </p>
@@ -71,7 +71,7 @@ export default function CardsTab() {
                     title="Card Preview"
                     description="This is how your bookmarks currently look. Future settings will allow you to toggle specific elements."
                 >
-                    <div className="flex flex-col gap-3 mt-2">
+                    <div className="mt-2 flex flex-col gap-3">
                         {MOCK_BOOKMARKS.map((bookmark, index) => {
                             const stats = MOCK_STATS[index % MOCK_STATS.length];
                             return (
@@ -93,14 +93,14 @@ export default function CardsTab() {
                     </div>
                 </SettingsCard>
 
-                <div className="p-4 rounded-xl border border-dashed border-border bg-muted/20 flex flex-col items-center justify-center text-center py-12">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 text-primary">
-                        <AiOutlineLayout className="w-6 h-6" />
+                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-muted/20 p-4 py-12 text-center">
+                    <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+                        <AiOutlineLayout className="size-6" />
                     </div>
                     <h3 className="font-medium">
                         More customization coming soon
                     </h3>
-                    <p className="text-sm text-muted-foreground mt-1 max-w-sm">
+                    <p className="mt-1 max-w-sm text-sm text-muted-foreground">
                         Soon you'll be able to toggle favicons, tags,
                         timestamps, and compact modes.
                     </p>
