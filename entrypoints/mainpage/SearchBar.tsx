@@ -268,7 +268,7 @@ export default function SearchBar() {
               >
                 {suggestion.category && (
                   <span
-                    className={`shrink-0 rounded-[3px] px-1.5 py-0.5 text-[10px] font-medium ${capsuleStyle(suggestion.category)}`}
+                    className={`shrink-0 rounded-[4px] px-2 py-0.5 text-xs font-medium ${capsuleStyle(suggestion.category)}`}
                   >
                     {suggestion.category}
                   </span>
