@@ -1,6 +1,6 @@
 import React from "react";
 import { AiOutlineMoon, AiOutlineSun } from "react-icons/ai";
-import { Theme } from "@/context/ThemeContext";
+import { type Theme } from "@/context/ThemeContext";
 
 interface SidebarProps {
     tabs: readonly { id: string; label: string; icon: React.ElementType }[];

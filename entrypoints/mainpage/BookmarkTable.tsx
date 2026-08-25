@@ -1,14 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-  ColumnDef,
-  ColumnResizeMode,
+  type ColumnDef,
+  type ColumnResizeMode,
   flexRender,
   getCoreRowModel,
   getSortedRowModel,
   useReactTable,
-  SortingState,
-  ColumnSizingState,
-  VisibilityState,
+  type SortingState,
+  type ColumnSizingState,
+  type VisibilityState,
 } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useBookmarks } from "@/context/BookmarksContext";

@@ -1,6 +1,6 @@
 import React from "react";
 import * as Select from "@radix-ui/react-select";
-import { SortOption, useBookmarks } from "@/context/BookmarksContext.tsx";
+import { type SortOption, useBookmarks } from "@/context/BookmarksContext.tsx";
 import { AiOutlineArrowDown, AiOutlineArrowUp } from "react-icons/ai";
 
 type SortOptionType = {

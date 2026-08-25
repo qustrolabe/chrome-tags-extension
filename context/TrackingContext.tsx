@@ -4,8 +4,8 @@ import {
   DEFAULT_SHOW_STATS,
   DEFAULT_TRACKING_ENABLED,
   TRACKING_STORAGE_KEYS,
-  TrackingStat,
-  TrackingStatsMap,
+  type TrackingStat,
+  type TrackingStatsMap,
   clampNonNegative,
 } from "@/utils/tracking";
 
@@ -68,21 +68,25 @@ export const TrackingProvider = ({ children }: { children: React.ReactNode }) =>
   }, []);
 
   useEffect(() => {
-    const handleStorageChange = (changes: {
-      [key: string]: browser.storage.StorageChange;
-    }) => {
-      if (TRACKING_STORAGE_KEYS.enabled in changes) {
-        setEnabledState(Boolean(changes[TRACKING_STORAGE_KEYS.enabled].newValue));
+    const handleStorageChange = (
+      changes: Record<string, { newValue?: unknown; oldValue?: unknown }>,
+    ) => {
+      const getChange = (key: string) =>
+        key in changes ? changes[key]?.newValue : undefined;
+
+      const enabledChange = getChange(TRACKING_STORAGE_KEYS.enabled);
+      if (typeof enabledChange === "boolean") {
+        setEnabledState(enabledChange);
       }
-      if (TRACKING_STORAGE_KEYS.showStats in changes) {
-        setShowStatsState(Boolean(changes[TRACKING_STORAGE_KEYS.showStats].newValue));
+      const showStatsChange = getChange(TRACKING_STORAGE_KEYS.showStats);
+      if (typeof showStatsChange === "boolean") {
+        setShowStatsState(showStatsChange);
       }
-      if (TRACKING_STORAGE_KEYS.maxAge in changes) {
-        const value = changes[TRACKING_STORAGE_KEYS.maxAge].newValue;
-        if (typeof value === "number") setMaxAgeState(value);
-      }
-      if (TRACKING_STORAGE_KEYS.stats in changes) {
-        setStats(normalizeStats(changes[TRACKING_STORAGE_KEYS.stats].newValue as TrackingStatsMap));
+      const maxAgeChange = getChange(TRACKING_STORAGE_KEYS.maxAge);
+      if (typeof maxAgeChange === "number") setMaxAgeState(maxAgeChange);
+      const statsChange = getChange(TRACKING_STORAGE_KEYS.stats);
+      if (statsChange !== undefined) {
+        setStats(normalizeStats(statsChange as TrackingStatsMap));
       }
     };
 

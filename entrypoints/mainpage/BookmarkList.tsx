@@ -1,5 +1,5 @@
 import React from "react";
-import { List, RowComponentProps } from "react-window";
+import { List, type RowComponentProps } from "react-window";
 
 import { useBookmarks } from "@/context/BookmarksContext.tsx";
 import { useTracking } from "@/context/TrackingContext";

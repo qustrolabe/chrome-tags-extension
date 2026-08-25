@@ -1,5 +1,5 @@
 import React from "react";
-import { TagFilter, useBookmarks } from "@/context/BookmarksContext";
+import { type TagFilter, useBookmarks } from "@/context/BookmarksContext";
 import { AiOutlineCheck, AiOutlineClose } from "react-icons/ai";
 
 export default function SidebarTagList() {

@@ -2,7 +2,7 @@ import {
   DEFAULT_MAX_AGE,
   DEFAULT_TRACKING_ENABLED,
   TRACKING_STORAGE_KEYS,
-  TrackingStatsMap,
+  type TrackingStatsMap,
   clampNonNegative,
 } from "@/utils/tracking";
 

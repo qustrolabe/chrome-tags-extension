@@ -1,5 +1,5 @@
 import React from "react";
-import { SidebarMode, useSidebar } from "@/context/SidebarContext";
+import { type SidebarMode, useSidebar } from "@/context/SidebarContext";
 import SidebarTagList from "./SidebarTagList.tsx";
 import SidebarFolderTree from "./SidebarFolderTree.tsx";
 import SidebarViews from "./SidebarViews.tsx";
