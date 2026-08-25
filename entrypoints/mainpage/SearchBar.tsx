@@ -200,9 +200,13 @@ export default function SearchBar() {
                 key={`${index}-${suggestion.label}`}
                 className={`flex cursor-pointer items-center gap-2 rounded-sm p-1 ${
                   suggestion.action === "invert"
-                    ? "bg-yellow-100 dark:bg-yellow-900/40"
+                    ? index === activeIndex
+                      ? "bg-yellow-300 font-medium ring-1 ring-yellow-500 dark:bg-yellow-700/60"
+                      : "bg-yellow-100 dark:bg-yellow-900/40"
                     : suggestion.action === "remove"
-                    ? "bg-red-100 dark:bg-red-900/40"
+                    ? index === activeIndex
+                      ? "bg-red-300 font-medium ring-1 ring-red-500 dark:bg-red-700/60"
+                      : "bg-red-100 dark:bg-red-900/40"
                     : index === activeIndex
                     ? "bg-muted"
                     : "hover:bg-muted"

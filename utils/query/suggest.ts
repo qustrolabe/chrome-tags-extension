@@ -119,6 +119,8 @@ const valueSuggestions = (
   key: string,
   frag: Fragment,
   data: SuggestData,
+  /** Existing "key:value" pairs in the query (lowercased) to skip. */
+  existing: Set<string>,
 ): Suggestion[] => {
   const spec = getKeySpec(key);
   if (!spec) return [];
@@ -130,6 +132,8 @@ const valueSuggestions = (
     comment?: string,
     category: string = spec.label,
   ) => {
+    // Don't offer a value already present in the query for this key.
+    if (existing.has(`${key}:${value.toLowerCase()}`)) return;
     out.push({
       type: "value",
       label: buildFilterText(spec.kind, frag, key, value),
@@ -253,6 +257,13 @@ export const suggest = (
         replaceTo: covering.end,
       },
     ];
+    // Existing key:value pairs, excluding the token under the caret itself.
+    const existing = new Set(
+      parsed.tokens
+        .filter((t) => t.kind === "filter" && t !== covering)
+        .map((t) => `${t.key}:${t.value.toLowerCase()}`),
+    );
+
     // Value completions for the partial value inside this token.
     const innerCaret = caret - covering.start;
     const tokenText = query.slice(covering.start, covering.end);
@@ -265,14 +276,32 @@ export const suggest = (
           (tokenText.indexOf(":") + 1 + (frag.quoted ? 1 : 0))),
       ),
     };
-    const completions = valueSuggestions(covering.key, virtualFrag, data)
-      .map((s) => ({
-        ...s,
-        replaceFrom: covering.start,
-        replaceTo: covering.end,
-      }))
-      .filter((s) => s.insert !== query.slice(covering.start, covering.end));
-    return [...actions, ...completions];
+    const completions = valueSuggestions(
+      covering.key,
+      virtualFrag,
+      data,
+      existing,
+    ).map((s) => ({
+      ...s,
+      replaceFrom: covering.start,
+      replaceTo: covering.end,
+    }));
+
+    // Always offer the token's current value as-is ("keep this one").
+    const coveringText = query.slice(covering.start, covering.end);
+    const selfSuggestion: Suggestion | null = covering.value
+      ? {
+          type: "value",
+          label: coveringText,
+          category: getKeySpec(covering.key)?.label ?? covering.key,
+          comment: "current value",
+          replaceFrom: covering.start,
+          replaceTo: covering.end,
+          insert: coveringText,
+        }
+      : null;
+
+    return [...actions, ...(selfSuggestion ? [selfSuggestion] : []), ...completions];
   }
 
   // 2. Fragment currently being typed (empty -> suggest all keys).
@@ -308,6 +337,13 @@ export const suggest = (
 
   const frag = parseFragment(fragment.text);
 
+  // Exclude values already present anywhere else in the query.
+  const existing = new Set(
+    parsed.tokens
+      .filter((t) => t.kind === "filter")
+      .map((t) => `${t.key}:${t.value.toLowerCase()}`),
+  );
+
   if (frag.key === null) {
     return keySuggestions(frag).map((s) => ({
       ...s,
@@ -316,7 +352,7 @@ export const suggest = (
     }));
   }
 
-  return valueSuggestions(frag.key, frag, data).map((s) => ({
+  return valueSuggestions(frag.key, frag, data, existing).map((s) => ({
     ...s,
     replaceFrom: fragment.start,
     replaceTo: caret,

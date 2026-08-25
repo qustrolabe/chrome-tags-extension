@@ -171,6 +171,22 @@ describe("suggest — token actions (caret inside existing token)", () => {
     expect(s.some((x) => x.insert?.includes("new_notes"))).toBe(true);
   });
 
+  test("covered token lists its own current value after the actions", () => {
+    const query = 'tag:"random"';
+    const s = suggest(query, 6, DATA);
+    const self = s.find((x) => x.type === "value" && x.comment === "current value");
+    expect(self).toBeDefined();
+    expect(self!.insert).toBe('tag:"random"');
+    // it comes right after the two actions
+    expect(s.indexOf(self!)).toBe(2);
+  });
+
+  test("existing same-key values are excluded when adding another token", () => {
+    const query = 'tag:"tech" tag:';
+    const s = suggest(query, query.length, DATA);
+    expect(s.some((x) => x.insert?.includes("tech"))).toBe(false);
+  });
+
   test("first two suggestions are invert & remove", () => {
     const query = 'tag:"tech" url:x';
     const caret = 6; // inside first token
