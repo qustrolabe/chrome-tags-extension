@@ -182,7 +182,13 @@ export default function SearchBar() {
               <li
                 key={`${index}-${suggestion.label}`}
                 className={`flex cursor-pointer items-center gap-2 rounded-sm p-1 ${
-                  index === activeIndex ? "bg-muted" : "hover:bg-muted"
+                  suggestion.action === "invert"
+                    ? "bg-yellow-100 dark:bg-yellow-900/40"
+                    : suggestion.action === "remove"
+                    ? "bg-red-100 dark:bg-red-900/40"
+                    : index === activeIndex
+                    ? "bg-muted"
+                    : "hover:bg-muted"
                 }`}
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => acceptSuggestion(suggestion)}
