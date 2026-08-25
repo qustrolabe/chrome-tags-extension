@@ -261,9 +261,21 @@ export const suggest = (
     return [...actions, ...completions];
   }
 
-  // 2. Fragment currently being typed.
+  // 2. Fragment currently being typed (empty -> suggest all keys).
   const fragment = activeFragment(query, caret);
-  if (fragment.text === "") return [];
+
+  if (fragment.text === "") {
+    return keySuggestions({
+      negated: false,
+      key: null,
+      valuePrefix: "",
+      quoted: false,
+    }).map((s) => ({
+      ...s,
+      replaceFrom: caret,
+      replaceTo: caret,
+    }));
+  }
 
   const frag = parseFragment(fragment.text);
 

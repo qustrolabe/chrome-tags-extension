@@ -42,8 +42,14 @@ describe("editing — cycleToken / tokenState", () => {
 });
 
 describe("suggest — keys", () => {
-  test("empty fragment suggests nothing (not typing yet)", () => {
-    expect(suggest("abc ", 4, DATA)).toEqual([]);
+  test("empty fragment suggests all keys right away", () => {
+    const s = suggest("", 0, DATA);
+    expect(s.length).toBeGreaterThanOrEqual(5);
+    expect(s.every((x) => x.type === "key")).toBe(true);
+    expect(s.some((x) => x.label === "tag:")).toBe(true);
+    // insertion point is the caret itself
+    expect(s[0].replaceFrom).toBe(0);
+    expect(s[0].replaceTo).toBe(0);
   });
 
   test("prefix suggests matching keys with descriptions and capsule", () => {

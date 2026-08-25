@@ -45,6 +45,7 @@ export default function SearchBar() {
   const [caret, setCaret] = useState(0);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [dismissed, setDismissed] = useState(false);
+  const [focused, setFocused] = useState(false);
 
   const folderNames = useMemo(
     () =>
@@ -59,10 +60,10 @@ export default function SearchBar() {
   // Recompute suggestions on every query/caret change.
   const suggestions: Suggestion[] = useMemo(
     () =>
-      dismissed
-        ? []
-        : suggestFor(query, caret, { tags: availableTags, folderNames }),
-    [query, caret, availableTags, folderNames, dismissed],
+      focused && !dismissed
+        ? suggestFor(query, caret, { tags: availableTags, folderNames })
+        : [],
+    [query, caret, availableTags, folderNames, dismissed, focused],
   );
 
   // Derived: keep the highlight within bounds instead of resetting via effect.
@@ -149,7 +150,8 @@ export default function SearchBar() {
 
   return (
     <div className="flex w-full flex-col gap-1">
-      <div className="focus-within:ring-focus flex w-full items-center gap-1 rounded bg-input p-1 text-foreground focus-within:ring focus-within:outline-none">
+      {/* relative wrapper anchors the dropdown directly below the input */}
+      <div className="focus-within:ring-focus relative flex w-full items-center gap-1 rounded bg-input p-1 text-foreground focus-within:ring focus-within:outline-none">
         <input
           ref={inputRef}
           type="text"
@@ -164,9 +166,46 @@ export default function SearchBar() {
           onClick={syncCaret}
           onSelect={syncCaret}
           onKeyDown={handleKeyDown}
-          onBlur={() => setTimeout(() => setDismissed(true), 150)}
-          onFocus={() => setDismissed(false)}
+          onBlur={() => {
+            setFocused(false);
+            setTimeout(() => setDismissed(true), 150);
+          }}
+          onFocus={() => {
+            setFocused(true);
+            setDismissed(false);
+          }}
         />
+
+        {suggestions.length > 0 && (
+          <ul className="absolute top-full left-0 z-50 mt-1 max-h-80 w-full max-w-[560px] min-w-[380px] overflow-auto rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-lg">
+            {suggestions.map((suggestion, index) => (
+              <li
+                key={`${index}-${suggestion.label}`}
+                className={`flex cursor-pointer items-center gap-2 rounded-sm p-1 ${
+                  index === activeIndex ? "bg-muted" : "hover:bg-muted"
+                }`}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => acceptSuggestion(suggestion)}
+              >
+                {suggestion.category && (
+                  <span
+                    className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${capsuleStyle(suggestion.category)}`}
+                  >
+                    {suggestion.category}
+                  </span>
+                )}
+                <span className="truncate font-mono text-sm">
+                  {suggestion.label}
+                </span>
+                {suggestion.comment && (
+                  <span className="ml-auto shrink-0 pl-2 text-xs whitespace-nowrap text-muted-foreground">
+                    {suggestion.comment}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {chips.length > 0 && (
@@ -194,37 +233,6 @@ export default function SearchBar() {
             </span>
           ))}
         </div>
-      )}
-
-      {suggestions.length > 0 && (
-        <ul className="absolute z-50 mt-1 max-h-80 max-w-[420px] overflow-auto rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-lg">
-          {suggestions.map((suggestion, index) => (
-            <li
-              key={`${index}-${suggestion.label}`}
-              className={`flex cursor-pointer items-center gap-2 rounded-sm p-1 ${
-                index === activeIndex ? "bg-muted" : "hover:bg-muted"
-              }`}
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => acceptSuggestion(suggestion)}
-            >
-              {suggestion.category && (
-                <span
-                  className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${capsuleStyle(suggestion.category)}`}
-                >
-                  {suggestion.category}
-                </span>
-              )}
-              <span className="truncate font-mono text-sm">
-                {suggestion.label}
-              </span>
-              {suggestion.comment && (
-                <span className="ml-auto shrink-0 pl-2 text-xs text-muted-foreground">
-                  {suggestion.comment}
-                </span>
-              )}
-            </li>
-          ))}
-        </ul>
       )}
     </div>
   );
