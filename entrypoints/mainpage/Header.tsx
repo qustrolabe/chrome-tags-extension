@@ -1,6 +1,6 @@
 import React from "react";
 
-import FilterInput from "./FilterInput.tsx";
+import SearchBar from "./SearchBar.tsx";
 
 import { useBookmarks } from "@/context/BookmarksContext.tsx";
 import { useSidebar } from "@/context/SidebarContext.tsx";
@@ -54,7 +54,7 @@ export default function Header() {
     <div className="relative z-30 flex items-center gap-2 border-b border-border bg-background p-2 text-foreground shadow-sm">
       <SidebarToggle />
       <div className="flex flex-1 space-x-2">
-        <FilterInput />
+        <SearchBar />
       </div>
       <div className="flex items-center gap-2">
         <div className="flex items-center rounded-md bg-secondary p-0.5">

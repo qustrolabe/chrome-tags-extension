@@ -5,13 +5,13 @@ import React, {
     useEffect,
     useState,
 } from "react";
-import type { Filter } from "./BookmarksContext";
 import { useBookmarks } from "./BookmarksContext";
 
 export interface SavedView {
     id: string;
     name: string;
-    filters: Filter[];
+    /** Raw query string, e.g. `tag:"tech" -in:"Archive" last_used:<1w`. */
+    query: string;
 }
 
 interface ViewsContextType {
@@ -29,6 +29,46 @@ const ViewsContext = createContext<ViewsContextType | undefined>(undefined);
 
 const generateId = () => crypto.randomUUID();
 
+/**
+ * Migrate legacy views that stored a structured `filters` array.
+ * Best-effort conversion into query-string form.
+ */
+interface LegacyFilter {
+  type: string;
+  negative?: boolean;
+  tag?: string;
+  title?: string;
+  url?: string;
+  value?: string;
+}
+
+const migrateLegacyView = (view: Partial<SavedView> & { filters?: LegacyFilter[] }): SavedView => ({
+    id: view.id ?? generateId(),
+    name: view.name ?? "View",
+    query:
+        view.query ??
+        (Array.isArray(view.filters)
+            ? view.filters
+                .map((f) => {
+                    const neg = f.negative ? "-" : "";
+                    switch (f.type) {
+                        case "tag":
+                            return `${neg}tag:${JSON.stringify(f.tag ?? "")}`;
+                        case "title":
+                            return `${neg}title:${JSON.stringify(f.title ?? "")}`;
+                        case "url":
+                            return `${neg}url:${JSON.stringify(f.url ?? "")}`;
+                        default:
+                            return f.value
+                                ? `${neg}${JSON.stringify(f.value)}`
+                                : null;
+                    }
+                })
+                .filter(Boolean)
+                .join(" ")
+            : ""),
+});
+
 export const ViewsProvider = ({
     children,
 }: {
@@ -38,13 +78,16 @@ export const ViewsProvider = ({
     const [activeViewId, setActiveViewId] = useState<string | null>(null);
     const [mounted, setMounted] = useState(false);
 
-    const { filters } = useBookmarks();
+    const { query, setQuery } = useBookmarks();
 
     // Load persisted views
     useEffect(() => {
         browser.storage.local.get(["savedViews"]).then((result) => {
             if (result.savedViews) {
-                setViews(result.savedViews as SavedView[]);
+                setViews(
+                    (result.savedViews as (SavedView & { filters?: LegacyFilter[] })[])
+                        .map(migrateLegacyView),
+                );
             }
             setMounted(true);
         });
@@ -61,24 +104,23 @@ export const ViewsProvider = ({
             const newView: SavedView = {
                 id: generateId(),
                 name,
-                filters: filters.list,
+                query,
             };
             setViews((prev) => [...prev, newView]);
             setActiveViewId(newView.id);
         },
-        [filters.list],
+        [query],
     );
 
     const loadView = useCallback(
         (id: string) => {
             const view = views.find((v) => v.id === id);
             if (view) {
-                // Atomically replace all filters with view's filters
-                filters.set([...view.filters]);
+                setQuery(view.query);
                 setActiveViewId(id);
             }
         },
-        [views, filters],
+        [views, setQuery],
     );
 
     const deleteView = useCallback((id: string) => {
@@ -93,7 +135,7 @@ export const ViewsProvider = ({
             const duplicate: SavedView = {
                 id: generateId(),
                 name: `${view.name} (copy)`,
-                filters: [...view.filters],
+                query: view.query,
             };
             return [...prev, duplicate];
         });

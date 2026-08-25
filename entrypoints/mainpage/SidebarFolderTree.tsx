@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
-import type { Bookmark, FolderFilter } from "@/context/BookmarksContext";
+import type { Bookmark } from "@/context/BookmarksContext";
 import { useBookmarks } from "@/context/BookmarksContext";
+import { setTokenState, tokenState } from "@/utils/query/editing.ts";
 import {
     AiOutlineFolder,
     AiOutlineFolderOpen,
@@ -48,9 +49,13 @@ interface FolderItemProps {
     depth: number;
     expandedIds: Set<string>;
     toggleExpanded: (id: string) => void;
-    onFilter: (folderId: string, negative: boolean, strict: boolean) => void;
+    onFilter: (
+        folder: FolderNode,
+        negative: boolean,
+        strict: boolean,
+    ) => void;
     getFilterState: (
-        folderId: string,
+        folder: FolderNode,
     ) => "positive" | "negative" | "strict" | null;
 }
 
@@ -64,7 +69,7 @@ function FolderItem({
 }: FolderItemProps) {
     const isExpanded = expandedIds.has(node.id);
     const hasChildren = node.children.length > 0;
-    const filterState = getFilterState(node.id);
+    const filterState = getFilterState(node);
 
     return (
         <div>
@@ -114,20 +119,20 @@ function FolderItem({
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
-                            onFilter(node.id, false, e.altKey);
+                            onFilter(node, false, e.altKey);
                         }}
                         className="rounded p-1 text-green-600 hover:bg-green-500/30 dark:text-green-400"
-                        title="Add folder filter (Alt+Click for strict)"
+                        title="Add folder filter (Alt+Click for this folder only)"
                     >
                         <AiOutlinePlus className="size-3" />
                     </button>
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
-                            onFilter(node.id, true, e.altKey);
+                            onFilter(node, true, e.altKey);
                         }}
                         className="rounded p-1 text-destructive hover:bg-destructive/30"
-                        title="Exclude folder (Alt+Click for strict)"
+                        title="Exclude folder (Alt+Click for this folder only)"
                     >
                         <AiOutlineMinus className="size-3" />
                     </button>
@@ -154,7 +159,8 @@ function FolderItem({
 export default function SidebarFolderTree() {
     const {
         bookmarks: { all: bookmarks },
-        filters: { list: filters, add: addFilter, remove: removeFilter },
+        query,
+        setQuery,
     } = useBookmarks();
 
     const [expandedIds, setExpandedIds] = useState<Set<string>>(
@@ -176,52 +182,31 @@ export default function SidebarFolderTree() {
     };
 
     const getFilterState = (
-        folderId: string,
+        folder: FolderNode,
     ): "positive" | "negative" | "strict" | null => {
-        const filter = filters.find(
-            (f) =>
-                (f.type === "folder" || f.type === "strict_folder") &&
-                f.folderId === folderId,
-        );
-        if (!filter) return null;
-        if (filter.negative) return "negative";
-        if (filter.type === "strict_folder") return "strict";
-        return "positive";
+        const recursiveState = tokenState(query, "in", folder.title);
+        if (recursiveState === "negative") return "negative";
+        if (recursiveState === "positive") return "positive";
+        if (tokenState(query, "folder", folder.title) !== null) return "strict";
+        return null;
     };
 
     const handleFilter = (
-        folderId: string,
+        folder: FolderNode,
         negative: boolean,
         strict: boolean,
     ) => {
-        const existing = filters.find(
-            (f) =>
-                (f.type === "folder" || f.type === "strict_folder") &&
-                f.folderId === folderId,
+        // Clear both variants first, then set the requested one.
+        let next = setTokenState(query, "in", folder.title, null);
+        next = setTokenState(next, "folder", folder.title, null);
+        const key = strict ? "folder" : "in";
+        next = setTokenState(
+            next,
+            key,
+            folder.title,
+            negative ? "negative" : "positive",
         );
-
-        if (existing) {
-            removeFilter(existing);
-            // If clicking same type/state, just remove (toggle off).
-            // If different, add new.
-            const isSameType = (strict && existing.type === "strict_folder") ||
-                (!strict && existing.type === "folder");
-            const isSameNeg = existing.negative === negative;
-
-            if (!isSameType || !isSameNeg) {
-                addFilter({
-                    type: strict ? "strict_folder" : "folder",
-                    folderId,
-                    negative,
-                } as any);
-            }
-        } else {
-            addFilter({
-                type: strict ? "strict_folder" : "folder",
-                folderId,
-                negative,
-            } as any);
-        }
+        setQuery(next);
     };
 
     if (tree.length === 0) {

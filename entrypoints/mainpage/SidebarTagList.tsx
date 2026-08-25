@@ -1,53 +1,44 @@
 import React from "react";
-import { type TagFilter, useBookmarks } from "@/context/BookmarksContext";
+import { useBookmarks } from "@/context/BookmarksContext";
+import { cycleToken, tokenState } from "@/utils/query/editing.ts";
 import { AiOutlineCheck, AiOutlineClose } from "react-icons/ai";
 
 export default function SidebarTagList() {
     const {
         bookmarks: { availableTags },
-        filters: { list: filters, add: addFilter, remove: removeFilter },
+        query,
+        setQuery,
     } = useBookmarks();
 
-    // Get all tags that are currently used in filters
-    const activeTagFilters = filters
-        .filter((f): f is TagFilter => f.type === "tag")
-        .map((f) => f.tag);
+    // Tags referenced anywhere in the current query (either polarity)
+    const activeTags = new Set(
+      [...query.matchAll(/-?tag:"?([^\s"]+)"?/g)]
+        .map((m) => m[1])
+        .filter((t): t is string => t !== undefined),
+    );
 
-    // Merge availableTags with tags from filters to ensure they are displayed
-    // even if they have 0 count in the current results (e.g. negative filters)
+    // Merge availableTags with tags from the query so they stay visible
     const displayTags = { ...availableTags };
-    activeTagFilters.forEach((tag) => {
+    activeTags.forEach((tag) => {
         if (displayTags[tag] === undefined) {
             displayTags[tag] = 0;
         }
     });
 
-    // Check if a tag is already in filters
-    const getTagFilterState = (tag: string): "positive" | "negative" | null => {
-        const filter = filters.find(
-            (f): f is TagFilter => f.type === "tag" && f.tag === tag,
-        );
-        if (!filter) return null;
-        return filter.negative ? "negative" : "positive";
-    };
+    const getTagState = (tag: string): "positive" | "negative" | null =>
+        tokenState(query, "tag", tag);
 
-    // Sort tags:
-    // 1. Positive filters
-    // 2. Negative filters
-    // 3. Regular suggestions (sorted by count)
+    // Sort: positive filters, then negative, then by count
     const sortedTags = Object.entries(displayTags).sort(
         ([tagA, countA], [tagB, countB]) => {
-            const stateA = getTagFilterState(tagA);
-            const stateB = getTagFilterState(tagB);
-
             const score = (state: string | null) => {
                 if (state === "positive") return 2;
                 if (state === "negative") return 1;
                 return 0;
             };
 
-            const scoreA = score(stateA);
-            const scoreB = score(stateB);
+            const scoreA = score(getTagState(tagA));
+            const scoreB = score(getTagState(tagB));
 
             if (scoreA !== scoreB) {
                 return scoreB - scoreA;
@@ -57,26 +48,8 @@ export default function SidebarTagList() {
         },
     );
 
-    const handleTagClick = (tag: string, e: React.MouseEvent) => {
-        const currentState = getTagFilterState(tag);
-        const isShiftClick = e.shiftKey;
-
-        if (currentState) {
-            // Remove existing filter
-            const existingFilter = filters.find(
-                (f): f is TagFilter => f.type === "tag" && f.tag === tag,
-            );
-            if (existingFilter) {
-                removeFilter(existingFilter);
-            }
-        } else {
-            // Add new filter
-            addFilter({
-                type: "tag",
-                tag,
-                negative: isShiftClick,
-            });
-        }
+    const handleTagClick = (tag: string) => {
+        setQuery(cycleToken(query, "tag", tag));
     };
 
     if (sortedTags.length === 0) {
@@ -90,15 +63,15 @@ export default function SidebarTagList() {
     return (
         <div className="p-2">
             <div className="mb-1 px-2 py-1 text-xs text-muted-foreground">
-                Click to filter • Shift+Click to exclude
+                Click to filter • click again to exclude • once more to clear
             </div>
             <div className="flex flex-col gap-0.5">
                 {sortedTags.map(([tag, count]) => {
-                    const state = getTagFilterState(tag);
+                    const state = getTagState(tag);
                     return (
                         <button
                             key={tag}
-                            onClick={(e) => handleTagClick(tag, e)}
+                            onClick={() => handleTagClick(tag)}
                             className={`flex cursor-pointer items-center gap-1.5 rounded-md border-2 px-2 py-1.5 text-left text-sm transition-colors ${
                                 state === "positive"
                                     ? "border-green-500 bg-green-500/20 font-medium text-green-700 dark:text-green-300"
@@ -107,7 +80,6 @@ export default function SidebarTagList() {
                                     : "border-transparent text-foreground hover:bg-muted"
                             }`}
                         >
-                            {/* State indicator icon */}
                             {state === "positive" && (
                                 <AiOutlineCheck className="size-3.5 shrink-0 text-green-600 dark:text-green-400" />
                             )}

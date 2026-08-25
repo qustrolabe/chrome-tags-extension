@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useViews } from "@/context/ViewsContext";
+import { useViews, type SavedView } from "@/context/ViewsContext";
 import { useBookmarks } from "@/context/BookmarksContext";
 import {
     AiOutlineCheck,
@@ -20,7 +20,7 @@ export default function SidebarViews() {
         duplicateView,
         clearActiveView,
     } = useViews();
-    const { filters, bookmarks } = useBookmarks();
+    const { query, setQuery } = useBookmarks();
     const [newViewName, setNewViewName] = useState("");
     const [isCreating, setIsCreating] = useState(false);
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -31,31 +31,9 @@ export default function SidebarViews() {
         setIsCreating(false);
     };
 
-    const getViewDisplayName = (view: any) => {
+    const getViewDisplayName = (view: SavedView) => {
         if (view.name.trim()) return view.name;
-        if (view.filters.length === 0) return "Empty View";
-
-        return view.filters.map((f: any) => {
-            const prefix = f.negative ? "!" : "";
-            switch (f.type) {
-                case "tag":
-                    return `${prefix}#${f.tag}`;
-                case "folder": {
-                    const folder = bookmarks.all.find((b: any) =>
-                        b.id === f.folderId
-                    );
-                    return `${prefix}${folder?.title || "Folder"}`;
-                }
-                case "any":
-                    return `${prefix}${f.value}`;
-                case "title":
-                    return `${prefix}T:${f.title}`;
-                case "url":
-                    return `${prefix}U:${f.url}`;
-                default:
-                    return "View";
-            }
-        }).join(", ");
+        return view.query || "Empty View";
     };
 
     const handleDelete = (id: string) => {
@@ -76,7 +54,7 @@ export default function SidebarViews() {
                 ? (
                     <button
                         onClick={() => setIsCreating(true)}
-                        disabled={filters.list.length === 0}
+                        disabled={query.trim() === ""}
                         className="flex cursor-pointer items-center gap-2 rounded-md bg-primary/10 px-3 py-2 text-sm text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         <AiOutlineSave className="size-4" />
@@ -106,20 +84,20 @@ export default function SidebarViews() {
                     </div>
                 )}
 
-            {/* Current filters info */}
+            {/* Current query info */}
             <div className="px-1 text-xs text-muted-foreground">
-                Current: {filters.list.length}{" "}
-                filter{filters.list.length !== 1 ? "s" : ""}
+                Current query:{" "}
+                <span className="font-mono">{query || "(empty)"}</span>
             </div>
 
             {/* Clear Filters / Default View */}
             <button
                 onClick={() => {
-                    filters.clear();
+                    setQuery("");
                     clearActiveView();
                 }}
                 className={`group flex w-full items-center gap-2 rounded-md  p-2 text-left transition-colors ${
-                    !activeViewId && filters.list.length === 0
+                    !activeViewId && query.trim() === ""
                         ? "border border-primary/50 bg-primary/20"
                         : "border border-transparent hover:bg-muted"
                 }`}
@@ -167,10 +145,7 @@ export default function SidebarViews() {
                                             {getViewDisplayName(view)}
                                         </div>
                                         <div className="text-xs text-muted-foreground">
-                                            {view.filters.length}{" "}
-                                            filter{view.filters.length !== 1
-                                                ? "s"
-                                                : ""}
+                                            {view.query || "empty query"}
                                         </div>
                                     </button>
 
