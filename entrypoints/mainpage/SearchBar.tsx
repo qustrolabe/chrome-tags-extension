@@ -43,8 +43,14 @@ const capsuleStyle = (category?: string) =>
   "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-200";
 
 const tokenStyle = (token: FilterToken): string => {
+  // px-1 -mx-1 widens the painted capsule without shifting the text
+  // after it (negative margin cancels the padding's layout advance),
+  // which keeps the mirror layer aligned with the real input text.
   const base = TOKEN_COLORS[token.key] ?? "bg-neutral-500/15";
-  return token.negated ? `${base} line-through opacity-80` : base;
+  const shape = "rounded-[5px] px-1 -mx-1";
+  return token.negated
+    ? `${base} ${shape} line-through opacity-80`
+    : `${base} ${shape}`;
 };
 
 /** Split query into segments; filter tokens get highlighted. */
