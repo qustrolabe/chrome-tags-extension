@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useState } from "react";
 import { useBookmarks } from "@/context/BookmarksContext.tsx";
 import { parseQuery } from "@/utils/query/parser.ts";
-import type { FilterToken } from "@/utils/query/types.ts";
+import type { FilterToken, QueryToken } from "@/utils/query/types.ts";
 import { buildFolderTree } from "@/utils/query/folders.ts";
 import {
   invertTokenAt,
@@ -9,17 +9,25 @@ import {
   suggestFor,
 } from "@/utils/query/index.ts";
 import type { Suggestion } from "@/utils/query/suggest.ts";
-import { AiOutlineClose } from "react-icons/ai";
 
 /**
  * Query-language search bar.
  *
- * - One input holding the raw query string (the single source of truth).
- * - Caret-aware suggestions: key names, values with category capsules and
- *   grey comments, plus Invert/Remove actions when the caret is inside an
- *   existing token.
- * - Arrow keys navigate, Enter accepts, Tab completes, Esc dismisses.
+ * The <input> stays a fully native single-line input (selection,
+ * Ctrl+A, copy/paste, undo all work). Token highlighting uses a mirror
+ * layer BEHIND the input: the input's own text is transparent (caret
+ * and selection still paint), while the mirror draws the same text
+ * with colored token spans. Both layers are pinned to monospace with
+ * identical metrics, and horizontal scroll is synced.
  */
+
+const TOKEN_COLORS: Record<string, string> = {
+  tag: "bg-green-500/15 text-green-700 dark:text-green-300",
+  url: "bg-orange-500/15 text-orange-700 dark:text-orange-300",
+  title: "bg-purple-500/15 text-purple-700 dark:text-purple-300",
+  folder: "bg-blue-500/15 text-blue-700 dark:text-blue-300",
+  folder_strict: "bg-teal-500/15 text-teal-700 dark:text-teal-300",
+};
 
 const CATEGORY_STYLES: Record<string, string> = {
   tag: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100",
@@ -34,6 +42,28 @@ const capsuleStyle = (category?: string) =>
   CATEGORY_STYLES[category ?? ""] ??
   "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-200";
 
+const tokenStyle = (token: FilterToken): string => {
+  const base = TOKEN_COLORS[token.key] ?? "bg-neutral-500/15";
+  return token.negated ? `${base} line-through opacity-80` : base;
+};
+
+/** Split query into segments; filter tokens get highlighted. */
+const splitSegmentsForMirror = (
+  query: string,
+): { text: string; token?: QueryToken }[] => {
+  const parts: { text: string; token?: QueryToken }[] = [];
+  let pos = 0;
+  for (const token of parseQuery(query).tokens) {
+    if (token.start > pos) {
+      parts.push({ text: query.slice(pos, token.start) });
+    }
+    parts.push({ text: query.slice(token.start, token.end), token });
+    pos = token.end;
+  }
+  if (pos < query.length) parts.push({ text: query.slice(pos) });
+  return parts;
+};
+
 export default function SearchBar() {
   const {
     query,
@@ -42,6 +72,7 @@ export default function SearchBar() {
   } = useBookmarks();
 
   const inputRef = useRef<HTMLInputElement>(null);
+  const mirrorRef = useRef<HTMLDivElement>(null);
   const [caret, setCaret] = useState(0);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [dismissed, setDismissed] = useState(false);
@@ -66,6 +97,9 @@ export default function SearchBar() {
     highlightedIndex >= 0 && highlightedIndex < suggestions.length
       ? highlightedIndex
       : -1;
+
+  const mirrorParts = useMemo(() => splitSegmentsForMirror(query), [query]);
+
   const updateQuery = (next: string, caretAfter?: number) => {
     // Compute the final caret synchronously and clamp it: the suggestion
     // memo must never recompute with a stale or out-of-range caret.
@@ -76,8 +110,7 @@ export default function SearchBar() {
     requestAnimationFrame(() => {
       const input = inputRef.current;
       if (!input) return;
-      // Don't yank caret/focus if the user already typed on or moved past
-      // the text we inserted.
+      // Don't yank caret/focus if the user already typed past our insert.
       if (input.value !== next || document.activeElement !== input) return;
       input.setSelectionRange(pos, pos);
     });
@@ -153,24 +186,38 @@ export default function SearchBar() {
     }
   };
 
-  /** Active filter tokens shown as removable chips under the input. */
-  const chips = useMemo(
-    () =>
-      parseQuery(query).tokens.filter(
-        (t): t is FilterToken => t.kind === "filter" && !t.incomplete,
-      ),
-    [query],
-  );
-
   return (
-    <div className="flex w-full flex-col gap-1">
-      {/* relative wrapper anchors the dropdown directly below the input */}
-      <div className="focus-within:ring-focus relative flex w-full items-center gap-1 rounded bg-input p-1 text-foreground focus-within:ring focus-within:outline-none">
+    <div className="relative w-full">
+      <div className="ring-focus-within relative flex w-full items-center rounded bg-input text-foreground focus-within:outline-none">
+        {/* Highlight mirror behind the input: identical metrics */}
+        <div
+          ref={mirrorRef}
+          aria-hidden
+          className="pointer-events-none absolute inset-0 overflow-hidden px-2 py-[7px] font-mono text-sm leading-5 whitespace-pre"
+        >
+          {mirrorParts.map((part, i) =>
+            part.token &&
+            part.token.kind === "filter" &&
+            !part.token.incomplete
+              ? (
+                <span key={i} className={`rounded-[3px] ${tokenStyle(part.token)}`}>
+                  {part.text}
+                </span>
+              )
+              : (
+                <span key={i}>{part.text}</span>
+              )
+          )}
+          {/* trailing space so the mirror width tracks the input */}
+          {"\u200b"}
+        </div>
+
         <input
           ref={inputRef}
           type="text"
+          spellCheck={false}
           placeholder='Search — tag:"tech" url:"google" last_used:<1w -folder:"Archive"'
-          className="w-full min-w-[100px] grow bg-transparent p-1 align-middle focus:outline-none"
+          className="relative z-10 w-full min-w-[100px] grow bg-transparent px-2 py-[7px] font-mono text-sm leading-5 text-transparent caret-foreground selection:bg-blue-500/30 selection:text-transparent placeholder:text-muted-foreground/70 focus:outline-none"
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
@@ -180,6 +227,11 @@ export default function SearchBar() {
           onClick={syncCaret}
           onSelect={syncCaret}
           onKeyDown={handleKeyDown}
+          onScroll={(e) => {
+            if (mirrorRef.current) {
+              mirrorRef.current.scrollLeft = e.currentTarget.scrollLeft;
+            }
+          }}
           onBlur={() => {
             setFocused(false);
             setTimeout(() => setDismissed(true), 150);
@@ -234,33 +286,6 @@ export default function SearchBar() {
           </ul>
         )}
       </div>
-
-      {chips.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1">
-          {chips.map((token) => (
-            <span
-              key={`${token.start}-${token.key}-${token.value}`}
-              className={`flex items-center gap-1 rounded-[3px] px-1.5 py-0.5 text-xs select-none ${
-                token.negated
-                  ? `${capsuleStyle(token.key)} line-through opacity-70 outline-1 outline-destructive`
-                  : capsuleStyle(token.key)
-              }`}
-            >
-              <span className="font-medium">{token.key}</span>
-              <span>{token.value}</span>
-              <button
-                className="cursor-pointer opacity-60 hover:opacity-100"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() =>
-                  updateQuery(removeTokenAt(query, token.end))
-                }
-              >
-                <AiOutlineClose className="size-3" />
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
