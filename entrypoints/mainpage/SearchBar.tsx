@@ -80,8 +80,10 @@ export default function SearchBar() {
     requestAnimationFrame(() => {
       const input = inputRef.current;
       if (!input) return;
+      // Don't yank caret/focus if the user already typed on or moved past
+      // the text we inserted.
+      if (input.value !== next || document.activeElement !== input) return;
       input.setSelectionRange(pos, pos);
-      input.focus();
     });
   };
 
@@ -115,6 +117,8 @@ export default function SearchBar() {
   };
 
   const handleKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
+    // Let IME composition (e.g. CJK candidates) handle its own keys.
+    if (e.nativeEvent.isComposing) return;
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setDismissed(false);

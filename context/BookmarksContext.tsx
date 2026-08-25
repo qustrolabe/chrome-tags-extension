@@ -125,11 +125,17 @@ export const BookmarksManagerProvider = (
     });
   }, [sortOption, sortDirection, sortingMounted]);
 
+  // Match context only depends on the tree + stats, not the query —
+  // building it on every keystroke would re-scan the whole bookmark tree.
+  const matchContext = useMemo(
+    () => createMatchContext(allBookmarksFlat, stats),
+    [allBookmarksFlat, stats],
+  );
+
   // Sort and filter bookmarks into displayBookmarks
   const displayBookmarks = useMemo(() => {
     const bookmarkOnly = allBookmarksFlat.filter((b) => b.url !== undefined);
-    const ctx = createMatchContext(allBookmarksFlat, stats);
-    const filteredBookmarks = applyQuery(query, bookmarkOnly, ctx);
+    const filteredBookmarks = applyQuery(query, bookmarkOnly, matchContext);
 
     return sortBookmarks(
       filteredBookmarks,
@@ -137,7 +143,7 @@ export const BookmarksManagerProvider = (
       sortDirection,
       stats,
     );
-  }, [allBookmarksFlat, sortOption, sortDirection, query, stats]);
+  }, [allBookmarksFlat, sortOption, sortDirection, query, stats, matchContext]);
 
   // Get all available tags from currently displayed bookmarks
   // (used in displaying tag search suggestion)
