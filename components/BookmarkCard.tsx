@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Tooltip, AlertDialog } from "radix-ui";
-import { AiOutlineDelete, AiOutlineEdit } from "react-icons/ai";
+import { AiOutlineDelete, AiOutlineEdit, AiOutlineTool } from "react-icons/ai";
 import BookmarkEditDialog from "@/components/BookmarkEditDialog.tsx";
 import { extractTags, buildTagIndex } from "@/utils/query/tags.ts";
 import { faviconURL } from "@/utils/favicon.ts";
@@ -375,10 +375,14 @@ export default function BookmarkCard({
                     )}
                 <button
                     type="button"
-                    className="ml-2 cursor-pointer rounded-md bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground transition-colors hover:bg-secondary/80"
+                    className={`ml-2 flex cursor-pointer items-center rounded-md bg-secondary p-1.5 text-secondary-foreground transition-colors hover:bg-secondary/80 ${
+                        isEditing ? "px-2.5" : ""
+                    }`}
                     onClick={handleEdit}
                 >
-                    {isEditing ? "Submit" : "Edit"}
+                    {isEditing
+                        ? <span className="text-xs font-medium">Submit</span>
+                        : <AiOutlineEdit className="size-3.5" />}
                 </button>
                 {!isEditing && !isSettingsPreview && (
                     <div className="ml-1 flex shrink-0 items-center gap-0.5">
@@ -387,11 +391,11 @@ export default function BookmarkCard({
                                 <Tooltip.Trigger asChild>
                                     <button
                                         type="button"
-                                        className="cursor-pointer rounded-md p-1 text-muted-foreground/50 transition-colors hover:bg-muted hover:text-foreground"
+                                        className="cursor-pointer rounded-md bg-secondary p-1 text-secondary-foreground transition-colors hover:bg-secondary/80"
                                         onClick={() => setAdvEditOpen(true)}
                                         title="Advanced edit"
                                     >
-                                        <AiOutlineEdit className="size-3.5" />
+                                        <AiOutlineTool className="size-3.5" />
                                     </button>
                                 </Tooltip.Trigger>
                                 <Tooltip.Portal>
@@ -408,7 +412,7 @@ export default function BookmarkCard({
                             <Tooltip.Trigger asChild>
                                 <button
                                     type="button"
-                                    className="ml-1 cursor-pointer rounded-md p-1 text-muted-foreground/50 transition-colors hover:bg-destructive/20 hover:text-destructive"
+                                    className="cursor-pointer rounded-md bg-secondary p-1 text-secondary-foreground transition-colors hover:bg-destructive/80"
                                     onClick={() => setConfirmOpen(true)}
                                     title="Delete bookmark"
                                 >
