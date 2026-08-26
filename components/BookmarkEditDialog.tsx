@@ -346,14 +346,10 @@ function FolderPicker(
                     children: build(byParent.get(f.id) ?? []),
                 }))
                 .sort((a, b) => a.title.localeCompare(b.title));
-        // Show the Bookmarks Bar as the single visible root (itself
-        // selectable); without it, fall back to the raw root level.
-        const bookmarksBar =
-            byParent.get("0")?.find((f) => f.id === "1") ??
-            byParent.get("0")?.find((f) => /bookmarks bar/i.test(f.title));
-        return build(
-            bookmarksBar ? [bookmarksBar] : byParent.get("0") ?? [],
-        );
+        // All root-level folders (Bookmarks Bar, Other Bookmarks, Mobile,
+        // …) as visible, selectable roots; the invisible root itself is
+        // never rendered.
+        return build(byParent.get("0") ?? []);
     }, [allBookmarks, selfId]);
 
     // Full path for every folder (used by fuzzy search results).
@@ -368,10 +364,13 @@ function FolderPicker(
         return map;
     }, [tree]);
 
-    // Start with the bookmark's current location unfolded — and the
-    // Bookmarks Bar root always open.
+    // Start unfolded at the bookmark's current location; root-level
+    // folders (Bookmarks Bar etc.) are always open.
     const [expanded, setExpanded] = useState<Set<string>>(() => {
-        const initial = new Set<string>(["1"]);
+        const initial = new Set<string>();
+        for (const f of allBookmarks) {
+            if (f.url === undefined && f.parentId === "0") initial.add(f.id);
+        }
         let cur = allBookmarks.find((b) => b.id === value);
         while (cur?.parentId) {
             initial.add(cur.parentId);
