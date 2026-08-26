@@ -81,6 +81,7 @@ export default function BookmarkCard({
     const [suggest, setSuggest] = useState<{
         start: number; // index of first char after '#'
         caret: number;
+        left: number;
         matches: string[];
         highlighted: number;
     } | null>(null);
@@ -117,17 +118,37 @@ export default function BookmarkCard({
         return Object.keys(buildTagIndex(withUrl)).sort();
     }, [isEditing, allBookmarks]);
 
+    const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+    /** Approximate pixel X of the caret inside the input. */
+    const measureCaretX = (text: string): number => {
+        const input = inputRef.current;
+        if (!input || !text) return 0;
+        if (!canvasRef.current) canvasRef.current = document.createElement("canvas");
+        const ctx = canvasRef.current.getContext("2d");
+        if (!ctx) return 0;
+        const style = globalThis.getComputedStyle(input);
+        ctx.font = `${style.fontSize} ${style.fontFamily}`;
+        // account for horizontal scrolling of long titles
+        return Math.max(0, ctx.measureText(text).width - input.scrollLeft);
+    };
+
     /** Detect `#fragment` right before the caret; null = no suggestion mode. */
     const computeSuggest = (value: string, caret: number) => {
         const upto = value.slice(0, caret);
         const match = /(?:^|\s)#([^\s#]*)$/.exec(upto);
-        if (!match?.[1]) return null;
+        if (!match || match[1] === undefined) return null;
         const prefix = match[1].toLowerCase();
         const matches = knownTags
             .filter((t) => t.startsWith(prefix))
             .slice(0, 8);
+        const left = Math.min(
+            measureCaretX(value.slice(0, caret - match[1].length - 1)),
+            Math.max(0, (inputRef.current?.clientWidth ?? 300) - 200),
+        );
         return {
             start: caret - match[1].length,
+            left,
             caret,
             matches,
             highlighted: 0,
@@ -265,7 +286,11 @@ export default function BookmarkCard({
 
                 {isEditing
                     ? (
-                        <div className="relative w-full">
+                        <div
+                            className={`relative w-full ${
+                                suggest ? "z-50" : ""
+                            }`}
+                        >
                             <input
                                 ref={inputRef}
                                 type="text"
@@ -275,11 +300,15 @@ export default function BookmarkCard({
                                     updateSuggestions();
                                 }}
                                 onKeyDown={handleTitleKeyDown}
+                                onSelect={updateSuggestions}
                                 onBlur={() => setSuggest(null)}
                                 className="w-full rounded-md border border-border bg-input px-2 text-sm text-foreground"
                             />
                             {suggest && suggest.matches.length > 0 && (
-                                <div className="absolute top-full left-0 z-50 mt-1 max-h-[180px] min-w-[160px] overflow-y-auto rounded-md border border-border bg-popover py-1 shadow-lg">
+                                <div
+                                    className="absolute top-full z-50 mt-1 max-h-[180px] min-w-[160px] overflow-y-auto rounded-md border border-border bg-popover py-1 shadow-lg"
+                                    style={{ left: suggest.left }}
+                                >
                                     <div className="px-2 pb-1 text-[10px] text-muted-foreground/60">
                                         Tags — Tab to insert
                                     </div>
