@@ -265,8 +265,8 @@ export default function BookmarkCard({
 
     return (
         <div
-            className={`flex min-h-[100px] flex-col rounded-lg border border-border bg-card p-2 text-card-foreground shadow-sm transition-shadow ${
-                isSettingsPreview ? "" : "m-1 hover:shadow-md"
+            className={`flex min-h-[100px] flex-col rounded-lg border border-border bg-card p-2 text-card-foreground ${
+                isSettingsPreview ? "" : "m-1"
             }`}
         >
             <div className="flex items-center">
