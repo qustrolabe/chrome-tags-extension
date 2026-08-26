@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Tooltip, AlertDialog } from "radix-ui";
-import { AiOutlineDelete } from "react-icons/ai";
+import { AiOutlineDelete, AiOutlineEdit } from "react-icons/ai";
+import BookmarkEditDialog from "@/components/BookmarkEditDialog.tsx";
 import { extractTags, buildTagIndex } from "@/utils/query/tags.ts";
 import { faviconURL } from "@/utils/favicon.ts";
 
@@ -76,6 +77,7 @@ export default function BookmarkCard({
     const [isEditing, setIsEditing] = useState(false);
     const [title, setTitle] = useState(bookmark.title);
     const [confirmOpen, setConfirmOpen] = useState(false);
+    const [advEditOpen, setAdvEditOpen] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
 
     /** Tag suggestions shown while a `#fragment` is being typed. */
@@ -379,7 +381,29 @@ export default function BookmarkCard({
                     {isEditing ? "Submit" : "Edit"}
                 </button>
                 {!isEditing && !isSettingsPreview && (
-                    <Tooltip.Provider>
+                    <div className="ml-1 flex shrink-0 items-center gap-0.5">
+                        <Tooltip.Provider>
+                            <Tooltip.Root delayDuration={300}>
+                                <Tooltip.Trigger asChild>
+                                    <button
+                                        type="button"
+                                        className="cursor-pointer rounded-md p-1 text-muted-foreground/50 transition-colors hover:bg-muted hover:text-foreground"
+                                        onClick={() => setAdvEditOpen(true)}
+                                        title="Advanced edit"
+                                    >
+                                        <AiOutlineEdit className="size-3.5" />
+                                    </button>
+                                </Tooltip.Trigger>
+                                <Tooltip.Portal>
+                                    <Tooltip.Content side="left" className="z-100">
+                                        <div className="rounded-md border border-border bg-popover px-1.5 py-0.5 text-xs font-medium text-popover-foreground shadow-lg">
+                                            Advanced edit
+                                        </div>
+                                    </Tooltip.Content>
+                                </Tooltip.Portal>
+                            </Tooltip.Root>
+                        </Tooltip.Provider>
+                        <Tooltip.Provider>
                         <Tooltip.Root delayDuration={300}>
                             <Tooltip.Trigger asChild>
                                 <button
@@ -399,7 +423,8 @@ export default function BookmarkCard({
                                 </Tooltip.Content>
                             </Tooltip.Portal>
                         </Tooltip.Root>
-                    </Tooltip.Provider>
+                        </Tooltip.Provider>
+                    </div>
                 )}
             </div>
 
@@ -549,6 +574,13 @@ export default function BookmarkCard({
                     </AlertDialog.Content>
                 </AlertDialog.Portal>
             </AlertDialog.Root>
+
+            <BookmarkEditDialog
+                bookmark={bookmark}
+                open={advEditOpen}
+                onOpenChange={setAdvEditOpen}
+                allBookmarks={allBookmarks}
+            />
         </div>
     );
 }
