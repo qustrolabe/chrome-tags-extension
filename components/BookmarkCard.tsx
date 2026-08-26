@@ -84,7 +84,7 @@ export default function BookmarkCard({
         caret: number;
         left: number;
         top: number;
-        matches: string[];
+        matches: { tag: string; count: number }[];
         highlighted: number;
     } | null>(null);
 
@@ -113,11 +113,14 @@ export default function BookmarkCard({
         }
     };
 
-    // Known tags across ALL bookmarks (case-merged), only needed while editing.
+    // Known tags across ALL bookmarks (case-merged), most popular first.
+    // Only computed while editing.
     const knownTags = useMemo(() => {
-        if (!isEditing) return [] as string[];
+        if (!isEditing) return [] as { tag: string; count: number }[];
         const withUrl = allBookmarks.filter((b) => b.url !== undefined);
-        return Object.keys(buildTagIndex(withUrl)).sort();
+        return Object.entries(buildTagIndex(withUrl))
+            .map(([tag, count]) => ({ tag, count }))
+            .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag));
     }, [isEditing, allBookmarks]);
 
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -145,7 +148,7 @@ export default function BookmarkCard({
         if (!match || match[1] === undefined || !input) return null;
         const prefix = match[1].toLowerCase();
         const matches = knownTags
-            .filter((t) => t.startsWith(prefix))
+            .filter((entry) => entry.tag.startsWith(prefix))
             .slice(0, 8);
         const rect = input.getBoundingClientRect();
         const left = Math.min(
@@ -211,7 +214,7 @@ export default function BookmarkCard({
             ) {
                 e.preventDefault();
                 e.stopPropagation();
-                const tag = suggest.matches[suggest.highlighted];
+                const tag = suggest.matches[suggest.highlighted]?.tag;
                 if (tag === undefined) return;
                 acceptSuggestion(tag);
                 return;
@@ -319,9 +322,9 @@ export default function BookmarkCard({
                                         <div className="px-2 pb-1 text-[10px] text-muted-foreground/60">
                                             Tags — Tab to insert
                                         </div>
-                                        {suggest.matches.map((tag, i) => (
+                                        {suggest.matches.map((entry, i) => (
                                             <button
-                                                key={tag}
+                                                key={entry.tag}
                                                 className={`flex w-full cursor-pointer items-center gap-1.5 px-2 py-1 text-left text-xs ${
                                                     i === suggest.highlighted
                                                         ? "bg-muted text-foreground"
@@ -330,7 +333,9 @@ export default function BookmarkCard({
                                                 onMouseDown={(e) => {
                                                     // prevent blur before accept
                                                     e.preventDefault();
-                                                    acceptSuggestion(tag);
+                                                    acceptSuggestion(
+                                                        entry.tag,
+                                                    )
                                                 }}
                                                 onMouseEnter={() =>
                                                     setSuggest({
@@ -342,7 +347,14 @@ export default function BookmarkCard({
                                                     #
                                                 </span>
                                                 <span className="truncate">
-                                                    {tag}
+                                                    {entry.tag}
+                                                </span>
+                                                <span className="ml-auto shrink-0 pl-2 text-xs whitespace-nowrap text-muted-foreground">
+                                                    {entry.count}
+                                                    {" "}
+                                                    {entry.count === 1
+                                                        ? "bookmark"
+                                                        : "bookmarks"}
                                                 </span>
                                             </button>
                                         ))}
