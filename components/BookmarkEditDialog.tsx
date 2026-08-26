@@ -68,34 +68,7 @@ function EditForm({
     const [newTag, setNewTag] = useState("");
     const [saving, setSaving] = useState(false);
 
-    // Folder options: every folder with a readable path, excluding the
-    // bookmark itself and anything inside its own subtree.
-    const folderOptions = useMemo(() => {
-        if (allBookmarks.length === 0) return [];
-        const byId = new Map(allBookmarks.map((b) => [b.id, b]));
-        const pathOf = (node: Bookmark): string[] => {
-            const parts: string[] = [];
-            let cur: Bookmark | undefined = node;
-            while (cur) {
-                parts.unshift(cur.title || "…");
-                cur = cur.parentId ? byId.get(cur.parentId) : undefined;
-            }
-            return parts.slice(1); // drop the root placeholder
-        };
-        return allBookmarks
-            .filter((b) => b.url === undefined)
-            .map((f) => {
-                // skip self + descendants
-                let cur: Bookmark | undefined = f;
-                while (cur) {
-                    if (cur.id === bookmark.id) return null;
-                    cur = cur.parentId ? byId.get(cur.parentId) : undefined;
-                }
-                return { id: f.id, label: pathOf(f).join(" / ") };
-            })
-            .filter((o): o is { id: string; label: string } => o !== null)
-            .sort((a, b) => a.label.localeCompare(b.label));
-    }, [allBookmarks, bookmark.id]);
+    // Folder navigation state now lives in <FolderPicker> below.
 
     const tags = useMemo(
         () =>
@@ -272,30 +245,15 @@ function EditForm({
                     />
 
                     {/* Folder */}
-                    {folderOptions.length > 0 && (
-                        <>
-                            <label className="mt-3 block text-xs font-medium">
-                                Folder
-                            </label>
-                            <select
-                                value={folderId}
-                                onChange={(e) => setFolderId(e.target.value)}
-                                className="w-full cursor-pointer rounded-md border border-border bg-input px-2 py-1 text-sm"
-                            >
-                                {!folderOptions.some((o) =>
-                                        o.id === folderId) && folderId && (
-                                    <option value={folderId}>
-                                        (current folder)
-                                    </option>
-                                )}
-                                {folderOptions.map((o) => (
-                                    <option key={o.id} value={o.id}>
-                                        {o.label}
-                                    </option>
-                                ))}
-                            </select>
-                        </>
-                    )}
+                    <label className="mt-3 block text-xs font-medium">
+                        Move to
+                    </label>
+                    <FolderPicker
+                        allBookmarks={allBookmarks}
+                        selfId={bookmark.id}
+                        value={folderId}
+                        onChange={setFolderId}
+                    />
 
                     {/* Actions */}
                     <div className="mt-4 flex justify-end gap-2">
@@ -317,5 +275,182 @@ function EditForm({
                         </button>
                     </div>
         </>
+    );
+}
+
+interface FolderNode {
+    id: string;
+    title: string;
+    children: FolderNode[];
+}
+
+/** Case-insensitive subsequence match; null when no match. */
+const fuzzyMatch = (query: string, text: string): boolean => {
+    if (query === "") return true;
+    let i = 0;
+    const q = query.toLowerCase();
+    const t = text.toLowerCase();
+    for (const ch of t) {
+        if (ch === q[i]) i++;
+        if (i === q.length) return true;
+    }
+    return false;
+};
+
+/**
+ * Tree navigator for picking a destination folder. Browse by unfolding,
+ * or type to fuzzy-filter — matches are then shown as full branch paths.
+ */
+function FolderPicker(
+    { allBookmarks, selfId, value, onChange }: {
+        allBookmarks: Bookmark[];
+        selfId: string;
+        value: string;
+        onChange: (id: string) => void;
+    },
+) {
+    const [query, setQuery] = useState("");
+
+    // Build the folder tree once, excluding self + own subtree.
+    const tree = useMemo(() => {
+        const folders = allBookmarks.filter((b) => b.url === undefined);
+        const byId = new Map(folders.map((f) => [f.id, f]));
+        const inOwnSubtree = (f: Bookmark): boolean => {
+            let cur: Bookmark | undefined = f;
+            while (cur) {
+                if (cur.id === selfId) return true;
+                cur = cur.parentId ? byId.get(cur.parentId) : undefined;
+            }
+            return false;
+        };
+        const byParent = new Map<string, Bookmark[]>();
+        for (const f of folders) {
+            if (inOwnSubtree(f)) continue;
+            const key = f.parentId ?? "";
+            const list = byParent.get(key) ?? [];
+            list.push(f);
+            byParent.set(key, list);
+        }
+        const build = (nodes: Bookmark[]): FolderNode[] =>
+            nodes
+                .map((f) => ({
+                    id: f.id,
+                    title: f.title || "…",
+                    children: build(byParent.get(f.id) ?? []),
+                }))
+                .sort((a, b) => a.title.localeCompare(b.title));
+        return build(byParent.get("") ?? []);
+    }, [allBookmarks, selfId]);
+
+    // Full path for every folder (used by fuzzy search results).
+    const pathsById = useMemo(() => {
+        const map = new Map<string, string[]>();
+        const walk = (node: FolderNode, prefix: string[]) => {
+            const path = [...prefix, node.title];
+            map.set(node.id, path);
+            node.children.forEach((c) => walk(c, path));
+        };
+        tree.forEach((root) => walk(root, []));
+        return map;
+    }, [tree]);
+
+    // Start with the bookmark's current location unfolded.
+    const [expanded, setExpanded] = useState<Set<string>>(() => {
+        const initial = new Set<string>();
+        let cur = allBookmarks.find((b) => b.id === value);
+        while (cur?.parentId) {
+            initial.add(cur.parentId);
+            cur = allBookmarks.find((b) => b.id === cur!.parentId);
+        }
+        return initial;
+    });
+
+    const toggle = (id: string) => {
+        setExpanded((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+            return next;
+        });
+    };
+
+    // Fuzzy-filtered flat results with full branch paths.
+    const matches = useMemo(() => {
+        if (query.trim() === "") return [];
+        const out: { id: string; path: string[] }[] = [];
+        for (const [id, path] of pathsById) {
+            if (fuzzyMatch(query.trim(), path.join(" / "))) out.push({ id, path });
+        }
+        out.sort((a, b) =>
+            a.path.join("/").length - b.path.join("/").length ||
+            a.path.join("/").localeCompare(b.path.join("/")),
+        );
+        return out.slice(0, 30);
+    }, [query, pathsById]);
+
+    const Row = ({ id }: { id: string }) => (
+        <button
+            type="button"
+            onClick={() => onChange(id)}
+            className={`flex w-full cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 text-left text-xs ${
+                id === value
+                    ? "bg-primary/20 font-medium text-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            }`}
+        >
+            {id === value && <span className="text-primary">✓</span>}
+            <span className="truncate">
+                {(pathsById.get(id) ?? []).join(" / ") || "…"}
+            </span>
+        </button>
+    );
+
+    const renderTree = (nodes: FolderNode[], depth: number) => (
+        <>
+            {nodes.map((node) => (
+                <div key={node.id}>
+                    <div
+                        className={`flex w-full items-center gap-0.5 rounded px-0.5 ${
+                            node.id === value ? "bg-primary/20" : ""
+                        }`}
+                        style={{ paddingLeft: depth * 12 }}
+                    >
+                        <button
+                            type="button"
+                            className={`cursor-pointer rounded p-0.5 text-muted-foreground transition-transform hover:text-foreground ${
+                                expanded.has(node.id) ? "rotate-90" : ""
+                            } ${node.children.length === 0 ? "invisible" : ""}`}
+                            onClick={() => toggle(node.id)}
+                            tabIndex={-1}
+                        >
+                            ▸
+                        </button>
+                        <Row id={node.id} />
+                    </div>
+                    {expanded.has(node.id) &&
+                        renderTree(node.children, depth + 1)}
+                </div>
+            ))}
+        </>
+    );
+
+    return (
+        <div className="rounded-md border border-border bg-input/50 p-1">
+            <input
+                type="text"
+                value={query}
+                placeholder="search folders…"
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full border-b border-border bg-transparent px-2 py-1 text-xs outline-none placeholder:text-muted-foreground/50"
+            />
+            <div className="mt-1 max-h-[200px] overflow-y-auto">
+                {query.trim() !== ""
+                    ? matches.map((m) => <Row key={m.id} id={m.id} />)
+                    : renderTree(tree, 0)}
+            </div>
+        </div>
     );
 }
