@@ -290,18 +290,6 @@ interface FolderNode {
     children: FolderNode[];
 }
 
-/** Case-insensitive subsequence match; null when no match. */
-const fuzzyMatch = (query: string, text: string): boolean => {
-    if (query === "") return true;
-    let i = 0;
-    const q = query.toLowerCase();
-    const t = text.toLowerCase();
-    for (const ch of t) {
-        if (ch === q[i]) i++;
-        if (i === q.length) return true;
-    }
-    return false;
-};
 
 /**
  * Tree navigator for picking a destination folder. Browse by unfolding,
@@ -360,18 +348,6 @@ function FolderPicker(
         return build(byParent.get("0") ?? []);
     }, [allBookmarks, selfId]);
 
-    // Full path for every folder (used by fuzzy search results).
-    const pathsById = useMemo(() => {
-        const map = new Map<string, string[]>();
-        const walk = (node: FolderNode, prefix: string[]) => {
-            const path = [...prefix, node.title];
-            map.set(node.id, path);
-            node.children.forEach((c) => walk(c, path));
-        };
-        tree.forEach((root) => walk(root, []));
-        return map;
-    }, [tree]);
-
     // Start unfolded at the bookmark's current location; root-level
     // folders (Bookmarks Bar etc.) are always open.
     const [expanded, setExpanded] = useState<Set<string>>(() => {
@@ -399,25 +375,24 @@ function FolderPicker(
         });
     };
 
-    // Fuzzy-filtered tree: keeps hierarchy, showing matched folders and
-    // their ancestors (children of a match stay visible too).
+    // Filtered tree: keeps hierarchy, showing folders whose own name
+    // contains the query, plus their ancestor chain (children of a
+    // match stay visible too).
     const filteredTree = useMemo(() => {
-        const q = query.trim();
+        const q = query.trim().toLowerCase();
         if (q === "") return null;
         const filter = (nodes: FolderNode[]): FolderNode[] => {
             const result: FolderNode[] = [];
             for (const node of nodes) {
                 const kids = filter(node.children);
-                const selfMatch = fuzzyMatch(q, node.title) ||
-                    fuzzyMatch(q, (pathsById.get(node.id) ?? []).join(" / "));
-                if (selfMatch || kids.length > 0) {
+                if (node.title.toLowerCase().includes(q) || kids.length > 0) {
                     result.push({ ...node, children: kids });
                 }
             }
             return result;
         };
         return filter(tree);
-    }, [query, tree, pathsById]);
+    }, [query, tree]);
 
     const Row = ({ id, title }: { id: string; title: string }) => (
         <button
