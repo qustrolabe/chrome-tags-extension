@@ -8,11 +8,14 @@ import { Popover } from "radix-ui";
 
 import { useTheme } from "@/context/ThemeContext";
 
-export default function ControlMenu() {
+export default function ControlMenu(
+    { onOpenSettings }: { onOpenSettings?: () => void },
+) {
     const { theme, setTheme } = useTheme();
 
     const openSettings = () => {
-        browser.runtime.openOptionsPage();
+        if (onOpenSettings) onOpenSettings();
+        else browser.runtime.openOptionsPage();
     };
 
     const THEME_OPTIONS = [

@@ -1,15 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 
 import SearchBar from "./SearchBar.tsx";
+import SettingsPopup from "./SettingsPopup.tsx";
 
 import { useBookmarks } from "@/context/BookmarksContext.tsx";
 import { useSidebar } from "@/context/SidebarContext.tsx";
 import SortOptions from "./SortOptions.tsx";
 import { useViewMode } from "@/context/ViewModeContext";
 
-import { AiOutlineMenu } from "react-icons/ai";
 import { RiSideBarLine } from "react-icons/ri";
-import { Popover } from "radix-ui";
 import ControlMenu from "./ControlMenu.tsx";
 
 function BookmarksCounter() {
@@ -49,6 +48,7 @@ function SidebarToggle() {
 
 export default function Header() {
   const { mode, setMode } = useViewMode();
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
     <div className="relative z-30 flex items-center gap-2 border-b border-border bg-background p-2 text-foreground shadow-sm">
@@ -76,7 +76,8 @@ export default function Header() {
         <SortOptions />
       </div>
       <BookmarksCounter />
-      <ControlMenu />
+      <ControlMenu onOpenSettings={() => setSettingsOpen(true)} />
+      <SettingsPopup open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
   );
 }
