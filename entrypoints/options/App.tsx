@@ -6,6 +6,8 @@ import {
   AiOutlineBarChart,
 } from "react-icons/ai";
 import { useTheme } from "@/context/ThemeContext";
+import { useEffect } from "react";
+import { initAccent } from "@/utils/accent.ts";
 import Sidebar from "./components/Sidebar";
 import GeneralTab from "./components/GeneralTab";
 import CardsTab from "./components/CardsTab";
@@ -15,6 +17,9 @@ import TrackingTab from "./components/TrackingTab";
 type TabId = "general" | "cards" | "tracking" | "about";
 
 export default function App() {
+  useEffect(() => {
+    initAccent();
+  }, []);
   const [activeTab, setActiveTab] = useState<TabId>("general");
   const { theme, setTheme } = useTheme();
 

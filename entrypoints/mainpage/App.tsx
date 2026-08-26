@@ -12,6 +12,8 @@ import { ViewsProvider } from "@/context/ViewsContext";
 import { TrackingProvider } from "@/context/TrackingContext";
 import { ViewModeProvider } from "@/context/ViewModeContext";
 import { useViewMode } from "@/context/ViewModeContext";
+import { useEffect } from "react";
+import { initAccent } from "@/utils/accent.ts";
 
 function MainContent() {
   const { isOpen } = useSidebar();
@@ -28,6 +30,9 @@ function MainContent() {
 }
 
 export default function App() {
+  useEffect(() => {
+    initAccent();
+  }, []);
   return (
     <div className="bg-background text-foreground">
       <ThemeProvider>

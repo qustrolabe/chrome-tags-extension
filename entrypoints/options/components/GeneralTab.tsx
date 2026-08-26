@@ -1,7 +1,11 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { AiOutlineMoon, AiOutlineSun } from "react-icons/ai";
 import { type Theme } from "@/context/ThemeContext";
 import SettingsCard from "./SettingsCard";
+import {
+    ACCENT_PRESETS,
+    saveAccent,
+} from "@/utils/accent.ts";
 
 interface GeneralTabProps {
     theme: Theme;
@@ -9,6 +13,21 @@ interface GeneralTabProps {
 }
 
 export default function GeneralTab({ theme, setTheme }: GeneralTabProps) {
+    const [accent, setAccent] = useState<string | null>(null);
+
+    useEffect(() => {
+        browser.storage.local
+            .get(["accentColor"])
+            .then((r) =>
+                setAccent((r.accentColor as string) ?? null),
+            );
+    }, []);
+
+    const pickAccent = (color: string | null) => {
+        setAccent(color);
+        saveAccent(color);
+    };
+
     return (
         <section className="animate-in fade-in slide-in-from-bottom-4 space-y-8 duration-500">
             <div>
@@ -65,6 +84,54 @@ export default function GeneralTab({ theme, setTheme }: GeneralTabProps) {
                                 </div>
                             )}
                         </button>
+                    </div>
+                </SettingsCard>
+
+                <SettingsCard
+                    title="Accent color"
+                    description="Used for active tabs, sidebar highlights and links."
+                >
+                    <div className="flex flex-wrap items-center gap-2">
+                        {ACCENT_PRESETS.map((preset) => (
+                            <button
+                                key={preset.value}
+                                onClick={() => pickAccent(preset.value)}
+                                title={preset.name}
+                                className={`size-8 cursor-pointer rounded-full border-2 transition-transform hover:scale-110 ${
+                                    accent === preset.value
+                                        ? "border-foreground"
+                                        : "border-transparent"
+                                }`}
+                                style={{ backgroundColor: preset.value }}
+                            />
+                        ))}
+                        <label
+                            className={`ml-1 flex size-8 cursor-pointer items-center justify-center rounded-full border-2 text-xs font-bold ${
+                                accent && !ACCENT_PRESETS.some((p) => p.value === accent)
+                                    ? "border-foreground"
+                                    : "border-border"
+                            }`}
+                            title="Custom color"
+                            style={{
+                                backgroundColor: accent ?? "transparent",
+                            }}
+                        >
+                            <input
+                                type="color"
+                                value={accent ?? "#7c5cff"}
+                                onChange={(e) =>
+                                    pickAccent(e.target.value)}
+                                className="absolute size-8 cursor-pointer opacity-0"
+                            />
+                        </label>
+                        {accent !== null && (
+                            <button
+                                onClick={() => pickAccent(null)}
+                                className="cursor-pointer rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                            >
+                                Reset to theme default
+                            </button>
+                        )}
                     </div>
                 </SettingsCard>
             </div>
