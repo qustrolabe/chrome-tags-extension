@@ -36,7 +36,7 @@ export default function ControlMenu(
                     side="bottom"
                     sideOffset={5}
                 >
-                    <div className="z-50 flex w-52 flex-col rounded-xl border border-border bg-popover p-1.5 shadow-lg">
+                    <div className="z-50 flex w-52 flex-col rounded-xl border border-border bg-popover p-1.5">
                         <div className="mb-2 flex flex-col gap-0.5">
                             <button
                                 onClick={openSettings}

@@ -248,7 +248,7 @@ export default function SearchBar() {
         />
 
         {suggestions.length > 0 && (
-          <ul className="absolute top-full left-0 z-50 mt-1 max-h-80 w-full max-w-[560px] min-w-[380px] overflow-auto rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-lg">
+          <ul className="absolute top-full left-0 z-50 mt-1 max-h-80 w-full max-w-[560px] min-w-[380px] overflow-auto rounded-md border border-border bg-popover p-1 text-popover-foreground">
             {suggestions.map((suggestion, index) => (
               <li
                 key={`${index}-${suggestion.label}`}

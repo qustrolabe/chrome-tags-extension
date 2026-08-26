@@ -288,7 +288,7 @@ export default function BookmarkCard({
                         </Tooltip.Trigger>
                         <Tooltip.Portal>
                             <Tooltip.Content side="right" className="z-100">
-                                <div className="rounded-md border border-border bg-popover p-1.5 text-xs font-medium text-popover-foreground shadow-lg">
+                                <div className="rounded-md border border-border bg-popover p-1.5 text-xs font-medium text-popover-foreground">
                                     ID: {bookmark.id}
                                 </div>
                             </Tooltip.Content>
@@ -315,7 +315,7 @@ export default function BookmarkCard({
                             {suggest && suggest.matches.length > 0 &&
                                 createPortal(
                                     <div
-                                        className="fixed z-100 max-h-[180px] min-w-[160px] overflow-y-auto rounded-md border border-border bg-popover py-1 shadow-lg"
+                                        className="fixed z-100 max-h-[180px] min-w-[160px] overflow-y-auto rounded-md border border-border bg-popover py-1"
                                         style={{
                                             left: suggest.left,
                                             top: suggest.top,
@@ -400,7 +400,7 @@ export default function BookmarkCard({
                                 </Tooltip.Trigger>
                                 <Tooltip.Portal>
                                     <Tooltip.Content side="left" className="z-100">
-                                        <div className="rounded-md border border-border bg-popover px-1.5 py-0.5 text-xs font-medium text-popover-foreground shadow-lg">
+                                        <div className="rounded-md border border-border bg-popover px-1.5 py-0.5 text-xs font-medium text-popover-foreground">
                                             Advanced edit
                                         </div>
                                     </Tooltip.Content>
@@ -421,7 +421,7 @@ export default function BookmarkCard({
                             </Tooltip.Trigger>
                             <Tooltip.Portal>
                                 <Tooltip.Content side="left" className="z-100">
-                                    <div className="rounded-md border border-border bg-popover px-1.5 py-0.5 text-xs font-medium text-popover-foreground shadow-lg">
+                                    <div className="rounded-md border border-border bg-popover px-1.5 py-0.5 text-xs font-medium text-popover-foreground">
                                         Delete
                                     </div>
                                 </Tooltip.Content>
@@ -539,7 +539,7 @@ export default function BookmarkCard({
             >
                 <AlertDialog.Portal>
                     <AlertDialog.Overlay className="fixed inset-0 z-90 bg-black/60" />
-                    <AlertDialog.Content className="fixed top-1/2 left-1/2 z-100 w-[320px] -translate-1/2 rounded-lg border border-border bg-popover p-4 text-popover-foreground shadow-xl">
+                    <AlertDialog.Content className="fixed top-1/2 left-1/2 z-100 w-[320px] -translate-1/2 rounded-lg border border-border bg-popover p-4 text-popover-foreground">
                         <AlertDialog.Title className="text-sm font-bold">
                             Delete bookmark?
                         </AlertDialog.Title>

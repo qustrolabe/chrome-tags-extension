@@ -398,7 +398,7 @@ export default function BookmarkTable() {
 
             {contextMenu && (
               <div
-                className="fixed z-30 w-56 rounded-md border border-border bg-popover p-2 shadow-lg"
+                className="fixed z-30 w-56 rounded-md border border-border bg-popover p-2"
                 style={{ top: contextMenu.y, left: contextMenu.x }}
                 onClick={(event) => event.stopPropagation()}
               >

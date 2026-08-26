@@ -38,7 +38,7 @@ export default function BookmarkEditDialog({
         <Dialog.Root open={open} onOpenChange={onOpenChange}>
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 z-90 bg-black/60" />
-                <Dialog.Content className="fixed top-1/2 left-1/2 z-100 h-[560px] max-h-[calc(100vh-2rem)] w-[680px] max-w-[calc(100vw-2rem)] -translate-1/2 overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground shadow-xl">
+                <Dialog.Content className="fixed top-1/2 left-1/2 z-100 h-[560px] max-h-[calc(100vh-2rem)] w-[680px] max-w-[calc(100vw-2rem)] -translate-1/2 overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground">
                     {/* Remounts on every open -> state resets naturally. */}
                     {open && (
                         <EditForm

@@ -52,7 +52,7 @@ const SortOptions = () => {
             align="end"
             sideOffset={6}
             collisionPadding={8}
-            className="z-50 min-w-[150px] overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-lg"
+            className="z-50 min-w-[150px] overflow-hidden rounded-md border border-border bg-popover text-popover-foreground"
             style={{ minWidth: "var(--radix-select-trigger-width)" }}
           >
             <Select.Viewport className="p-2">
