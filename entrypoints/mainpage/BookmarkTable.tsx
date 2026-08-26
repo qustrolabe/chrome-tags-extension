@@ -101,7 +101,7 @@ export default function BookmarkTable() {
       cell: (info) => {
         const url = info.row.original.url;
         return (
-          <div className="flex size-4 items-center">
+          <div className="-mx-3 flex items-center justify-center">
             {url
               ? (
                   <img
