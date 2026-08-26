@@ -1,6 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Tooltip } from "radix-ui";
-import { extractTags } from "@/utils/query/tags.ts";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Tooltip, AlertDialog } from "radix-ui";
+import { AiOutlineDelete } from "react-icons/ai";
+import { extractTags, buildTagIndex } from "@/utils/query/tags.ts";
 import { faviconURL } from "@/utils/favicon.ts";
 
 type Bookmark = chrome.bookmarks.BookmarkTreeNode;
@@ -22,6 +23,7 @@ interface BookmarkCardProps {
     ) => void;
     onAddTagFilter?: (tag: string, negative: boolean) => void;
     onEdit?: (id: string, title: string) => void;
+    onDelete?: (id: string) => void;
     allBookmarks?: Bookmark[]; // Needed for path calculation if in preview
 }
 
@@ -67,11 +69,21 @@ export default function BookmarkCard({
     onAddFolderFilter,
     onAddTagFilter,
     onEdit,
+    onDelete,
     allBookmarks = [],
 }: BookmarkCardProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [title, setTitle] = useState(bookmark.title);
+    const [confirmOpen, setConfirmOpen] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
+
+    /** Tag suggestions shown while a `#fragment` is being typed. */
+    const [suggest, setSuggest] = useState<{
+        start: number; // index of first char after '#'
+        caret: number;
+        matches: string[];
+        highlighted: number;
+    } | null>(null);
 
     const handleEdit = () => {
         if (isEditing) {
@@ -96,6 +108,100 @@ export default function BookmarkCard({
         if (e.key === "Enter") {
             handleEdit();
         }
+    };
+
+    // Known tags across ALL bookmarks (case-merged), only needed while editing.
+    const knownTags = useMemo(() => {
+        if (!isEditing) return [] as string[];
+        const withUrl = allBookmarks.filter((b) => b.url !== undefined);
+        return Object.keys(buildTagIndex(withUrl)).sort();
+    }, [isEditing, allBookmarks]);
+
+    /** Detect `#fragment` right before the caret; null = no suggestion mode. */
+    const computeSuggest = (value: string, caret: number) => {
+        const upto = value.slice(0, caret);
+        const match = /(?:^|\s)#([^\s#]*)$/.exec(upto);
+        if (!match?.[1]) return null;
+        const prefix = match[1].toLowerCase();
+        const matches = knownTags
+            .filter((t) => t.startsWith(prefix))
+            .slice(0, 8);
+        return {
+            start: caret - match[1].length,
+            caret,
+            matches,
+            highlighted: 0,
+        };
+    };
+
+    const updateSuggestions = () => {
+        const input = inputRef.current;
+        if (!input) return;
+        setSuggest(computeSuggest(input.value, input.selectionStart ?? 0));
+    };
+
+    const acceptSuggestion = (tag: string) => {
+        if (!suggest || !inputRef.current) return;
+        const caret = suggest.caret;
+        const next =
+            title.slice(0, suggest.start) + tag + " " + title.slice(caret);
+        setTitle(next);
+        setSuggest(null);
+        const pos = suggest.start + tag.length + 1;
+        requestAnimationFrame(() => {
+            inputRef.current?.focus();
+            inputRef.current?.setSelectionRange(pos, pos);
+        });
+    };
+
+    const handleTitleKeyDown: React.KeyboardEventHandler<
+        HTMLInputElement
+    > = (e) => {
+        if (suggest && suggest.matches.length > 0) {
+            if (e.key === "ArrowDown") {
+                e.preventDefault();
+                setSuggest({
+                    ...suggest,
+                    highlighted:
+                        (suggest.highlighted + 1) % suggest.matches.length,
+                });
+                return;
+            }
+            if (e.key === "ArrowUp") {
+                e.preventDefault();
+                setSuggest({
+                    ...suggest,
+                    highlighted: suggest.highlighted <= 0
+                        ? -1
+                        : suggest.highlighted - 1,
+                });
+                return;
+            }
+            if (
+                (e.key === "Tab" || e.key === "Enter") &&
+                suggest.highlighted >= 0
+            ) {
+                e.preventDefault();
+                e.stopPropagation();
+                const tag = suggest.matches[suggest.highlighted];
+                if (tag === undefined) return;
+                acceptSuggestion(tag);
+                return;
+            }
+            if (e.key === "Escape") {
+                e.stopPropagation();
+                setSuggest(null);
+                return;
+            }
+        }
+        handleEnter(e);
+    };
+
+    const handleDelete = () => {
+        setConfirmOpen(false);
+        if (isSettingsPreview) return;
+        if (onDelete) onDelete(bookmark.id);
+        else browser.bookmarks.remove(bookmark.id);
     };
 
     const path: Bookmark[] = (() => {
@@ -159,14 +265,49 @@ export default function BookmarkCard({
 
                 {isEditing
                     ? (
-                        <input
-                            ref={inputRef}
-                            type="text"
-                            value={title}
-                            onInput={(e) => setTitle(e.currentTarget.value)}
-                            onKeyDown={handleEnter}
-                            className="w-full rounded-md border border-border bg-input px-2 text-sm text-foreground"
-                        />
+                        <div className="relative w-full">
+                            <input
+                                ref={inputRef}
+                                type="text"
+                                value={title}
+                                onInput={(e) => {
+                                    setTitle(e.currentTarget.value);
+                                    updateSuggestions();
+                                }}
+                                onKeyDown={handleTitleKeyDown}
+                                onBlur={() => setSuggest(null)}
+                                className="w-full rounded-md border border-border bg-input px-2 text-sm text-foreground"
+                            />
+                            {suggest && suggest.matches.length > 0 && (
+                                <div className="absolute top-full left-0 z-50 mt-1 max-h-[180px] min-w-[160px] overflow-y-auto rounded-md border border-border bg-popover py-1 shadow-lg">
+                                    <div className="px-2 pb-1 text-[10px] text-muted-foreground/60">
+                                        Tags — Tab to insert
+                                    </div>
+                                    {suggest.matches.map((tag, i) => (
+                                        <button
+                                            key={tag}
+                                            className={`flex w-full cursor-pointer items-center gap-1.5 px-2 py-1 text-left text-xs ${
+                                                i === suggest.highlighted
+                                                    ? "bg-muted text-foreground"
+                                                    : "text-muted-foreground hover:bg-muted"
+                                            }`}
+                                            onMouseDown={(e) => {
+                                                // prevent blur before accept
+                                                e.preventDefault();
+                                                acceptSuggestion(tag);
+                                            }}
+                                            onMouseEnter={() =>
+                                                setSuggest({ ...suggest, highlighted: i })}
+                                        >
+                                            <span className="font-bold text-primary">
+                                                #
+                                            </span>
+                                            <span className="truncate">{tag}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     )
                     : (
                         <span
@@ -183,6 +324,29 @@ export default function BookmarkCard({
                 >
                     {isEditing ? "Submit" : "Edit"}
                 </button>
+                {!isEditing && !isSettingsPreview && (
+                    <Tooltip.Provider>
+                        <Tooltip.Root delayDuration={300}>
+                            <Tooltip.Trigger asChild>
+                                <button
+                                    type="button"
+                                    className="ml-1 cursor-pointer rounded-md p-1 text-muted-foreground/50 transition-colors hover:bg-destructive/20 hover:text-destructive"
+                                    onClick={() => setConfirmOpen(true)}
+                                    title="Delete bookmark"
+                                >
+                                    <AiOutlineDelete className="size-3.5" />
+                                </button>
+                            </Tooltip.Trigger>
+                            <Tooltip.Portal>
+                                <Tooltip.Content side="left" className="z-100">
+                                    <div className="rounded-md border border-border bg-popover px-1.5 py-0.5 text-xs font-medium text-popover-foreground shadow-lg">
+                                        Delete
+                                    </div>
+                                </Tooltip.Content>
+                            </Tooltip.Portal>
+                        </Tooltip.Root>
+                    </Tooltip.Provider>
+                )}
             </div>
 
             <div className="mt-0.5 flex items-center gap-1 overflow-hidden text-xs text-muted-foreground">
@@ -200,7 +364,7 @@ export default function BookmarkCard({
                                             onAddFolderFilter?.(
                                                 node.id,
                                                 e.shiftKey,
-                                                e.altKey as any,
+                                                e.altKey as boolean,
                                             )}
                                     >
                                         {node.title}
@@ -285,6 +449,52 @@ export default function BookmarkCard({
                     </div>
                 )
                 : null}
+
+            <AlertDialog.Root
+                open={confirmOpen}
+                onOpenChange={setConfirmOpen}
+            >
+                <AlertDialog.Portal>
+                    <AlertDialog.Overlay className="fixed inset-0 z-90 bg-black/60" />
+                    <AlertDialog.Content className="fixed top-1/2 left-1/2 z-100 w-[320px] -translate-1/2 rounded-lg border border-border bg-popover p-4 text-popover-foreground shadow-xl">
+                        <AlertDialog.Title className="text-sm font-bold">
+                            Delete bookmark?
+                        </AlertDialog.Title>
+                        <AlertDialog.Description
+                            asChild
+                            className="mt-2 block text-xs text-muted-foreground"
+                        >
+                            <div>
+                                <span className="line-clamp-2 font-semibold text-foreground">
+                                    {bookmark.title || bookmark.url}
+                                </span>
+                                <span className="mt-1 block">
+                                    This permanently removes it from your
+                                    bookmarks. This cannot be undone.
+                                </span>
+                            </div>
+                        </AlertDialog.Description>
+                        <div className="mt-4 flex justify-end gap-2">
+                            <AlertDialog.Cancel asChild>
+                                <button
+                                    type="button"
+                                    className="cursor-pointer rounded-md bg-secondary px-3 py-1.5 text-xs font-medium transition-colors hover:bg-secondary/80"
+                                >
+                                    Cancel
+                                </button>
+                            </AlertDialog.Cancel>
+                            <button
+                                type="button"
+                                autoFocus
+                                className="cursor-pointer rounded-md bg-destructive px-3 py-1.5 text-xs font-medium text-destructive-foreground transition-colors hover:bg-destructive/80"
+                                onClick={handleDelete}
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </AlertDialog.Content>
+                </AlertDialog.Portal>
+            </AlertDialog.Root>
         </div>
     );
 }
