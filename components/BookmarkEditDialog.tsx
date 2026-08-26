@@ -331,6 +331,8 @@ function FolderPicker(
         };
         const byParent = new Map<string, Bookmark[]>();
         for (const f of folders) {
+            // Never render the invisible root as a folder.
+            if (f.id === "0") continue;
             if (inOwnSubtree(f)) continue;
             // Chrome's invisible root has id "0".
             const key = f.parentId ?? "0";
@@ -338,8 +340,14 @@ function FolderPicker(
             list.push(f);
             byParent.set(key, list);
         }
+        const seen = new Set<string>();
         const build = (nodes: Bookmark[]): FolderNode[] =>
             nodes
+                .filter((f) => {
+                    if (seen.has(f.id)) return false;
+                    seen.add(f.id);
+                    return true;
+                })
                 .map((f) => ({
                     id: f.id,
                     title: f.title || "…",
