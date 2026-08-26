@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Tooltip, AlertDialog } from "radix-ui";
 import { AiOutlineDelete } from "react-icons/ai";
 import { extractTags, buildTagIndex } from "@/utils/query/tags.ts";
@@ -82,6 +83,7 @@ export default function BookmarkCard({
         start: number; // index of first char after '#'
         caret: number;
         left: number;
+        top: number;
         matches: string[];
         highlighted: number;
     } | null>(null);
@@ -133,22 +135,27 @@ export default function BookmarkCard({
         return Math.max(0, ctx.measureText(text).width - input.scrollLeft);
     };
 
-    /** Detect `#fragment` right before the caret; null = no suggestion mode. */
+    /** Detect `#fragment` right before the caret; null = no suggestion mode.
+     *  Dropdown renders in a body portal (fixed) so following cards can't
+     *  paint over it. */
     const computeSuggest = (value: string, caret: number) => {
+        const input = inputRef.current;
         const upto = value.slice(0, caret);
         const match = /(?:^|\s)#([^\s#]*)$/.exec(upto);
-        if (!match || match[1] === undefined) return null;
+        if (!match || match[1] === undefined || !input) return null;
         const prefix = match[1].toLowerCase();
         const matches = knownTags
             .filter((t) => t.startsWith(prefix))
             .slice(0, 8);
+        const rect = input.getBoundingClientRect();
         const left = Math.min(
-            measureCaretX(value.slice(0, caret - match[1].length - 1)),
-            Math.max(0, (inputRef.current?.clientWidth ?? 300) - 200),
+            rect.left + measureCaretX(value.slice(0, caret - match[1].length - 1)),
+            globalThis.innerWidth - 220,
         );
         return {
             start: caret - match[1].length,
             left,
+            top: rect.bottom + 4,
             caret,
             matches,
             highlighted: 0,
@@ -286,11 +293,7 @@ export default function BookmarkCard({
 
                 {isEditing
                     ? (
-                        <div
-                            className={`relative w-full ${
-                                suggest ? "z-50" : ""
-                            }`}
-                        >
+                        <div className="relative w-full">
                             <input
                                 ref={inputRef}
                                 type="text"
@@ -304,38 +307,48 @@ export default function BookmarkCard({
                                 onBlur={() => setSuggest(null)}
                                 className="w-full rounded-md border border-border bg-input px-2 text-sm text-foreground"
                             />
-                            {suggest && suggest.matches.length > 0 && (
-                                <div
-                                    className="absolute top-full z-50 mt-1 max-h-[180px] min-w-[160px] overflow-y-auto rounded-md border border-border bg-popover py-1 shadow-lg"
-                                    style={{ left: suggest.left }}
-                                >
-                                    <div className="px-2 pb-1 text-[10px] text-muted-foreground/60">
-                                        Tags — Tab to insert
-                                    </div>
-                                    {suggest.matches.map((tag, i) => (
-                                        <button
-                                            key={tag}
-                                            className={`flex w-full cursor-pointer items-center gap-1.5 px-2 py-1 text-left text-xs ${
-                                                i === suggest.highlighted
-                                                    ? "bg-muted text-foreground"
-                                                    : "text-muted-foreground hover:bg-muted"
-                                            }`}
-                                            onMouseDown={(e) => {
-                                                // prevent blur before accept
-                                                e.preventDefault();
-                                                acceptSuggestion(tag);
-                                            }}
-                                            onMouseEnter={() =>
-                                                setSuggest({ ...suggest, highlighted: i })}
-                                        >
-                                            <span className="font-bold text-primary">
-                                                #
-                                            </span>
-                                            <span className="truncate">{tag}</span>
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
+                            {suggest && suggest.matches.length > 0 &&
+                                createPortal(
+                                    <div
+                                        className="fixed z-100 max-h-[180px] min-w-[160px] overflow-y-auto rounded-md border border-border bg-popover py-1 shadow-lg"
+                                        style={{
+                                            left: suggest.left,
+                                            top: suggest.top,
+                                        }}
+                                    >
+                                        <div className="px-2 pb-1 text-[10px] text-muted-foreground/60">
+                                            Tags — Tab to insert
+                                        </div>
+                                        {suggest.matches.map((tag, i) => (
+                                            <button
+                                                key={tag}
+                                                className={`flex w-full cursor-pointer items-center gap-1.5 px-2 py-1 text-left text-xs ${
+                                                    i === suggest.highlighted
+                                                        ? "bg-muted text-foreground"
+                                                        : "text-muted-foreground hover:bg-muted"
+                                                }`}
+                                                onMouseDown={(e) => {
+                                                    // prevent blur before accept
+                                                    e.preventDefault();
+                                                    acceptSuggestion(tag);
+                                                }}
+                                                onMouseEnter={() =>
+                                                    setSuggest({
+                                                        ...suggest,
+                                                        highlighted: i,
+                                                    })}
+                                            >
+                                                <span className="font-bold text-primary">
+                                                    #
+                                                </span>
+                                                <span className="truncate">
+                                                    {tag}
+                                                </span>
+                                            </button>
+                                        ))}
+                                    </div>,
+                                    document.body,
+                                )}
                         </div>
                     )
                     : (
