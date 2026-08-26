@@ -161,7 +161,7 @@ function EditForm({
             </div>
 
             {/* RIGHT: fields */}
-            <div className="flex min-h-0 flex-col overflow-y-auto p-4">
+            <div className="scrollbar-slim flex min-h-0 flex-col overflow-y-auto p-4">
                 <Dialog.Title className="text-sm font-bold">
                     Edit bookmark
                 </Dialog.Title>
@@ -345,7 +345,17 @@ function FolderPicker(
                     children: build(byParent.get(f.id) ?? []),
                 }))
                 .sort((a, b) => a.title.localeCompare(b.title));
-        return build(byParent.get("") ?? []);
+        // Prefer starting at the Bookmarks Bar when it exists.
+        const bookmarksBar =
+            byParent.get("")?.find((f) => f.id === "1") ??
+            byParent
+                .get("")
+                ?.find((f) => /bookmarks bar/i.test(f.title));
+        return build(
+            bookmarksBar
+                ? byParent.get(bookmarksBar.id) ?? []
+                : byParent.get("") ?? [],
+        );
     }, [allBookmarks, selfId]);
 
     // Full path for every folder (used by fuzzy search results).
@@ -397,20 +407,18 @@ function FolderPicker(
         return out.slice(0, 30);
     }, [query, pathsById]);
 
-    const Row = ({ id }: { id: string }) => (
+    const Row = ({ id, title }: { id: string; title: string }) => (
         <button
             type="button"
             onClick={() => onChange(id)}
-            className={`flex w-full cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 text-left text-xs ${
+            className={`flex w-full cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 pl-3 text-left text-xs ${
                 id === value
                     ? "bg-primary/20 font-medium text-foreground"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
             }`}
         >
             {id === value && <span className="text-primary">✓</span>}
-            <span className="truncate">
-                {(pathsById.get(id) ?? []).join(" / ") || "…"}
-            </span>
+            <span className="truncate">{title}</span>
         </button>
     );
 
@@ -434,7 +442,7 @@ function FolderPicker(
                         >
                             ▸
                         </button>
-                        <Row id={node.id} />
+                        <Row id={node.id} title={node.title} />
                     </div>
                     {expanded.has(node.id) &&
                         renderTree(node.children, depth + 1)}
@@ -452,9 +460,15 @@ function FolderPicker(
                 onChange={(e) => setQuery(e.target.value)}
                 className="w-full border-b border-border bg-transparent px-2 py-1 text-xs outline-none placeholder:text-muted-foreground/50"
             />
-            <div className="mt-1 min-h-0 flex-1 overflow-y-auto">
+            <div className="scrollbar-slim mt-1 min-h-0 flex-1 overflow-y-auto">
                 {query.trim() !== ""
-                    ? matches.map((m) => <Row key={m.id} id={m.id} />)
+                    ? matches.map((m) => (
+                        <Row
+                            key={m.id}
+                            id={m.id}
+                            title={pathsById.get(m.id)?.slice(-1)[0] ?? "…"}
+                        />
+                    ))
                     : renderTree(tree, 0)}
             </div>
         </div>

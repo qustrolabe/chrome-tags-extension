@@ -158,3 +158,30 @@
         @apply bg-background text-foreground;
     }
 }
+
+/* Slim styled scrollbar for inner scroll areas */
+:root {
+    --scrollbar-thumb: color-mix(
+        in oklab,
+        var(--color-muted-foreground) 45%,
+        transparent
+    );
+}
+.scrollbar-slim {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+.scrollbar-slim::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+.scrollbar-slim::-webkit-scrollbar-track {
+    background: transparent;
+}
+.scrollbar-slim::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background: var(--scrollbar-thumb);
+}
+.scrollbar-slim::-webkit-scrollbar-thumb:hover {
+    background: var(--color-muted-foreground);
+}
