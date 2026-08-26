@@ -23,9 +23,12 @@ function buildFolderTree(bookmarks: Bookmark[]): FolderNode[] {
 
     // Create nodes
     folders.forEach((folder) => {
+        let title = folder.title;
+        if (folder.id === "0") title = "Root";
+        if (!title) title = `Folder ${folder.id}`;
         folderMap.set(folder.id, {
             id: folder.id,
-            title: folder.title || "(Untitled)",
+            title,
             parentId: folder.parentId,
             children: [],
         });
@@ -49,6 +52,7 @@ interface FolderItemProps {
     depth: number;
     expandedIds: Set<string>;
     toggleExpanded: (id: string) => void;
+    forceExpanded?: boolean;
     onFilter: (
         folder: FolderNode,
         negative: boolean,
@@ -64,10 +68,11 @@ function FolderItem({
     depth,
     expandedIds,
     toggleExpanded,
+    forceExpanded = false,
     onFilter,
     getFilterState,
 }: FolderItemProps) {
-    const isExpanded = expandedIds.has(node.id);
+    const isExpanded = forceExpanded || expandedIds.has(node.id);
     const hasChildren = node.children.length > 0;
     const filterState = getFilterState(node);
 
@@ -83,7 +88,7 @@ function FolderItem({
                         ? "border-dashed border-l-teal-500 bg-teal-500/20 font-medium text-teal-700 dark:text-teal-300"
                         : "border-l-transparent hover:bg-muted"
                 }`}
-                style={{ paddingLeft: `${depth * 12 + 4}px` }}
+                style={{ paddingLeft: `${depth * 6 + 2}px` }}
             >
                 {/* Expand/Collapse */}
                 <button
@@ -148,6 +153,7 @@ function FolderItem({
                         depth={depth + 1}
                         expandedIds={expandedIds}
                         toggleExpanded={toggleExpanded}
+                        forceExpanded={forceExpanded}
                         onFilter={onFilter}
                         getFilterState={getFilterState}
                     />
@@ -166,8 +172,31 @@ export default function SidebarFolderTree() {
     const [expandedIds, setExpandedIds] = useState<Set<string>>(
         new Set(["0", "1", "2"]),
     );
+    const [search, setSearch] = useState("");
 
     const tree = useMemo(() => buildFolderTree(bookmarks), [bookmarks]);
+
+    // Search filters the tree in place: folders whose name matches stay,
+    // along with their ancestors (children of matches remain visible).
+    // While searching, matching branches render expanded automatically.
+    const filteredTree = useMemo(() => {
+        const q = search.trim().toLowerCase();
+        if (q === "") return null;
+        const filter = (nodes: FolderNode[]): FolderNode[] => {
+            const result: FolderNode[] = [];
+            for (const node of nodes) {
+                const kids = filter(node.children);
+                if (
+                    node.title.toLowerCase().includes(q) ||
+                    kids.length > 0
+                ) {
+                    result.push({ ...node, children: kids });
+                }
+            }
+            return result;
+        };
+        return filter(tree);
+    }, [search, tree]);
 
     const toggleExpanded = (id: string) => {
         setExpandedIds((prev) => {
@@ -220,21 +249,31 @@ export default function SidebarFolderTree() {
     }
 
     return (
-        <div className="p-2">
-            <div className="mb-1 px-2 py-1 text-xs text-muted-foreground">
-                + to filter • − to exclude
+        <div className="flex flex-col p-2">
+            <input
+                type="text"
+                value={search}
+                placeholder="search folders…"
+                onChange={(e) => setSearch(e.target.value)}
+                className="mb-1 w-full rounded-md border border-border bg-input px-2 py-1 text-xs outline-none placeholder:text-muted-foreground/50"
+            />
+            <div className="scrollbar-slim min-h-0 flex-1 overflow-y-auto">
+                <div className="mb-1 px-2 py-1 text-xs text-muted-foreground">
+                    + to filter • − to exclude
+                </div>
+                {(filteredTree ?? tree).map((node) => (
+                    <FolderItem
+                        key={node.id}
+                        node={node}
+                        depth={0}
+                        expandedIds={expandedIds}
+                        toggleExpanded={toggleExpanded}
+                        onFilter={handleFilter}
+                        getFilterState={getFilterState}
+                        forceExpanded={search.trim() !== ""}
+                    />
+                ))}
             </div>
-            {tree.map((node) => (
-                <FolderItem
-                    key={node.id}
-                    node={node}
-                    depth={0}
-                    expandedIds={expandedIds}
-                    toggleExpanded={toggleExpanded}
-                    onFilter={handleFilter}
-                    getFilterState={getFilterState}
-                />
-            ))}
         </div>
     );
 }
