@@ -38,7 +38,7 @@ export default function BookmarkEditDialog({
         <Dialog.Root open={open} onOpenChange={onOpenChange}>
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 z-90 bg-black/60" />
-                <Dialog.Content className="fixed top-1/2 left-1/2 z-100 max-h-[85vh] w-[420px] -translate-1/2 overflow-y-auto rounded-lg border border-border bg-popover p-4 text-popover-foreground shadow-xl">
+                <Dialog.Content className="fixed top-1/2 left-1/2 z-100 max-h-[85vh] w-[680px] max-w-[calc(100vw-2rem)] -translate-1/2 overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground shadow-xl">
                     {/* Remounts on every open -> state resets naturally. */}
                     {open && (
                         <EditForm
@@ -144,140 +144,146 @@ function EditForm({
     };
 
     return (
-        <>
-            <Dialog.Title className="text-sm font-bold">
-                Edit bookmark
-            </Dialog.Title>
-            <Dialog.Description className="mt-0.5 block text-xs text-muted-foreground">
-                Changes apply when you press Save.
-            </Dialog.Description>
-
-                    {/* Title */}
-                    <label className="mt-3 block text-xs font-medium">
-                        Title
-                    </label>
-                    <div className="flex gap-1">
-                        <input
-                            type="text"
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                            className="w-full rounded-md border border-border bg-input px-2 py-1 text-sm"
-                        />
-                        <button
-                            type="button"
-                            title="Move all #tags to the right of the title"
-                            disabled={sortTagsRight(title) === title.trim()}
-                            onClick={() => setTitle(sortTagsRight(title))}
-                            className="shrink-0 cursor-pointer rounded-md bg-secondary px-2 text-xs font-medium transition-colors hover:bg-secondary/80 disabled:cursor-default disabled:opacity-40"
-                        >
-                            tags →
-                        </button>
-                    </div>
-
-                    {/* Tag chips */}
-                    <label className="mt-3 block text-xs font-medium">
-                        Tags
-                    </label>
-                    <div className="mt-1 flex flex-wrap items-center gap-1 rounded-md border border-border bg-input/50 p-1.5">
-                        {tags.length === 0 && (
-                            <span className="px-1 text-xs text-muted-foreground/60">
-                                no tags
-                            </span>
-                        )}
-                        {tags.map((tag) => (
-                            <span
-                                key={tag}
-                                className="flex cursor-default items-center gap-1 rounded-[3px] bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary"
-                            >
-                                #{tag}
-                                <button
-                                    type="button"
-                                    className="cursor-pointer rounded-sm px-0.5 hover:bg-destructive/30"
-                                    title={`Remove ${tag}`}
-                                    onClick={() => removeTag(tag)}
-                                >
-                                    ×
-                                </button>
-                            </span>
-                        ))}
-                        <input
-                            type="text"
-                            value={newTag}
-                            placeholder="add tag…"
-                            onChange={(e) => setNewTag(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                    e.preventDefault();
-                                    addTag(newTag);
-                                }
-                            }}
-                            className="min-w-[90px] flex-1 bg-transparent px-1 text-xs outline-none placeholder:text-muted-foreground/50"
-                        />
-                    </div>
-                    {tagSuggestions.length > 0 && (
-                        <div className="mt-1 flex flex-wrap gap-1">
-                            {tagSuggestions.map((t) => (
-                                <button
-                                    key={t}
-                                    type="button"
-                                    className="cursor-pointer rounded-[3px] bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground transition-colors hover:bg-muted-foreground/20 hover:text-foreground"
-                                    onMouseDown={(e) => {
-                                        e.preventDefault();
-                                        addTag(t);
-                                    }}
-                                >
-                                    +#{t}
-                                </button>
-                            ))}
-                        </div>
-                    )}
-
-                    {/* URL */}
-                    <label className="mt-3 block text-xs font-medium">
-                        URL
-                    </label>
-                    <input
-                        type="text"
-                        value={url}
-                        onChange={(e) => setUrl(e.target.value)}
-                        spellCheck={false}
-                        className="w-full rounded-md border border-border bg-input px-2 py-1 font-mono text-xs"
-                    />
-
-                    {/* Folder */}
-                    <label className="mt-3 block text-xs font-medium">
-                        Move to
-                    </label>
+        <div className="grid max-h-[85vh] grid-cols-[260px_1fr] overflow-hidden">
+            {/* LEFT: folder navigator */}
+            <div className="flex min-h-0 flex-col gap-1 border-r border-border p-4">
+                <label className="block text-xs font-medium">
+                    Move to
+                </label>
+                <div className="min-h-0 flex-1">
                     <FolderPicker
                         allBookmarks={allBookmarks}
                         selfId={bookmark.id}
                         value={folderId}
                         onChange={setFolderId}
                     />
+                </div>
+            </div>
 
-                    {/* Actions */}
-                    <div className="mt-4 flex justify-end gap-2">
-                        <Dialog.Close asChild>
+            {/* RIGHT: fields */}
+            <div className="flex min-h-0 flex-col overflow-y-auto p-4">
+                <Dialog.Title className="text-sm font-bold">
+                    Edit bookmark
+                </Dialog.Title>
+                <Dialog.Description className="mt-0.5 block text-xs text-muted-foreground">
+                    Changes apply when you press Save.
+                </Dialog.Description>
+
+                {/* Title */}
+                <label className="mt-3 block text-xs font-medium">
+                    Title
+                </label>
+                <div className="flex gap-1">
+                    <input
+                        type="text"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        className="w-full rounded-md border border-border bg-input px-2 py-1 text-sm"
+                    />
+                    <button
+                        type="button"
+                        title="Move all #tags to the right of the title"
+                        disabled={sortTagsRight(title) === title.trim()}
+                        onClick={() => setTitle(sortTagsRight(title))}
+                        className="shrink-0 cursor-pointer rounded-md bg-secondary px-2 text-xs font-medium transition-colors hover:bg-secondary/80 disabled:cursor-default disabled:opacity-40"
+                    >
+                        tags →
+                    </button>
+                </div>
+
+                {/* Tag chips */}
+                <label className="mt-3 block text-xs font-medium">
+                    Tags
+                </label>
+                <div className="mt-1 flex flex-wrap items-center gap-1 rounded-md border border-border bg-input/50 p-1.5">
+                    {tags.length === 0 && (
+                        <span className="px-1 text-xs text-muted-foreground/60">
+                            no tags
+                        </span>
+                    )}
+                    {tags.map((tag) => (
+                        <span
+                            key={tag}
+                            className="flex cursor-default items-center gap-1 rounded-[3px] bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary"
+                        >
+                            #{tag}
                             <button
                                 type="button"
-                                className="cursor-pointer rounded-md bg-secondary px-3 py-1.5 text-xs font-medium transition-colors hover:bg-secondary/80"
+                                className="cursor-pointer rounded-sm px-0.5 hover:bg-destructive/30"
+                                title={`Remove ${tag}`}
+                                onClick={() => removeTag(tag)}
                             >
-                                Cancel
+                                ×
                             </button>
-                        </Dialog.Close>
+                        </span>
+                    ))}
+                    <input
+                        type="text"
+                        value={newTag}
+                        placeholder="add tag…"
+                        onChange={(e) => setNewTag(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                e.preventDefault();
+                                addTag(newTag);
+                            }
+                        }}
+                        className="min-w-[90px] flex-1 bg-transparent px-1 text-xs outline-none placeholder:text-muted-foreground/50"
+                    />
+                </div>
+                {tagSuggestions.length > 0 && (
+                    <div className="mt-1 flex flex-wrap gap-1">
+                        {tagSuggestions.map((t) => (
+                            <button
+                                key={t}
+                                type="button"
+                                className="cursor-pointer rounded-[3px] bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground transition-colors hover:bg-muted-foreground/20 hover:text-foreground"
+                                onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    addTag(t);
+                                }}
+                            >
+                                +#{t}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                {/* URL */}
+                <label className="mt-3 block text-xs font-medium">
+                    URL
+                </label>
+                <input
+                    type="text"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    spellCheck={false}
+                    className="w-full rounded-md border border-border bg-input px-2 py-1 font-mono text-xs"
+                />
+
+                {/* Actions */}
+                <div className="mt-auto flex justify-end gap-2 pt-4">
+                    <Dialog.Close asChild>
                         <button
                             type="button"
-                            disabled={!dirty || saving}
-                            className="cursor-pointer rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/80 disabled:cursor-default disabled:opacity-40"
-                            onClick={save}
+                            className="cursor-pointer rounded-md bg-secondary px-3 py-1.5 text-xs font-medium transition-colors hover:bg-secondary/80"
                         >
-                            {saving ? "Saving…" : "Save"}
+                            Cancel
                         </button>
-                    </div>
-        </>
+                    </Dialog.Close>
+                    <button
+                        type="button"
+                        disabled={!dirty || saving}
+                        className="cursor-pointer rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/80 disabled:cursor-default disabled:opacity-40"
+                        onClick={save}
+                    >
+                        {saving ? "Saving…" : "Save"}
+                    </button>
+                </div>
+            </div>
+        </div>
     );
 }
-
 interface FolderNode {
     id: string;
     title: string;
@@ -438,7 +444,7 @@ function FolderPicker(
     );
 
     return (
-        <div className="rounded-md border border-border bg-input/50 p-1">
+        <div className="flex h-full flex-col rounded-md border border-border bg-input/50 p-1">
             <input
                 type="text"
                 value={query}
@@ -446,7 +452,7 @@ function FolderPicker(
                 onChange={(e) => setQuery(e.target.value)}
                 className="w-full border-b border-border bg-transparent px-2 py-1 text-xs outline-none placeholder:text-muted-foreground/50"
             />
-            <div className="mt-1 max-h-[200px] overflow-y-auto">
+            <div className="mt-1 min-h-0 flex-1 overflow-y-auto">
                 {query.trim() !== ""
                     ? matches.map((m) => <Row key={m.id} id={m.id} />)
                     : renderTree(tree, 0)}
