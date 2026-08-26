@@ -127,7 +127,7 @@ function FolderItem({
                             onFilter(node, false, e.altKey);
                         }}
                         className="rounded p-1 text-green-600 hover:bg-green-500/30 dark:text-green-400"
-                        title="Add folder filter (Alt+Click for this folder only)"
+                        title="Add folder filter (Alt+Click for this folder only • click again to remove)"
                     >
                         <AiOutlinePlus className="size-3" />
                     </button>
@@ -137,7 +137,7 @@ function FolderItem({
                             onFilter(node, true, e.altKey);
                         }}
                         className="rounded p-1 text-destructive hover:bg-destructive/30"
-                        title="Exclude folder (Alt+Click for this folder only)"
+                        title="Exclude folder (Alt+Click for this folder only • click again to remove)"
                     >
                         <AiOutlineMinus className="size-3" />
                     </button>
@@ -227,9 +227,22 @@ export default function SidebarFolderTree() {
         negative: boolean,
         strict: boolean,
     ) => {
-        // Clear both variants first, then set the requested one.
+        // Clicking the button matching the current state clears the
+        // folder's filter entirely.
+        const current = getFilterState(folder);
+        const requested = negative && strict
+            ? "strict"
+            : strict
+            ? "strict"
+            : negative
+            ? "negative"
+            : "positive";
         let next = setTokenState(query, "folder", folder.title, null);
         next = setTokenState(next, "folder_strict", folder.title, null);
+        if (current === requested) {
+            setQuery(next);
+            return;
+        }
         const key = strict ? "folder_strict" : "folder";
         next = setTokenState(
             next,
