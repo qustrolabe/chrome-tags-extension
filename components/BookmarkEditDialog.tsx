@@ -332,7 +332,8 @@ function FolderPicker(
         const byParent = new Map<string, Bookmark[]>();
         for (const f of folders) {
             if (inOwnSubtree(f)) continue;
-            const key = f.parentId ?? "";
+            // Chrome's invisible root has id "0".
+            const key = f.parentId ?? "0";
             const list = byParent.get(key) ?? [];
             list.push(f);
             byParent.set(key, list);
@@ -345,16 +346,15 @@ function FolderPicker(
                     children: build(byParent.get(f.id) ?? []),
                 }))
                 .sort((a, b) => a.title.localeCompare(b.title));
-        // Prefer starting at the Bookmarks Bar when it exists.
+        // Prefer starting at the Bookmarks Bar when it exists; the
+        // invisible root itself is never rendered.
         const bookmarksBar =
-            byParent.get("")?.find((f) => f.id === "1") ??
-            byParent
-                .get("")
-                ?.find((f) => /bookmarks bar/i.test(f.title));
+            byParent.get("0")?.find((f) => f.id === "1") ??
+            byParent.get("0")?.find((f) => /bookmarks bar/i.test(f.title));
         return build(
             bookmarksBar
                 ? byParent.get(bookmarksBar.id) ?? []
-                : byParent.get("") ?? [],
+                : byParent.get("0") ?? [],
         );
     }, [allBookmarks, selfId]);
 
