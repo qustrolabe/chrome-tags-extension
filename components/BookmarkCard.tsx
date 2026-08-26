@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Tooltip, AlertDialog } from "radix-ui";
 import { AiOutlineDelete, AiOutlineEdit, AiOutlineTool } from "react-icons/ai";
 import BookmarkEditDialog from "@/components/BookmarkEditDialog.tsx";
+import BookmarkTagPopup from "@/components/BookmarkTagPopup.tsx";
 import { extractTags, buildTagIndex } from "@/utils/query/tags.ts";
 import { faviconURL } from "@/utils/favicon.ts";
 
@@ -78,6 +79,7 @@ export default function BookmarkCard({
     const [title, setTitle] = useState(bookmark.title);
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [advEditOpen, setAdvEditOpen] = useState(false);
+    const [tagPopupOpen, setTagPopupOpen] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
 
     /** Tag suggestions shown while a `#fragment` is being typed. */
@@ -265,7 +267,7 @@ export default function BookmarkCard({
 
     return (
         <div
-            className={`flex min-h-[100px] flex-col rounded-lg border border-border bg-card p-2 text-card-foreground ${
+            className={`group flex min-h-[100px] flex-col rounded-lg border border-border bg-card p-2 text-card-foreground ${
                 isSettingsPreview ? "" : "m-1"
             }`}
         >
@@ -513,25 +515,31 @@ export default function BookmarkCard({
                     : null}
             </div>
 
-            {tags?.length
-                ? (
+            <div
+                className="mt-1 flex w-full flex-wrap items-center gap-1"
+                title={tags.map((tag) => `#${tag}`).join(" ")}
+            >
+                {tags.map((tag) => (
                     <div
-                        className="mt-1 flex w-full gap-x-1 truncate"
-                        title={tags.map((tag) => `#${tag}`).join(" ")}
+                        className="cursor-pointer select-none"
+                        onClick={(e) => onAddTagFilter?.(tag, e.shiftKey)}
+                        key={tag}
                     >
-                        {tags?.map((tag) => (
-                            <div
-                                className="cursor-pointer select-none"
-                                onClick={(e) =>
-                                    onAddTagFilter?.(tag, e.shiftKey)}
-                                key={tag}
-                            >
-                                <BookmarkTagCapsule tag={tag} />
-                            </div>
-                        ))}
+                        <BookmarkTagCapsule tag={tag} />
                     </div>
-                )
-                : null}
+                ))}
+                {!isSettingsPreview && (
+                    <button
+                        type="button"
+                        aria-label="Edit tags"
+                        title="Edit tags"
+                        onClick={() => setTagPopupOpen(true)}
+                        className="flex shrink-0 cursor-pointer items-center justify-center rounded-md border border-dashed border-border bg-muted/50 p-1 text-muted-foreground opacity-0 transition-all group-hover:opacity-100 hover:bg-muted hover:text-foreground focus:opacity-100 focus-visible:opacity-100"
+                    >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+                    </button>
+                )}
+            </div>
 
             <AlertDialog.Root
                 open={confirmOpen}
@@ -583,6 +591,12 @@ export default function BookmarkCard({
                 bookmark={bookmark}
                 open={advEditOpen}
                 onOpenChange={setAdvEditOpen}
+                allBookmarks={allBookmarks}
+            />
+            <BookmarkTagPopup
+                bookmark={bookmark}
+                open={tagPopupOpen}
+                onOpenChange={setTagPopupOpen}
                 allBookmarks={allBookmarks}
             />
         </div>
