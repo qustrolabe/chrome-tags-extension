@@ -393,25 +393,31 @@ function FolderPicker(
         });
     };
 
-    // Fuzzy-filtered flat results with full branch paths.
-    const matches = useMemo(() => {
-        if (query.trim() === "") return [];
-        const out: { id: string; path: string[] }[] = [];
-        for (const [id, path] of pathsById) {
-            if (fuzzyMatch(query.trim(), path.join(" / "))) out.push({ id, path });
-        }
-        out.sort((a, b) =>
-            a.path.join("/").length - b.path.join("/").length ||
-            a.path.join("/").localeCompare(b.path.join("/")),
-        );
-        return out.slice(0, 30);
-    }, [query, pathsById]);
+    // Fuzzy-filtered tree: keeps hierarchy, showing matched folders and
+    // their ancestors (children of a match stay visible too).
+    const filteredTree = useMemo(() => {
+        const q = query.trim();
+        if (q === "") return null;
+        const filter = (nodes: FolderNode[]): FolderNode[] => {
+            const result: FolderNode[] = [];
+            for (const node of nodes) {
+                const kids = filter(node.children);
+                const selfMatch = fuzzyMatch(q, node.title) ||
+                    fuzzyMatch(q, (pathsById.get(node.id) ?? []).join(" / "));
+                if (selfMatch || kids.length > 0) {
+                    result.push({ ...node, children: kids });
+                }
+            }
+            return result;
+        };
+        return filter(tree);
+    }, [query, tree, pathsById]);
 
     const Row = ({ id, title }: { id: string; title: string }) => (
         <button
             type="button"
             onClick={() => onChange(id)}
-            className={`flex w-full cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 pl-3 text-left text-xs ${
+            className={`flex w-full cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 text-left text-xs ${
                 id === value
                     ? "bg-primary/20 font-medium text-foreground"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -430,7 +436,7 @@ function FolderPicker(
                         className={`flex w-full items-center gap-0.5 rounded px-0.5 ${
                             node.id === value ? "bg-primary/20" : ""
                         }`}
-                        style={{ paddingLeft: depth * 12 }}
+                        style={{ paddingLeft: depth * 8 }}
                     >
                         <button
                             type="button"
@@ -444,7 +450,7 @@ function FolderPicker(
                         </button>
                         <Row id={node.id} title={node.title} />
                     </div>
-                    {expanded.has(node.id) &&
+                    {(expanded.has(node.id) || query.trim() !== "") &&
                         renderTree(node.children, depth + 1)}
                 </div>
             ))}
@@ -461,14 +467,8 @@ function FolderPicker(
                 className="w-full border-b border-border bg-transparent px-2 py-1 text-xs outline-none placeholder:text-muted-foreground/50"
             />
             <div className="scrollbar-slim mt-1 min-h-0 flex-1 overflow-y-auto">
-                {query.trim() !== ""
-                    ? matches.map((m) => (
-                        <Row
-                            key={m.id}
-                            id={m.id}
-                            title={pathsById.get(m.id)?.slice(-1)[0] ?? "…"}
-                        />
-                    ))
+                {filteredTree
+                    ? renderTree(filteredTree, 0)
                     : renderTree(tree, 0)}
             </div>
         </div>
