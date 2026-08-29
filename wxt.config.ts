@@ -20,8 +20,8 @@ export default defineConfig({
       "default_title": "Open Main Page",
     },
     permissions: browser === "firefox"
-      ? ["bookmarks", "storage", "tabs"]
-      : ["bookmarks", "storage", "favicon", "tabs"],
+      ? ["bookmarks", "storage", "tabs", "activeTab", "contextMenus"]
+      : ["bookmarks", "storage", "favicon", "tabs", "activeTab", "contextMenus"],
     author: browser === "firefox"
       ? "qustrolabe@gmail.com"
       : { email: "qustrolabe@gmail.com" },

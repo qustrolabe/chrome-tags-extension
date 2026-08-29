@@ -116,6 +116,140 @@ export default defineBackground(() => {
     await persistStats();
   };
 
+  const findBookmarksByUrl = async (url: string): Promise<chrome.bookmarks.BookmarkTreeNode[]> => {
+    try {
+      const results = await browser.bookmarks.search({ url });
+      return results.filter((n) => n.url === url);
+    } catch {
+      // Fallback: walk the tree
+      const tree = await browser.bookmarks.getTree();
+      const out: chrome.bookmarks.BookmarkTreeNode[] = [];
+      const stack = [...tree];
+      while (stack.length) {
+        const node = stack.pop();
+        if (!node) continue;
+        if (node.url === url) out.push(node);
+        if (node.children) for (const c of node.children) stack.push(c);
+      }
+      return out;
+    }
+  };
+
+  const openQuickBookmarkWindow = async (bookmarkId: string, isExisting: boolean) => {
+    const url = browser.runtime.getURL(`/quick-bookmark.html?id=${encodeURIComponent(bookmarkId)}&existing=${isExisting ? "1" : "0"}`);
+    try {
+      await browser.windows.create({
+        url,
+        type: "popup",
+        width: 720,
+        height: 600,
+        focused: true,
+      });
+    } catch {
+      // Fallback for environments without windows permission/popup support
+      await browser.tabs.create({ url });
+    }
+  };
+
+  const getContextMenus = (): typeof browser.contextMenus | undefined => {
+    const b = (browser as any).contextMenus as typeof browser.contextMenus | undefined;
+    if (b) return b;
+    const c = (globalThis as any).chrome?.contextMenus as typeof browser.contextMenus | undefined;
+    return c;
+  };
+
+  const setupContextMenu = () => {
+    const ctx = getContextMenus();
+    if (!ctx) {
+      console.warn("[background] contextMenus API not available", { hasBrowser: !!(browser as any).contextMenus, hasChrome: !!(globalThis as any).chrome?.contextMenus });
+      return;
+    }
+    const create = () => {
+      try {
+        ctx.create(
+          { id: "bookmark-this", title: "Bookmark this", contexts: ["page", "link"] },
+          () => {
+            const err = (browser.runtime as any).lastError ?? (globalThis as any).chrome?.runtime?.lastError;
+            if (err) console.warn("[background] contextMenus.create lastError", err);
+            else console.log("[background] context menu created");
+          },
+        );
+      } catch (e) {
+        console.warn("[background] contextMenus.create threw", e);
+      }
+    };
+    // Prefer promise form (WXT/brower polyfill), fallback to callback form (chrome)
+    try {
+      const res: any = (ctx as any).removeAll();
+      if (res && typeof res.then === "function") {
+        res.then(create).catch((e: any) => {
+          console.warn("[background] removeAll promise failed", e);
+          create();
+        });
+        return;
+      }
+    } catch {}
+    // callback form
+    try {
+      (ctx as any).removeAll(() => {
+        const err = (browser.runtime as any).lastError ?? (globalThis as any).chrome?.runtime?.lastError;
+        if (err) console.warn("[background] removeAll lastError", err);
+        create();
+      });
+    } catch (e) {
+      console.warn("[background] removeAll threw", e);
+      create();
+    }
+  };
+
+  const handleBookmarkThis = async (
+    info: chrome.contextMenus.OnClickData,
+    tab: any,
+  ) => {
+    if (info.menuItemId !== "bookmark-this") return;
+    const url = (info.linkUrl || tab?.url || (info.pageUrl as string) || "").trim();
+    const title = tab?.title?.trim() || url;
+    if (!url) return;
+    if (
+      url.startsWith("chrome://") ||
+      url.startsWith("chrome-extension://") ||
+      url.startsWith("moz-extension://") ||
+      url.startsWith("about:") ||
+      url.startsWith("edge://")
+    ) {
+      return;
+    }
+
+    const existing = await findBookmarksByUrl(url);
+    if (existing.length > 0) {
+      const bookmark = existing[0]!;
+      await openQuickBookmarkWindow(bookmark.id, true);
+      return;
+    }
+
+    try {
+      const created = await browser.bookmarks.create({ title, url });
+      scheduleRebuild();
+      await openQuickBookmarkWindow(created.id, false);
+    } catch (e) {
+      console.error("[background] bookmark create failed", e);
+    }
+  };
+
+  // Register context menu synchronously at top-level so it survives service worker restarts.
+  // Chrome MV3 requires menus be (re)created on every startup; onInstalled handles first install,
+  // and an immediate call handles reloads. The async init must not delay this.
+  browser.runtime.onInstalled.addListener(setupContextMenu);
+  (browser.runtime as any).onStartup?.addListener(setupContextMenu);
+  // Immediate attempt for reloads / dev rebuilds where onInstalled won't fire
+  setupContextMenu();
+  const ctxMenus = getContextMenus();
+  if (ctxMenus?.onClicked) {
+    ctxMenus.onClicked.addListener(handleBookmarkThis);
+  } else {
+    console.warn("[background] contextMenus.onClicked not available, menu clicks will not work");
+  }
+
   const init = async () => {
     await loadSettingsAndStats();
     await buildUrlIndex();
