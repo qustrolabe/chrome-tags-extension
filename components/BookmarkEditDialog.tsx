@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Dialog } from "radix-ui";
 import { extractTags } from "@/utils/query/tags.ts";
+import TagListPanel from "@/components/TagListPanel.tsx";
 
 type Bookmark = chrome.bookmarks.BookmarkTreeNode;
 
@@ -38,7 +39,7 @@ export default function BookmarkEditDialog({
         <Dialog.Root open={open} onOpenChange={onOpenChange}>
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 z-90 bg-black/60" />
-                <Dialog.Content className="fixed top-1/2 left-1/2 z-100 h-[560px] max-h-[calc(100vh-2rem)] w-[680px] max-w-[calc(100vw-2rem)] -translate-1/2 overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground">
+                <Dialog.Content className="fixed top-1/2 left-1/2 z-100 h-[560px] max-h-[calc(100vh-2rem)] w-[960px] max-w-[calc(100vw-2rem)] -translate-1/2 overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground">
                     {/* Remounts on every open -> state resets naturally. */}
                     {open && (
                         <EditForm
@@ -100,23 +101,7 @@ function EditForm({
         setNewTag("");
     };
 
-    const tagSuggestions = useMemo(() => {
-        if (newTag.trim() === "") return [];
-        const prefix = newTag.trim().replace(/^#/, "").toLowerCase();
-        const index = new Map<string, number>();
-        allBookmarks.forEach((b) => {
-            if (b.url === undefined) return;
-            extractTags(b.title).forEach((t) => {
-                const key = t.toLowerCase();
-                index.set(key, (index.get(key) ?? 0) + 1);
-            });
-        });
-        return [...index.entries()]
-            .filter(([t]) => t.startsWith(prefix) && !tags.includes(t))
-            .sort(([, a], [, b]) => b - a)
-            .slice(0, 6)
-            .map(([t]) => t);
-    }, [newTag, allBookmarks, tags]);
+    // Tag suggestions now handled by TagListPanel on the right.
 
     const dirty =
         title !== bookmark.title ||
@@ -144,7 +129,7 @@ function EditForm({
     };
 
     return (
-        <div className="grid h-full grid-cols-[260px_1fr] overflow-hidden">
+        <div className="grid h-full grid-cols-[260px_1fr_300px] overflow-hidden">
             {/* LEFT: folder navigator */}
             <div className="flex min-h-0 flex-col gap-1 border-r border-border p-4">
                 <label className="block text-xs font-medium">
@@ -160,7 +145,7 @@ function EditForm({
                 </div>
             </div>
 
-            {/* RIGHT: fields */}
+            {/* CENTER: fields */}
             <div className="scrollbar-slim flex min-h-0 flex-col overflow-y-auto p-4">
                 <Dialog.Title className="text-sm font-bold">
                     Edit bookmark
@@ -196,11 +181,6 @@ function EditForm({
                     Tags
                 </label>
                 <div className="mt-1 flex flex-wrap items-center gap-1 rounded-md border border-border bg-input/50 p-1.5">
-                    {tags.length === 0 && (
-                        <span className="px-1 text-xs text-muted-foreground/60">
-                            no tags
-                        </span>
-                    )}
                     {tags.map((tag) => (
                         <span
                             key={tag}
@@ -231,23 +211,6 @@ function EditForm({
                         className="min-w-[90px] flex-1 bg-transparent px-1 text-xs outline-none placeholder:text-muted-foreground/50"
                     />
                 </div>
-                {tagSuggestions.length > 0 && (
-                    <div className="mt-1 flex flex-wrap gap-1">
-                        {tagSuggestions.map((t) => (
-                            <button
-                                key={t}
-                                type="button"
-                                className="cursor-pointer rounded-[3px] bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground transition-colors hover:bg-muted-foreground/20 hover:text-foreground"
-                                onMouseDown={(e) => {
-                                    e.preventDefault();
-                                    addTag(t);
-                                }}
-                            >
-                                +#{t}
-                            </button>
-                        ))}
-                    </div>
-                )}
 
                 {/* URL */}
                 <label className="mt-3 block text-xs font-medium">
@@ -280,6 +243,11 @@ function EditForm({
                         {saving ? "Saving…" : "Save"}
                     </button>
                 </div>
+            </div>
+
+            {/* RIGHT: tag picker (same as Edit tags popup) */}
+            <div className="flex min-h-0 flex-col border-l border-border bg-popover">
+                <TagListPanel title={title} setTitle={setTitle} allBookmarks={allBookmarks} />
             </div>
         </div>
     );
