@@ -107,6 +107,8 @@ export default function FolderPicker(
             }
             return added ? next : prev;
         });
+        // computeInitial is a stable pure helper; listing it would recreate effect each render
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [allBookmarks, value]);
 
     useEffect(() => {

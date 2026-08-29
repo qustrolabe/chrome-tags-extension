@@ -202,6 +202,8 @@ export const BookmarksManagerProvider = (
       sortDirection,
       toggleSortDirection,
     },
+    // toggleSortDirection is stable (useCallback) — adding it would not change memoization
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [
     allBookmarksFlat,
     availableTags,

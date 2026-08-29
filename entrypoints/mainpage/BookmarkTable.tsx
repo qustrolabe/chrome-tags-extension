@@ -242,6 +242,8 @@ export default function BookmarkTable() {
     },
   ], [allBookmarks, stats]);
 
+  // TanStack Table returns non-memoizable handlers — skipping React Compiler memoization is intentional
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,
@@ -300,6 +302,8 @@ export default function BookmarkTable() {
       }
       setMounted(true);
     });
+    // STORAGE_KEYS is a stable const — no need to list its fields as deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -308,6 +312,8 @@ export default function BookmarkTable() {
       [STORAGE_KEYS.visibility]: columnVisibility,
       [STORAGE_KEYS.sizing]: columnSizing,
     });
+    // STORAGE_KEYS is stable
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [columnVisibility, columnSizing, mounted]);
 
   const columnSizes = table.getVisibleLeafColumns().map((col) => col.getSize());

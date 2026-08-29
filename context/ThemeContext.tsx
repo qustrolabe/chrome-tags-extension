@@ -22,7 +22,7 @@ export const ThemeProvider = (
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Initial sync with chrome storage
+    // Initial sync with chrome storage — one-shot, `theme` intentionally not a dep
     browser.storage.local.get("theme").then((result) => {
       if (result.theme && result.theme !== theme) {
         setTheme(result.theme as Theme);
@@ -30,6 +30,7 @@ export const ThemeProvider = (
       }
       setMounted(true);
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
