@@ -50,9 +50,16 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus 
 
   const filteredTags = useMemo(() => {
     const q = tagSearch.trim().replace(/^#/, "").toLowerCase();
-    if (!q) return knownTags;
-    return knownTags.filter((e) => e.tag.toLowerCase().includes(q));
-  }, [knownTags, tagSearch]);
+    const base = q ? knownTags.filter((e) => e.tag.toLowerCase().includes(q)) : knownTags;
+    // Active tags on top, then by count desc, then alphabetically
+    return [...base].sort((a, b) => {
+      const aActive = tagSet.has(a.tag.toLowerCase()) ? 1 : 0;
+      const bActive = tagSet.has(b.tag.toLowerCase()) ? 1 : 0;
+      if (aActive !== bActive) return bActive - aActive;
+      if (b.count !== a.count) return b.count - a.count;
+      return a.tag.localeCompare(b.tag);
+    });
+  }, [knownTags, tagSearch, tagSet]);
 
   const canCreate = useMemo(() => {
     const q = tagSearch.trim().replace(/^#/, "").replace(/\s+/g, "");
@@ -61,7 +68,7 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus 
   }, [tagSearch, tagSet, knownTags]);
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full min-h-0 flex-col">
       <div className="shrink-0 p-3 pb-2">
         <label className="block text-xs font-medium">Tags</label>
         <input
@@ -81,7 +88,7 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus 
         />
         <p className="mt-1 text-[10px] text-muted-foreground">Click row to add/remove • Enter to create</p>
       </div>
-      <div className="scrollbar-slim min-h-0 flex-1 overflow-y-auto border-y border-border p-2">
+      <div className="scrollbar-slim min-h-[280px] flex-1 overflow-y-auto border-y border-border p-2">
         {filteredTags.length === 0 && !canCreate ? (
           <div className="py-6 text-center text-xs text-muted-foreground">No matching tags</div>
         ) : (
