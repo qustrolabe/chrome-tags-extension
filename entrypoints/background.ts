@@ -175,7 +175,7 @@ export default defineBackground(() => {
           console.warn(`[background] contextMenus.create ${id} threw`, e);
         }
       };
-      createOne("bookmark-page", "Bookmark this page", ["page"]);
+      createOne("bookmark-page", "Bookmark this page", ["page", "link"]);
       createOne("bookmark-link", "Bookmark this link", ["link"]);
       console.log("[background] context menus created");
     };
