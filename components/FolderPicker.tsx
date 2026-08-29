@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 type Bookmark = chrome.bookmarks.BookmarkTreeNode;
 
@@ -55,18 +55,63 @@ export default function FolderPicker(
         return build(byParent.get("0") ?? []);
     }, [allBookmarks, selfId]);
 
-    const [expanded, setExpanded] = useState<Set<string>>(() => {
+    const STORAGE_KEY = "folderPickerExpanded";
+
+    const computeInitial = (bookmarks: typeof allBookmarks, val: string): Set<string> => {
         const initial = new Set<string>();
-        for (const f of allBookmarks) {
+        for (const f of bookmarks) {
             if (f.url === undefined && f.parentId === "0") initial.add(f.id);
         }
-        let cur = allBookmarks.find((b) => b.id === value);
+        let cur = bookmarks.find((b) => b.id === val);
         while (cur?.parentId) {
             initial.add(cur.parentId);
-            cur = allBookmarks.find((b) => b.id === cur!.parentId);
+            cur = bookmarks.find((b) => b.id === cur!.parentId);
         }
         return initial;
+    };
+
+    const [expanded, setExpanded] = useState<Set<string>>(() => {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) {
+                const arr = JSON.parse(raw) as string[];
+                if (Array.isArray(arr) && arr.length > 0) return new Set(arr);
+            }
+        } catch {}
+        return computeInitial(allBookmarks, value);
     });
+
+    // Keep expanded in sync when bookmarks/value load async (quick-bookmark case) and persist
+    useEffect(() => {
+        if (allBookmarks.length === 0) return;
+        setExpanded((prev) => {
+            // If we have a persisted non-empty set, ensure current value's ancestors are expanded
+            // (covers case where bookmark's folder changed or storage predates it).
+            // If prev is empty (initial mount with empty bookmarks), populate with defaults.
+            if (prev.size === 0) return computeInitial(allBookmarks, value);
+            const next = new Set(prev);
+            let added = false;
+            // Ensure at least root folders are present if none are expanded (user hasn't intentionally collapsed all roots)
+            const hasRoot = [...next].some((id) => {
+                const f = allBookmarks.find((b) => b.id === id);
+                return f?.parentId === "0";
+            });
+            if (!hasRoot) {
+                for (const f of allBookmarks) if (f.url === undefined && f.parentId === "0") { next.add(f.id); added = true; }
+            }
+            // Ensure ancestors of current value are expanded
+            let cur = allBookmarks.find((b) => b.id === value);
+            while (cur?.parentId) {
+                if (!next.has(cur.parentId)) { next.add(cur.parentId); added = true; }
+                cur = allBookmarks.find((b) => b.id === cur!.parentId);
+            }
+            return added ? next : prev;
+        });
+    }, [allBookmarks, value]);
+
+    useEffect(() => {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify([...expanded])); } catch {}
+    }, [expanded]);
 
     const toggle = (id: string) => {
         setExpanded((prev) => {
@@ -75,6 +120,12 @@ export default function FolderPicker(
             else next.add(id);
             return next;
         });
+    };
+
+    const collapseAll = () => {
+        const roots = new Set<string>();
+        for (const f of allBookmarks) if (f.url === undefined && f.parentId === "0") roots.add(f.id);
+        setExpanded(roots);
     };
 
     const filteredTree = useMemo(() => {
@@ -139,13 +190,23 @@ export default function FolderPicker(
 
     return (
         <div className="flex h-full flex-col rounded-md border border-border bg-input/50 p-1">
-            <input
-                type="text"
-                value={query}
-                placeholder="search folders…"
-                onChange={(e) => setQuery(e.target.value)}
-                className="w-full border-b border-border bg-transparent px-2 py-1 text-xs outline-none placeholder:text-muted-foreground/50"
-            />
+            <div className="flex items-center justify-between border-b border-border px-1 pb-1">
+                <input
+                    type="text"
+                    value={query}
+                    placeholder="search folders…"
+                    onChange={(e) => setQuery(e.target.value)}
+                    className="flex-1 bg-transparent px-1 py-1 text-xs outline-none placeholder:text-muted-foreground/50"
+                />
+                <button
+                    type="button"
+                    onClick={collapseAll}
+                    title="Collapse to Bookmarks bar"
+                    className="shrink-0 cursor-pointer rounded px-1.5 py-0.5 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground"
+                >
+                    Collapse
+                </button>
+            </div>
             <div className="scrollbar-slim mt-1 min-h-0 flex-1 overflow-y-auto">
                 {filteredTree
                     ? renderTree(filteredTree, 0)
