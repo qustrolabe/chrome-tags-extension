@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React from "react";
 
 import Header from "./Header.tsx";
 import BookmarkList from "./BookmarkList.tsx";

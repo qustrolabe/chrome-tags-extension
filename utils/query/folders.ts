@@ -1,5 +1,5 @@
 import type { BookmarkLike } from "./types.ts";
-import { patternMatch, splitSegments } from "./glob.ts";
+import { patternMatch } from "./glob.ts";
 
 /**
  * Folder tree used for suggestions.

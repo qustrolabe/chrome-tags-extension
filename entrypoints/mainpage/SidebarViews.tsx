@@ -5,7 +5,6 @@ import {
     AiOutlineCheck,
     AiOutlineCopy,
     AiOutlineDelete,
-    AiOutlineEdit,
     AiOutlineFilter,
     AiOutlineSave,
 } from "react-icons/ai";

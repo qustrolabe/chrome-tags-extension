@@ -62,7 +62,7 @@ export default function BookmarkTable() {
   const {
     bookmarks: { display: displayBookmarks, all: allBookmarks },
   } = useBookmarks();
-  const { stats, settings } = useTracking();
+  const { stats } = useTracking();
 
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
     icon: true,

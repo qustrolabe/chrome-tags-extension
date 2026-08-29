@@ -51,9 +51,9 @@ export const scan = (query: string): RawToken[] => {
       i += keyMatch[0].length + 1; // skip ':'
     }
 
-    let value = "";
-    let quoted = false;
-    let incomplete = false;
+    let value: string;
+    let quoted: boolean;
+    let incomplete: boolean;
     if (query[i] === '"') {
       quoted = true;
       const close = query.indexOf('"', i + 1);

@@ -38,7 +38,6 @@ export const ThemeProvider = (
     localStorage.setItem("theme", theme);
 
     const root = document.documentElement;
-    const themes: Theme[] = ["light", "dark"];
     root.classList.remove("light", "dark", "brutalism", "brutalism-dark");
     root.classList.add(theme);
   }, [theme]);

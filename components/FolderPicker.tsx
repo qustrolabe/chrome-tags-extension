@@ -196,7 +196,7 @@ export default function FolderPicker(
                     value={query}
                     placeholder="search folders…"
                     onChange={(e) => setQuery(e.target.value)}
-                    className="flex-1 bg-transparent px-1 py-1 text-xs outline-none placeholder:text-muted-foreground/50"
+                    className="flex-1 bg-transparent p-1 text-xs outline-none placeholder:text-muted-foreground/50"
                 />
                 <button
                     type="button"

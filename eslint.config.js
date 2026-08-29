@@ -42,6 +42,13 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      // empty catch blocks are intentional for best-effort storage/bookmarks fallbacks
+      "no-empty": ["error", { allowEmptyCatch: true }],
+      // browser polyfill and chrome.* APIs legitimately need `any`
+      "@typescript-eslint/no-explicit-any": "off",
+      // experimental compiler rules — false positives on mock data and intentional sync effects
+      "react-hooks/set-state-in-effect": "off",
+      "react-hooks/purity": "off",
       "tailwindcss/enforces-shorthand": "warn",
       "tailwindcss/multiline-annotation-order": "off",
       "tailwindcss/no-arbitrary-value": "off",

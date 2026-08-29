@@ -1,6 +1,6 @@
 import { parseQuery } from "./parser.ts";
 import { getKeySpec, KEY_SPECS } from "./registry.ts";
-import { patternMatch, splitSegments } from "./glob.ts";
+import { splitSegments } from "./glob.ts";
 import {
   allNodes,
   childNames,

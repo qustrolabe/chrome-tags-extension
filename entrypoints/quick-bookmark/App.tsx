@@ -138,11 +138,11 @@ function QuickEditor({ bookmark, allBookmarks, isExisting }: { bookmark: Bookmar
   return (
     <div className="flex h-screen max-h-screen flex-col bg-popover text-popover-foreground">
       {isExisting && (
-        <div className="shrink-0 bg-amber-500/15 px-4 py-2 text-xs font-medium text-amber-700 dark:text-amber-300 border-b border-amber-500/20">
+        <div className="shrink-0 border-b border-amber-500/20 bg-amber-500/15 px-4 py-2 text-xs font-medium text-amber-700 dark:text-amber-300">
           Already bookmarked — editing existing bookmark. Changes will update it. Close without saving to keep as-is.
         </div>
       )}
-      <div className="grid flex-1 min-h-0 grid-cols-[260px_1fr_300px] overflow-hidden">
+      <div className="grid min-h-0 flex-1 grid-cols-[260px_1fr_300px] overflow-hidden">
         {/* LEFT: folder picker */}
         <div className="flex min-h-0 flex-col gap-1 border-r border-border p-4">
           <label className="block text-xs font-medium">Move to</label>
