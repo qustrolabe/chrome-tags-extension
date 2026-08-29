@@ -190,7 +190,7 @@ function TagForm({
                     placeholder="search tags… (sorted by count)"
                     className="mt-3 w-full rounded-md border border-border bg-input px-2 py-1.5 text-xs outline-none placeholder:text-muted-foreground/50"
                 />
-                <p className="mt-1 text-[10px] text-muted-foreground">Click + to add, − to remove • press Enter to create new tag</p>
+                <p className="mt-1 text-[10px] text-muted-foreground">Click row to add/remove • press Enter to create new tag</p>
             </div>
 
             {/* Tag list sorted by count */}
@@ -202,9 +202,12 @@ function TagForm({
                         {filteredTags.map((entry) => {
                             const present = tagSet.has(entry.tag.toLowerCase());
                             return (
-                                <div
+                                <button
                                     key={entry.tag}
-                                    className={`flex items-center gap-2 rounded-md border px-2 py-1.5 text-sm transition-colors ${present ? "border-primary/30 bg-primary/10" : "border-transparent hover:bg-muted"}`}
+                                    type="button"
+                                    onClick={() => toggleTag(entry.tag)}
+                                    className={`flex w-full cursor-pointer items-center gap-2 rounded-md border px-2 py-1.5 text-left text-sm transition-colors ${present ? "border-primary/30 bg-primary/10" : "border-transparent hover:bg-muted"}`}
+                                    title={present ? `Remove #${entry.tag}` : `Add #${entry.tag}`}
                                 >
                                     <span className="flex-1 truncate text-xs font-medium">
                                         <span className="font-bold text-primary">#</span>{entry.tag}
@@ -212,15 +215,12 @@ function TagForm({
                                     <span className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
                                         {entry.count} {entry.count === 1 ? "bookmark" : "bookmarks"}
                                     </span>
-                                    <button
-                                        type="button"
-                                        onClick={() => toggleTag(entry.tag)}
-                                        className={`flex cursor-pointer items-center justify-center rounded-md p-1.5 text-xs font-bold transition-colors ${present ? "bg-destructive text-destructive-foreground hover:bg-destructive/80" : "bg-primary text-primary-foreground hover:bg-primary/80"}`}
-                                        title={present ? `Remove #${entry.tag}` : `Add #${entry.tag}`}
+                                    <span
+                                        className={`flex items-center justify-center rounded-md p-1.5 text-xs font-bold transition-colors ${present ? "bg-destructive text-destructive-foreground" : "bg-primary text-primary-foreground"}`}
                                     >
                                         {present ? <AiOutlineMinus className="size-3" /> : <AiOutlinePlus className="size-3" />}
-                                    </button>
-                                </div>
+                                    </span>
+                                </button>
                             );
                         })}
                         {canCreate && (
