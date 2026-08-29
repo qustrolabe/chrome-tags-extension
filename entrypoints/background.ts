@@ -222,8 +222,8 @@ export default defineBackground(() => {
     if (!finalUrl) return;
     if (
       finalUrl.startsWith("chrome://") ||
-      finalUrl.startsWith("chrome-extension://") ||
-      finalUrl.startsWith("moz-extension://") ||
+      // finalUrl.startsWith("chrome-extension://") ||
+      // finalUrl.startsWith("moz-extension://") ||
       finalUrl.startsWith("about:") ||
       finalUrl.startsWith("edge://")
     ) {
