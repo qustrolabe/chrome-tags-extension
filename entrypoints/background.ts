@@ -141,8 +141,8 @@ export default defineBackground(() => {
       await browser.windows.create({
         url,
         type: "popup",
-        width: 720,
-        height: 600,
+        width: 1020,
+        height: 620,
         focused: true,
       });
     } catch {
