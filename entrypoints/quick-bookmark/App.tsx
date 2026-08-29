@@ -3,6 +3,7 @@ import { extractTags } from "@/utils/query/tags.ts";
 import { sortTagsRight } from "@/components/BookmarkEditDialog.tsx";
 import TagListPanel from "@/components/TagListPanel.tsx";
 import FolderPicker from "@/components/FolderPicker.tsx";
+import { initAccent } from "@/utils/accent.ts";
 
 type Bookmark = chrome.bookmarks.BookmarkTreeNode;
 
@@ -48,6 +49,20 @@ export default function App() {
     };
     load();
   }, [id]);
+
+  useEffect(() => {
+    initAccent();
+    // Sync theme from storage (same logic as ThemeContext initial sync)
+    browser.storage.local.get("theme").then((res) => {
+      const stored = res.theme as string | undefined;
+      if (stored === "dark" || stored === "light") {
+        document.documentElement.classList.remove("light", "dark", "brutalism", "brutalism-dark");
+        document.documentElement.classList.add(stored);
+        try { localStorage.setItem("theme", stored); } catch {}
+        document.documentElement.style.backgroundColor = stored === "dark" ? "#000000" : "#fcfcfc";
+      }
+    });
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
