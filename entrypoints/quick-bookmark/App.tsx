@@ -165,7 +165,7 @@ function QuickEditor({ bookmark, allBookmarks, isExisting }: { bookmark: Bookmar
           <p className="mt-2 text-center text-[10px] text-muted-foreground">ESC to close without saving</p>
         </div>
         {/* RIGHT: tag picker */}
-        <div className="flex min-h-0 flex-col border-l border-border bg-popover">
+        <div className="flex min-h-0 flex-col overflow-hidden border-l border-border bg-popover">
           <TagListPanel title={title} setTitle={setTitle} allBookmarks={allBookmarks} />
         </div>
       </div>
