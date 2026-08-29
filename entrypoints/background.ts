@@ -283,6 +283,35 @@ export default defineBackground(() => {
     }
   };
 
+  const bookmarkActiveTab = async () => {
+    try {
+      const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+      if (!tab?.url) return;
+      const finalUrl = tab.url.trim();
+      const title = tab.title?.trim() || finalUrl;
+      if (
+        finalUrl.startsWith("chrome://") ||
+        // finalUrl.startsWith("chrome-extension://") ||
+        // finalUrl.startsWith("moz-extension://") ||
+        finalUrl.startsWith("about:") ||
+        finalUrl.startsWith("edge://")
+      ) {
+        return;
+      }
+      const existing = await findBookmarksByUrl(finalUrl);
+      if (existing.length > 0) {
+        await openQuickBookmarkWindow(existing[0]!.id, true);
+        return;
+      }
+      const parentId = await getDefaultFolderId();
+      const created = await browser.bookmarks.create({ title, url: finalUrl, parentId });
+      scheduleRebuild();
+      await openQuickBookmarkWindow(created.id, false);
+    } catch (e) {
+      console.error("[background] bookmarkActiveTab failed", e);
+    }
+  };
+
   // Register context menu synchronously at top-level so it survives service worker restarts.
   // Chrome MV3 requires menus be (re)created on every startup; onInstalled handles first install,
   // and an immediate call handles reloads. The async init must not delay this.
@@ -296,6 +325,12 @@ export default defineBackground(() => {
   } else {
     console.warn("[background] contextMenus.onClicked not available, menu clicks will not work");
   }
+  // Keyboard shortcut (user-assignable in chrome://extensions/shortcuts)
+  try {
+    (browser as any).commands?.onCommand?.addListener((cmd: string) => {
+      if (cmd === "bookmark-this-page") bookmarkActiveTab();
+    });
+  } catch {}
 
   const init = async () => {
     await loadSettingsAndStats();

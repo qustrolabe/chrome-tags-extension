@@ -22,6 +22,15 @@ export default defineConfig({
     permissions: browser === "firefox"
       ? ["bookmarks", "storage", "tabs", "activeTab", "contextMenus"]
       : ["bookmarks", "storage", "favicon", "tabs", "activeTab", "contextMenus"],
+    commands: {
+      "bookmark-this-page": {
+        description: "Bookmark this page",
+        suggested_key: {
+          default: "Ctrl+Shift+S",
+          mac: "Command+Shift+S",
+        },
+      },
+    },
     author: browser === "firefox"
       ? "qustrolabe@gmail.com"
       : { email: "qustrolabe@gmail.com" },
