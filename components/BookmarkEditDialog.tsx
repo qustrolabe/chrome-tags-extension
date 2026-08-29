@@ -110,6 +110,7 @@ function EditForm({
         folderId !== (bookmark.parentId ?? "");
 
     const save = async () => {
+        const folderChanged = folderId !== (bookmark.parentId ?? "") && !!folderId;
         setSaving(true);
         try {
             if (title !== bookmark.title) {
@@ -118,10 +119,12 @@ function EditForm({
             if (url !== (bookmark.url ?? "")) {
                 await browser.bookmarks.update(bookmark.id, { url });
             }
-            if (folderId !== (bookmark.parentId ?? "") && folderId) {
+            if (folderChanged) {
                 await browser.bookmarks.move(bookmark.id, {
                     parentId: folderId,
                 });
+                // Only persist last folder when it actually changed (Chrome-like)
+                try { await browser.storage.local.set({ lastBookmarkFolderId: folderId }); } catch {}
             }
         } finally {
             setSaving(false);

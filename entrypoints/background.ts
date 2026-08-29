@@ -116,6 +116,8 @@ export default defineBackground(() => {
     await persistStats();
   };
 
+  const LAST_FOLDER_KEY = "lastBookmarkFolderId";
+
   const findBookmarksByUrl = async (url: string): Promise<chrome.bookmarks.BookmarkTreeNode[]> => {
     try {
       const results = await browser.bookmarks.search({ url });
@@ -133,6 +135,40 @@ export default defineBackground(() => {
       }
       return out;
     }
+  };
+
+  const getDefaultFolderId = async (): Promise<string | undefined> => {
+    try {
+      const stored = await browser.storage.local.get(LAST_FOLDER_KEY);
+      const lastId = stored[LAST_FOLDER_KEY] as string | undefined;
+      if (lastId) {
+        try {
+          const nodes = await browser.bookmarks.get(lastId);
+          const n = nodes[0] as chrome.bookmarks.BookmarkTreeNode | undefined;
+          if (n && !n.url) return lastId; // still a folder
+        } catch {}
+      }
+    } catch {}
+    // Fallback to Bookmarks bar
+    try {
+      const tree = await browser.bookmarks.getTree();
+      const stack = [...tree];
+      const folders: chrome.bookmarks.BookmarkTreeNode[] = [];
+      while (stack.length) {
+        const n = stack.pop();
+        if (!n) continue;
+        if (!n.url) folders.push(n as any);
+        if (n.children) for (const c of n.children) stack.push(c as any);
+      }
+      const bar = folders.find((f) => f.parentId === "0" && f.title.toLowerCase() === "bookmarks bar");
+      if (bar) return bar.id;
+      // Chrome id "1" is often Bookmarks bar
+      const byId1 = folders.find((f) => f.id === "1");
+      if (byId1) return byId1.id;
+      const firstRoot = folders.find((f) => f.parentId === "0");
+      if (firstRoot) return firstRoot.id;
+    } catch {}
+    return undefined;
   };
 
   const openQuickBookmarkWindow = async (bookmarkId: string, isExisting: boolean) => {
@@ -238,7 +274,8 @@ export default defineBackground(() => {
     }
 
     try {
-      const created = await browser.bookmarks.create({ title, url: finalUrl });
+      const parentId = await getDefaultFolderId();
+      const created = await browser.bookmarks.create({ title, url: finalUrl, parentId });
       scheduleRebuild();
       await openQuickBookmarkWindow(created.id, false);
     } catch (e) {

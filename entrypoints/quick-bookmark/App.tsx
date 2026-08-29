@@ -109,11 +109,15 @@ function QuickEditor({ bookmark, allBookmarks, isExisting }: { bookmark: Bookmar
   const closeWindow = () => window.close();
 
   const save = async () => {
+    const folderChanged = folderId !== (bookmark.parentId ?? "") && !!folderId;
     setSaving(true);
     try {
       if (title !== bookmark.title) await browser.bookmarks.update(bookmark.id, { title });
       if (url !== (bookmark.url ?? "")) await browser.bookmarks.update(bookmark.id, { url });
-      if (folderId !== (bookmark.parentId ?? "") && folderId) await browser.bookmarks.move(bookmark.id, { parentId: folderId });
+      if (folderChanged) {
+        await browser.bookmarks.move(bookmark.id, { parentId: folderId });
+        try { await browser.storage.local.set({ lastBookmarkFolderId: folderId }); } catch {}
+      }
     } finally {
       setSaving(false);
       window.close();
