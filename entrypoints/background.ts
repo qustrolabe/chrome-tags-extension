@@ -165,18 +165,19 @@ export default defineBackground(() => {
       return;
     }
     const create = () => {
-      try {
-        ctx.create(
-          { id: "bookmark-this", title: "Bookmark this", contexts: ["page", "link"] },
-          () => {
+      const createOne = (id: string, title: string, contexts: chrome.contextMenus.ContextType[]) => {
+        try {
+          ctx.create({ id, title, contexts } as any, () => {
             const err = (browser.runtime as any).lastError ?? (globalThis as any).chrome?.runtime?.lastError;
-            if (err) console.warn("[background] contextMenus.create lastError", err);
-            else console.log("[background] context menu created");
-          },
-        );
-      } catch (e) {
-        console.warn("[background] contextMenus.create threw", e);
-      }
+            if (err?.message) console.warn(`[background] contextMenus.create ${id} lastError`, err);
+          });
+        } catch (e) {
+          console.warn(`[background] contextMenus.create ${id} threw`, e);
+        }
+      };
+      createOne("bookmark-page", "Bookmark this page", ["page"]);
+      createOne("bookmark-link", "Bookmark this link", ["link"]);
+      console.log("[background] context menus created");
     };
     // Prefer promise form (WXT/brower polyfill), fallback to callback form (chrome)
     try {
@@ -206,21 +207,30 @@ export default defineBackground(() => {
     info: chrome.contextMenus.OnClickData,
     tab: any,
   ) => {
-    if (info.menuItemId !== "bookmark-this") return;
-    const url = (info.linkUrl || tab?.url || (info.pageUrl as string) || "").trim();
-    const title = tab?.title?.trim() || url;
-    if (!url) return;
+    const isPage = info.menuItemId === "bookmark-page";
+    const isLink = info.menuItemId === "bookmark-link";
+    // keep backward compat with old id
+    const isLegacy = (info.menuItemId as string) === "bookmark-this";
+    if (!isPage && !isLink && !isLegacy) return;
+    const url = isLink ? (info.linkUrl || "").trim() : (tab?.url || (info.pageUrl as string) || "").trim();
+    // For legacy, prefer linkUrl if present (old emergent behavior)
+    const legacyUrl = isLegacy ? (info.linkUrl || tab?.url || (info.pageUrl as string) || "").trim() : url;
+    const finalUrl = isLegacy ? legacyUrl : url;
+    const title = isLink
+      ? ((info as any).linkText as string | undefined)?.trim() || finalUrl
+      : tab?.title?.trim() || finalUrl;
+    if (!finalUrl) return;
     if (
-      url.startsWith("chrome://") ||
-      url.startsWith("chrome-extension://") ||
-      url.startsWith("moz-extension://") ||
-      url.startsWith("about:") ||
-      url.startsWith("edge://")
+      finalUrl.startsWith("chrome://") ||
+      finalUrl.startsWith("chrome-extension://") ||
+      finalUrl.startsWith("moz-extension://") ||
+      finalUrl.startsWith("about:") ||
+      finalUrl.startsWith("edge://")
     ) {
       return;
     }
 
-    const existing = await findBookmarksByUrl(url);
+    const existing = await findBookmarksByUrl(finalUrl);
     if (existing.length > 0) {
       const bookmark = existing[0]!;
       await openQuickBookmarkWindow(bookmark.id, true);
@@ -228,7 +238,7 @@ export default defineBackground(() => {
     }
 
     try {
-      const created = await browser.bookmarks.create({ title, url });
+      const created = await browser.bookmarks.create({ title, url: finalUrl });
       scheduleRebuild();
       await openQuickBookmarkWindow(created.id, false);
     } catch (e) {
