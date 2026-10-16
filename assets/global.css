@@ -298,6 +298,47 @@
     border-radius: 0;
 }
 
-.automata .scrollbar-slim::-webkit-scrollbar-thumb {
+/* Chromium draws its own scrollbar — with a rounded thumb it refuses to
+   square off — as soon as the *standard* scrollbar properties are set, and
+   then ignores every ::-webkit-scrollbar-* rule. global.css sets
+   scrollbar-color on :root (line 67) and on .scrollbar-slim (line 178), so
+   the pseudo-elements below would be dead code. Resetting both to `auto`
+   re-enables them. Specificity must clear .scrollbar-slim, hence the doubled
+   class; scrollbar-color inherits, so descendants need naming too. */
+.automata.automata,
+.automata.automata .scrollbar-slim {
+    scrollbar-color: auto;
+    scrollbar-width: auto;
+}
+
+/* Automata scrollbars: square thumb, and it applies to the window scrollbar
+   too. `.scrollbar-slim` above only styles elements that opt in, and
+   `::-webkit-scrollbar-thumb` is a pseudo-element, so it is NOT matched by
+   the `.automata.automata *` rule — hence explicit subject selectors here.
+   The doubled class raises specificity past `.scrollbar-slim` (0,1,0). */
+.automata.automata::-webkit-scrollbar,
+.automata.automata ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.automata.automata::-webkit-scrollbar-track,
+.automata.automata ::-webkit-scrollbar-track,
+.automata.automata::-webkit-scrollbar-corner,
+.automata.automata ::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+.automata.automata::-webkit-scrollbar-thumb,
+.automata.automata ::-webkit-scrollbar-thumb {
+    /* `border: 0` drops Chrome's built-in inset border; without it the thumb
+       keeps a native rounded cap no matter what border-radius says. */
+    border: 0;
     border-radius: 0;
+    background: var(--scrollbar-thumb);
+}
+
+.automata.automata::-webkit-scrollbar-thumb:hover,
+.automata.automata ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-muted-foreground);
 }
