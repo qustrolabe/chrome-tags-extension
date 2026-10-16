@@ -67,8 +67,16 @@
     --color-token-folder-pill: var(--token-folder-pill);
     --color-token-folder-strict: var(--token-folder-strict);
     --color-token-folder-strict-fill: var(--token-folder-strict-fill);
+    --color-token-folder-strict-pill: var(--token-folder-strict-pill);
     --color-token-date: var(--token-date);
+    --color-token-date-fill: var(--token-date-fill);
     --color-token-date-pill: var(--token-date-pill);
+    --color-token-tracking: var(--token-tracking);
+    --color-token-tracking-fill: var(--token-tracking-fill);
+    --color-token-tracking-pill: var(--token-tracking-pill);
+    --color-token-id: var(--token-id);
+    --color-token-id-fill: var(--token-id-fill);
+    --color-token-id-pill: var(--token-id-pill);
     --color-token-action: var(--token-action);
     --color-token-action-pill: var(--token-action-pill);
     --color-token-invert: var(--token-invert);
@@ -149,9 +157,24 @@
 
     --token-folder-strict: oklch(51.1% 0.096 186.391); /* teal-700 */
     --token-folder-strict-fill: oklch(70.4% 0.14 182.503); /* teal-500 */
+    --token-folder-strict-pill: oklch(95.3% 0.051 180.801); /* teal-100 */
 
     --token-date: oklch(55.5% 0.163 48.998); /* amber-700 */
+    --token-date-fill: oklch(76.9% 0.188 70.08); /* amber-500 */
     --token-date-pill: oklch(96.2% 0.059 95.617); /* amber-100 */
+
+    /* Visits + frecency share a family: they are both derived from the same
+       visit history, so splitting them would imply a distinction the data
+       does not make. Lime fills the widest gap left between amber and green. */
+    --token-tracking: oklch(53.2% 0.157 131.589); /* lime-700 */
+    --token-tracking-fill: oklch(76.8% 0.233 130.85); /* lime-500 */
+    --token-tracking-pill: oklch(96.7% 0.067 122.328); /* lime-100 */
+
+    /* `id` is the only key that is neither text, a date nor a metric. Pink
+       occupies the widest remaining gap, between purple and orange. */
+    --token-id: oklch(52.5% 0.223 3.958); /* pink-700 */
+    --token-id-fill: oklch(65.6% 0.241 354.308); /* pink-500 */
+    --token-id-pill: oklch(94.8% 0.028 342.258); /* pink-100 */
 
     --token-action: oklch(26.9% 0 none); /* neutral-800 */
     --token-action-pill: oklch(92.2% 0 none); /* neutral-200 */
@@ -224,9 +247,19 @@
 
     --token-folder-strict: oklch(85.5% 0.138 181.071); /* teal-300 */
     --token-folder-strict-fill: oklch(70.4% 0.14 182.503); /* teal-500 */
+    --token-folder-strict-pill: oklch(38.6% 0.063 188.416); /* teal-900 */
 
     --token-date: oklch(87.9% 0.169 91.605); /* amber-300 */
+    --token-date-fill: oklch(76.9% 0.188 70.08); /* amber-500 */
     --token-date-pill: oklch(41.4% 0.112 45.904); /* amber-900 */
+
+    --token-tracking: oklch(89.7% 0.196 126.665); /* lime-300 */
+    --token-tracking-fill: oklch(76.8% 0.233 130.85); /* lime-500 */
+    --token-tracking-pill: oklch(40.5% 0.101 131.063); /* lime-900 */
+
+    --token-id: oklch(82.3% 0.12 346.018); /* pink-300 */
+    --token-id-fill: oklch(65.6% 0.241 354.308); /* pink-500 */
+    --token-id-pill: oklch(40.8% 0.153 2.432); /* pink-900 */
 
     --token-action: oklch(97% 0 none); /* neutral-100 */
     --token-action-pill: oklch(37.1% 0 none); /* neutral-700 */
@@ -389,9 +422,19 @@
 
     --token-folder-strict: oklch(38.6% 0.063 188.416); /* teal-900 */
     --token-folder-strict-fill: oklch(70.4% 0.14 182.503); /* teal-500 */
+    --token-folder-strict-pill: color-mix(in srgb, oklch(70.4% 0.14 182.503) 18%, #b8b29d);
 
     --token-date: oklch(41.4% 0.112 45.904); /* amber-900 */
+    --token-date-fill: oklch(76.9% 0.188 70.08); /* amber-500 */
     --token-date-pill: color-mix(in srgb, oklch(76.9% 0.188 70.08) 18%, #b8b29d);
+
+    --token-tracking: oklch(40.5% 0.101 131.063); /* lime-900 */
+    --token-tracking-fill: oklch(76.8% 0.233 130.85); /* lime-500 */
+    --token-tracking-pill: color-mix(in srgb, oklch(76.8% 0.233 130.85) 18%, #b8b29d);
+
+    --token-id: oklch(40.8% 0.153 2.432); /* pink-900 */
+    --token-id-fill: oklch(65.6% 0.241 354.308); /* pink-500 */
+    --token-id-pill: color-mix(in srgb, oklch(65.6% 0.241 354.308) 18%, #b8b29d);
 
     /* action stays neutral, but as a solid dark bar so it reads as a command
        rather than a sixth category. */

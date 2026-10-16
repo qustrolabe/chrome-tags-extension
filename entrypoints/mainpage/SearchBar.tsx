@@ -35,14 +35,31 @@ const TOKEN_COLORS: Record<string, string> = {
   title: "bg-token-title-fill/15 text-token-title",
   folder: "bg-token-folder-fill/15 text-token-folder",
   folder_strict: "bg-token-folder-strict-fill/15 text-token-folder-strict",
+  added: "bg-token-date-fill/15 text-token-date",
+  last_used: "bg-token-date-fill/15 text-token-date",
+  visits: "bg-token-tracking-fill/15 text-token-tracking",
+  frecency: "bg-token-tracking-fill/15 text-token-tracking",
+  id: "bg-token-id-fill/15 text-token-id",
 };
 
+// Keyed by the category strings `suggest.ts` actually emits, which are two
+// different vocabularies: value suggestions pass an explicit family ("date",
+// "visits") while key suggestions pass the KeySpec label ("added", "last
+// used"). Both have to be listed or one of the two paths falls back to the
+// neutral action pill and the same key changes colour depending on whether
+// you are picking the key or its value.
 const CATEGORY_STYLES: Record<string, string> = {
   tag: "bg-token-tag-pill text-token-tag",
   url: "bg-token-url-pill text-token-url",
   title: "bg-token-title-pill text-token-title",
   folder: "bg-token-folder-pill text-token-folder",
+  folder_strict: "bg-token-folder-strict-pill text-token-folder-strict",
   date: "bg-token-date-pill text-token-date",
+  added: "bg-token-date-pill text-token-date",
+  "last used": "bg-token-date-pill text-token-date",
+  visits: "bg-token-tracking-pill text-token-tracking",
+  frecency: "bg-token-tracking-pill text-token-tracking",
+  id: "bg-token-id-pill text-token-id",
   action: "bg-token-action-pill text-token-action",
 };
 
