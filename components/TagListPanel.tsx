@@ -1,6 +1,8 @@
 import React, { useMemo, useState, useRef, useEffect } from "react";
 import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
 import { extractTags, buildTagIndex } from "@/utils/query/tags.ts";
+import { useTagColor } from "@/context/TagColorContext";
+import { tagTitleStyle } from "@/utils/tagColor.ts";
 import { sortTagsRight } from "@/components/BookmarkEditDialog.tsx";
 
 type Bookmark = chrome.bookmarks.BookmarkTreeNode;
@@ -342,9 +344,10 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus 
                   className={`${cls} flex items-center gap-2 ${present && !selected ? "border-primary/30 bg-primary/10" : ""}`}
                 >
                   <span className="flex-1 truncate font-medium">
-                    <span className="font-bold text-primary">#</span>{row.tag}
+                    <span className="rounded-md px-1.5 py-0.5 font-bold" style={tagTitleStyle(useTagColor(), row.tag)}>#{row.tag}</span>
                   </span>
-                  <span className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                      <span className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+
                     {row.count} {row.count === 1 ? "bookmark" : "bookmarks"}
                   </span>
                   <span className={`flex items-center justify-center rounded-md p-1.5 text-xs font-bold ${present ? "bg-destructive text-destructive-foreground" : "bg-primary text-primary-foreground"}`}>

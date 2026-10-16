@@ -7,6 +7,7 @@ import BookmarkTable from "./BookmarkTable.tsx";
 
 import { BookmarksManagerProvider } from "@/context/BookmarksContext";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { TagColorProvider } from "@/context/TagColorContext";
 import { SidebarProvider, useSidebar } from "@/context/SidebarContext";
 import { ViewsProvider } from "@/context/ViewsContext";
 import { TrackingProvider } from "@/context/TrackingContext";
@@ -37,6 +38,7 @@ export default function App() {
   return (
     <div className="bg-background text-foreground">
       <ThemeProvider>
+        <TagColorProvider>
         <TrackingProvider>
           <BookmarksManagerProvider>
             <SidebarProvider>
@@ -51,6 +53,7 @@ export default function App() {
             </SidebarProvider>
           </BookmarksManagerProvider>
         </TrackingProvider>
+        </TagColorProvider>
       </ThemeProvider>
     </div>
   );

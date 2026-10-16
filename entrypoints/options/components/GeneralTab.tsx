@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { AiOutlineBlock, AiOutlineMoon, AiOutlineSun } from "react-icons/ai";
 import { type Theme } from "@/context/ThemeContext";
+import { useTagColor, useTagColorSetter } from "@/context/TagColorContext";
+import { TAG_COLOR_MODES, TAG_COLOR_MODE_LABELS } from "@/utils/tagColor.ts";
 import SettingsCard from "./SettingsCard";
 import {
     ACCENT_PRESETS,
@@ -40,12 +42,15 @@ const THEME_CARDS = [
 }[];
 
 export default function GeneralTab({ theme, setTheme }: GeneralTabProps) {
+    const tagColorMode = useTagColor();
+    const setTagColorMode = useTagColorSetter();
     const [accent, setAccent] = useState<string | null>(null);
 
     useEffect(() => {
         browser.storage.local
             .get(["accentColor"])
             .then((r) =>
+                // SAFETY: accentColor is a CSS color string
                 setAccent((r.accentColor as string) ?? null),
             );
     }, []);
@@ -145,6 +150,27 @@ export default function GeneralTab({ theme, setTheme }: GeneralTabProps) {
                                 Reset to theme default
                             </button>
                         )}
+                    </div>
+                </SettingsCard>
+
+                <SettingsCard
+                    title="Colored tag capsules"
+                    description="Tint tag capsules by tag name. v1 is on by default; choose None to keep them neutral."
+                >
+                    <div className="flex flex-wrap items-center gap-2">
+                        {TAG_COLOR_MODES.map((mode) => (
+                            <button
+                                key={mode}
+                                onClick={() => setTagColorMode(mode)}
+                                className={`rounded-md border px-3 py-1.5 text-sm font-medium transition-all ${
+                                    tagColorMode === mode
+                                        ? "border-primary bg-primary/10 text-primary"
+                                        : "border-border text-foreground hover:border-muted-foreground/40"
+                                }`}
+                            >
+                                {TAG_COLOR_MODE_LABELS[mode]}
+                            </button>
+                        ))}
                     </div>
                 </SettingsCard>
             </div>

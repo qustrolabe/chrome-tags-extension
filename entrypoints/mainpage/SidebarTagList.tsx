@@ -1,22 +1,21 @@
 import React from "react";
+import { useTagColor } from "@/context/TagColorContext";
+import { tagTitleStyle } from "@/utils/tagColor.ts";
 import { useBookmarks } from "@/context/BookmarksContext";
 import { cycleToken, tokenState } from "@/utils/query/editing.ts";
 import { AiOutlineCheck, AiOutlineClose } from "react-icons/ai";
-
 export default function SidebarTagList() {
     const {
         bookmarks: { availableTags },
         query,
         setQuery,
     } = useBookmarks();
-
     // Tags referenced anywhere in the current query (either polarity)
     const activeTags = new Set(
       [...query.matchAll(/-?tag:"?([^\s"]+)"?/g)]
         .map((m) => m[1])
         .filter((t): t is string => t !== undefined),
     );
-
     // Merge availableTags with tags from the query so they stay visible
     const displayTags = { ...availableTags };
     activeTags.forEach((tag) => {
@@ -24,36 +23,27 @@ export default function SidebarTagList() {
             displayTags[tag] = 0;
         }
     });
-
     const getTagState = (tag: string): "positive" | "negative" | null =>
         tokenState(query, "tag", tag);
-
     // Sort: positive filters, then negative, then by count
     const sortedTags = Object.entries(displayTags).sort(
         ([tagA, countA], [tagB, countB]) => {
             const score = (state: string | null) => {
                 if (state === "positive") return 2;
-
                 if (state === "negative") return 1;
-
                 return 0;
             };
-
             const scoreA = score(getTagState(tagA));
             const scoreB = score(getTagState(tagB));
-
             if (scoreA !== scoreB) {
                 return scoreB - scoreA;
             }
-
             return countB - countA;
         },
     );
-
     const handleTagClick = (tag: string) => {
         setQuery(cycleToken(query, "tag", tag));
     };
-
     if (sortedTags.length === 0) {
         return (
             <div className="p-4 text-center text-sm text-muted-foreground">
@@ -61,7 +51,6 @@ export default function SidebarTagList() {
             </div>
         );
     }
-
     return (
         <div className="p-2">
             <div className="mb-1 px-2 py-1 text-xs text-muted-foreground">
@@ -70,7 +59,6 @@ export default function SidebarTagList() {
             <div className="flex flex-col gap-0.5">
                 {sortedTags.map(([tag, count]) => {
                     const state = getTagState(tag);
-
                     return (
                         <button
                             key={tag}
@@ -89,12 +77,8 @@ export default function SidebarTagList() {
                             {state === "negative" && (
                                 <AiOutlineClose className="size-3.5 shrink-0 text-token-negative" />
                             )}
-                            <span className="flex-1 truncate">#{tag}</span>
-                            {!state && (
-                                <span className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
-                                    {count}
-                                </span>
-                            )}
+                            <span className="flex-1 truncate"><span className="rounded-md px-1.5 py-0.5" style={tagTitleStyle(useTagColor(), tag)}>#{tag}</span></span>
+                            <span className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">{count}</span>
                         </button>
                     );
                 })}

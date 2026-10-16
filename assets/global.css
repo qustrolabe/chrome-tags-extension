@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@source "../utils/tagColor.ts";
+
 /* background-color displayed before react app is loaded */
 :root {
     background-color: oklch(97% 0 0);

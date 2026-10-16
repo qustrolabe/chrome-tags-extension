@@ -1,4 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React from "react";
+import { useTagColor } from "@/context/TagColorContext";
+import { tagCapsuleStyle } from "@/utils/tagColor.ts";
 import { createPortal } from "react-dom";
 import { Tooltip, AlertDialog } from "radix-ui";
 import { AiOutlineDelete, AiOutlineEdit, AiOutlineTool } from "react-icons/ai";
@@ -638,8 +640,16 @@ export default function BookmarkCard({
 function BookmarkTagCapsule(
     { tag }: { tag: string },
 ) {
+    const tagColorMode = useTagColor();
+    const style = tagCapsuleStyle(tagColorMode, tag);
+
     return (
-        <div className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary transition-colors hover:bg-primary/20">
+        <div
+            style={style}
+            className={`rounded-md px-1.5 py-0.5 text-[10px] font-bold transition-colors ${
+                style ? "text-foreground/90" : "bg-primary/10 text-primary hover:bg-primary/20"
+            }`}
+        >
             #{tag}
         </div>
     );
