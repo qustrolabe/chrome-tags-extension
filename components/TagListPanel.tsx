@@ -361,7 +361,7 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus,
 
                     {row.count} {row.count === 1 ? "bookmark" : "bookmarks"}
                   </span>
-                  <span className={`flex items-center justify-center rounded-md p-1.5 text-xs font-bold ${present ? "bg-destructive text-destructive-foreground" : "bg-primary text-primary-foreground"}`}>
+                  <span className={`flex items-center justify-center rounded-md p-1.5 text-xs font-bold ${present ? "bg-destructive text-destructive-foreground" : "bg-primary text-primary-foreground dark:bg-primary/50 dark:text-primary-foreground/70"}`}>
                     {present ? <AiOutlineMinus className="size-3" /> : <AiOutlinePlus className="size-3" />}
                   </span>
                 </button>
