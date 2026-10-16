@@ -41,6 +41,11 @@ const normalize = (raw: string): string =>
  *
  * The selection is therefore tracked by lowercased tag name, never by index:
  * releasing the freeze changes every index, and only the tag survives.
+ *
+ * Clicking a row is the same operation as pressing Enter on it, not a second
+ * mode: the row is toggled, stays selected, and focus goes back to the search
+ * box so ↑/↓ and typing carry straight on from there. Moving to a *different*
+ * row releases the previous row, so it reflows instead of staying pinned.
  */
 export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus }: TagListPanelProps) {
   const [tagSearch, setTagSearch] = useState("");
@@ -105,17 +110,26 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus 
     [query, tagSet, knownTags],
   );
 
-  const rows = useMemo<Row[]>(() => {
+  /**
+   * The unfrozen active-first order. This is also what a *new* freeze
+   * captures, which is why it has to exist separately from `rows` — while a
+   * freeze is active, `rows` is a replay and would freeze the next selection
+   * onto the previous row's stale order.
+   */
+  const liveRows = useMemo<Row[]>(() => {
     const live: Row[] = sortedTags.map((e) => ({ tag: e.tag, count: e.count, isNew: false }));
     if (canCreate) live.push({ tag: query, count: 0, isNew: true });
+    return live;
+  }, [sortedTags, canCreate, query]);
 
+  const rows = useMemo<Row[]>(() => {
     // No selection -> live active-first order. Selection without a captured
     // order can't happen, but fall back to live rather than trusting it.
-    if (!selectedTag || !frozen) return live;
+    if (!selectedTag || !frozen) return liveRows;
 
     // Replay the captured order, then append anything that appeared since.
     // Keyed by lowercased tag so a row promoted by the toggle still matches.
-    const byTag = new Map(live.map((r) => [r.tag.toLowerCase(), r]));
+    const byTag = new Map(liveRows.map((r) => [r.tag.toLowerCase(), r]));
     const kept: Row[] = [];
     const used = new Set<string>();
     for (const t of frozen) {
@@ -125,12 +139,12 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus 
         used.add(t);
       }
     }
-    for (const r of live) {
+    for (const r of liveRows) {
       const key = r.tag.toLowerCase();
       if (!used.has(key)) kept.push(r);
     }
     return kept;
-  }, [sortedTags, canCreate, query, selectedTag, frozen]);
+  }, [liveRows, selectedTag, frozen]);
 
   /** Resolved against `rows`, so it survives both frozen and live ordering. */
   const activeIndex = useMemo(() => {
@@ -142,6 +156,15 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus 
     setSelectedTag(null);
     setFrozen(null);
   };
+
+  /**
+   * Keep a click from moving focus onto the row button. Without it the input
+   * blurs and every key goes to a <button>, so ↑/↓ and typing would work
+   * right up until the first click and then silently stop. `accept` hands
+   * focus back explicitly, which covers the case where the input did not have
+   * it in the first place.
+   */
+  const keepFocus = (e: React.MouseEvent) => e.preventDefault();
 
   /** Enter/click. Stays selected so a second Enter un-toggles the same tag. */
   const accept = (index: number | undefined) => {
@@ -161,9 +184,23 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus 
     else toggleTag(row.tag);
 
     const key = row.tag.toLowerCase();
+    // Re-entering the same row keeps the existing freeze — that is what makes
+    // a second Enter (or a second click) toggle the same tag back off.
+    //
+    // Landing on a *different* row starts a fresh selection instead: the row
+    // being left behind is released, so it reflows to its sorted position
+    // rather than staying pinned by a freeze that now belongs to someone else.
+    // The capture has to come from `liveRows`, not `rows`, which is currently
+    // the previous row's frozen replay.
+    const reentering = selectedTag === key;
+    const liveOrder = liveRows.map((r) => r.tag.toLowerCase());
     setSelectedTag(key);
-    // Capture the order on the first accept, so a later toggle can't reflow.
-    setFrozen((prev) => prev ?? rows.map((r) => r.tag.toLowerCase()));
+    setFrozen(reentering ? (prev) => prev ?? liveOrder : liveOrder);
+
+    // A click lands focus on the button, and ↑/↓ plus typing are both handled
+    // by the input's onKeyDown — so without this the row would be selected but
+    // the keyboard dead, i.e. a different mode from the one typing gives you.
+    searchRef.current?.focus();
   };
 
   /**
@@ -253,7 +290,7 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus 
 
               if (row.isNew) {
                 return (
-                  <button key={`new-${row.tag}`} type="button" ref={ref} onClick={() => accept(index)} className={`${cls} flex items-center gap-2`}>
+                  <button key={`new-${row.tag}`} type="button" ref={ref} onMouseDown={keepFocus} onClick={() => accept(index)} className={`${cls} flex items-center gap-2`}>
                     <span className="flex-1 truncate"><span className="font-bold text-primary">#</span>{row.tag} <span className="text-muted-foreground">(new)</span></span>
                     <span className="flex items-center justify-center rounded-md bg-primary p-1.5 text-primary-foreground"><AiOutlinePlus className="size-3" /></span>
                   </button>
@@ -266,6 +303,7 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus 
                   key={row.tag}
                   type="button"
                   ref={ref}
+                  onMouseDown={keepFocus}
                   onClick={() => accept(index)}
                   title={present ? `Remove #${row.tag}` : `Add #${row.tag}`}
                   className={`${cls} flex items-center gap-2 ${present && !selected ? "border-primary/30 bg-primary/10" : ""}`}
