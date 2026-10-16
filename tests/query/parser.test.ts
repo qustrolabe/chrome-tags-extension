@@ -71,6 +71,20 @@ describe("parser — scan", () => {
     const { tokens } = parseQuery('tag:"unclosed rest');
     expect(tokens[0]).toMatchObject({ key: "tag", value: "unclosed rest" });
   });
+
+  test("incomplete is a real boolean, never undefined", () => {
+    // A terminated quote used to skip the assignment entirely, so the token
+    // carried `undefined` into a field typed `boolean`. Harmless while every
+    // reader is a truthiness test, wrong the moment one compares strictly.
+    const closed = parseQuery('title:"closed"').tokens[0];
+    expect(closed?.incomplete).toBe(false);
+
+    const bare = parseQuery("url:google").tokens[0];
+    expect(bare?.incomplete).toBe(false);
+
+    const open = parseQuery('title:"still typing').tokens[0];
+    expect(open?.incomplete).toBe(true);
+  });
 });
 
 describe("parser — serialize roundtrip", () => {

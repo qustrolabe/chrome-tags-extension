@@ -53,7 +53,11 @@ export const scan = (query: string): RawToken[] => {
 
     let value: string;
     let quoted: boolean;
-    let incomplete: boolean;
+    // Seeded rather than left unassigned: the closed-quote branch below
+    // never assigns it, so a terminated "…" used to push `undefined` into a
+    // field typed `boolean`. Every reader is a truthiness test today, but the
+    // first `=== false` or JSON round-trip would have turned that into a bug.
+    let incomplete = false;
     if (query[i] === '"') {
       quoted = true;
       const close = query.indexOf('"', i + 1);
