@@ -12,6 +12,8 @@ interface TagListPanelProps {
   setTitle: (v: string) => void;
   allBookmarks: Bookmark[];
   autoFocus?: boolean;
+  compact?: boolean;
+  nativeScroll?: boolean;
 }
 
 /** A listable row: an existing tag, or the "create this" entry. */
@@ -49,7 +51,7 @@ const normalize = (raw: string): string =>
  * box so ↑/↓ and typing carry straight on from there. Moving to a *different*
  * row releases the previous row, so it reflows instead of staying pinned.
  */
-export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus }: TagListPanelProps) {
+export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus, compact, nativeScroll }: TagListPanelProps) {
   const [tagSearch, setTagSearch] = useState("");
   /** Lowercased tag of the selected row; null = nothing selected. */
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
@@ -279,11 +281,19 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus 
     } else if (e.key === "Enter") {
       e.preventDefault();
       accept(activeIndex);
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+
+      if (selectedTag || tagSearch) {
+        clearSelection();
+        setTagSearch("");
+        searchRef.current?.blur();
+      }
     }
   };
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+    <div className={`flex min-h-0 flex-1 flex-col ${nativeScroll ? "overflow-visible" : "overflow-hidden"}`}>
       <div className="shrink-0 p-3 pb-2">
         <label htmlFor="tag-panel-search" className="block text-xs font-medium">Tags</label>
         <input
@@ -297,12 +307,13 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus 
             clearSelection();
           }}
           onKeyDown={handleKeyDown}
+          onBlur={clearSelection}
           placeholder="search tags… (sorted by count)"
-          className="mt-1 w-full rounded-md border border-border bg-input px-2 py-1.5 text-xs outline-none placeholder:text-muted-foreground/50"
+          className="mt-1 w-full rounded-md border border-border bg-secondary/80 px-2 py-1.5 text-xs outline-none placeholder:text-muted-foreground/50"
         />
         <p className="mt-1 text-[10px] text-muted-foreground">↑↓ to move • Enter to toggle • Enter on empty to create</p>
       </div>
-      <div className="scrollbar-slim min-h-[280px] flex-1 overflow-y-auto overscroll-contain border-y border-border p-2">
+      <div className={nativeScroll ? "min-h-0 flex-1 p-2" : `scrollbar-slim ${compact ? "min-h-0" : "min-h-[280px]"} flex-1 overflow-y-auto overscroll-contain border-y border-border p-2`}>
         {rows.length === 0 ? (
           <div className="py-6 text-center text-xs text-muted-foreground">No matching tags</div>
         ) : (
