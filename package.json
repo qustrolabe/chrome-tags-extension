@@ -12,11 +12,14 @@
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
     "compile": "tsc --noEmit",
-    "lint": "eslint .",
-    "test": "bun test",
+    "lint": "oxlint .",
+    "test": "bun test tests/",
     "test:watch": "bun test --watch",
     "postinstall": "wxt prepare",
-    "release": "bun scripts/release.ts"
+    "release": "bun scripts/release.ts",
+    "lint:eslint": "eslint .",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check ."
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
@@ -33,6 +36,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@oxlint/plugins": "1.88.0",
     "@types/chrome": "^0.2.7",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
@@ -42,6 +46,8 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-tailwindcss": "^4.4.0",
     "globals": "^17.11.0",
+    "oxfmt": "0.73.0",
+    "oxlint": "1.88.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.68.0",
     "wxt": "^0.21.4"
