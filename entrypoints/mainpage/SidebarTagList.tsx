@@ -7,17 +7,50 @@ import {
     TAG_COLOR_MODE_LABELS,
 } from "@/utils/tagColor.ts";
 
+const TAG_TOKEN = /-?\s*tag:"([^"]+)"|-?\s*tag:([^\s]+)/gi;
+
+function stripTagTokens(value: string): string {
+    return value.replace(TAG_TOKEN, " ").replace(/\s+/g, " ").trim();
+}
+
+function tagTokensToHash(value: string): string {
+    let match: RegExpExecArray | null;
+    const tags: string[] = [];
+    const regex = new RegExp(TAG_TOKEN.source, "gi");
+
+    while ((match = regex.exec(value)) !== null) {
+        const tag = match[1] ?? match[2];
+
+        if (tag) tags.push(`#${tag}`);
+    }
+
+    return tags.join(" ");
+}
+
+function hashToTagQuery(value: string): string {
+    const hashes = value.match(/#([^\s]+)/g);
+
+    return (hashes ?? [])
+        .map((item) => `tag:"${item.slice(1)}"`)
+        .join(" ");
+}
+
 export default function SidebarTagList() {
     const { query, setQuery, bookmarks: { all: allBookmarks } } = useBookmarks();
-    const [title, setTitleState] = useState(query);
+    const [title, setTitleState] = useState(tagTokensToHash(query));
 
     useEffect(() => {
-        setTitleState(query);
+        setTitleState(tagTokensToHash(query));
     }, [query]);
 
     const setTitle = (value: string) => {
         setTitleState(value);
-        setQuery(value);
+
+        const base = stripTagTokens(query);
+        const tags = hashToTagQuery(value);
+        const next = [base, tags].filter(Boolean).join(" ");
+
+        setQuery(next);
     };
 
     const tagColorMode = useTagColor();
@@ -47,7 +80,13 @@ export default function SidebarTagList() {
                 </div>
             </div>
             <div className="min-h-0 flex-1 overflow-auto">
-                <TagListPanel title={title} setTitle={setTitle} allBookmarks={allBookmarks} nativeScroll compact />
+                <TagListPanel
+                    title={title}
+                    setTitle={setTitle}
+                    allBookmarks={allBookmarks}
+                    nativeScroll
+                    compact
+                />
             </div>
         </div>
     );

@@ -581,13 +581,13 @@
 .tag-color-2 { @apply bg-token-title-pill text-token-title; }
 .tag-color-3 { @apply bg-token-folder-pill text-token-folder; }
 .tag-color-4 { @apply bg-token-date-pill text-token-date; }
-.tag-color-5 { @apply bg-token-action-pill text-token-action; }
+.tag-color-5 { @apply bg-token-title-pill text-token-title; }
 .tag-color-6 { @apply bg-token-tag-pill text-token-tag; }
 .tag-color-7 { @apply bg-token-url-pill text-token-url; }
 .tag-color-8 { @apply bg-token-title-pill text-token-title; }
 .tag-color-9 { @apply bg-token-folder-pill text-token-folder; }
 .tag-color-10 { @apply bg-token-date-pill text-token-date; }
-.tag-color-11 { @apply bg-token-action-pill text-token-action; }
+.tag-color-11 { @apply bg-token-url-pill text-token-url; }
 .tag-color-12 { @apply bg-token-tag-pill text-token-tag; }
 .tag-color-13 { @apply bg-token-url-pill text-token-url; }
 .tag-color-14 { @apply bg-token-title-pill text-token-title; }
