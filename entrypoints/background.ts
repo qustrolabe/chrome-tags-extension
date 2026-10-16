@@ -206,7 +206,7 @@ export default defineBackground(() => {
       return;
     }
     const create = () => {
-      const createOne = (id: string, title: string, contexts: chrome.contextMenus.ContextType[]) => {
+      const createOne = (id: string, title: string, contexts: string[]) => {
         try {
           ctx.create({ id, title, contexts } as any, () => {
             const err = (browser.runtime as any).lastError ?? (globalThis as any).chrome?.runtime?.lastError;
@@ -358,14 +358,19 @@ export default defineBackground(() => {
 
   browser.storage.onChanged.addListener((changes) => {
     if (TRACKING_STORAGE_KEYS.enabled in changes) {
-      trackingEnabled = Boolean(changes[TRACKING_STORAGE_KEYS.enabled].newValue);
+      const change = changes[TRACKING_STORAGE_KEYS.enabled];
+      if (change) trackingEnabled = Boolean(change.newValue);
     }
     if (TRACKING_STORAGE_KEYS.maxAge in changes) {
-      const value = changes[TRACKING_STORAGE_KEYS.maxAge].newValue;
-      if (typeof value === "number") maxAge = value;
+      const change = changes[TRACKING_STORAGE_KEYS.maxAge];
+      if (change) {
+        const value = change.newValue;
+        if (typeof value === "number") maxAge = value;
+      }
     }
     if (TRACKING_STORAGE_KEYS.stats in changes) {
-      statsCache = normalizeStats(changes[TRACKING_STORAGE_KEYS.stats].newValue as TrackingStatsMap);
+      const change = changes[TRACKING_STORAGE_KEYS.stats];
+      if (change) statsCache = normalizeStats(change.newValue as TrackingStatsMap);
     }
   });
 

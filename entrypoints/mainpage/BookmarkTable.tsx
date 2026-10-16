@@ -370,7 +370,7 @@ export default function BookmarkTable() {
                                 event.preventDefault();
                                 return;
                               }
-                              header.column.getToggleSortingHandler()(event);
+                              header.column.getToggleSortingHandler()?.(event);
                             }
                             : undefined
                         }
@@ -442,6 +442,7 @@ export default function BookmarkTable() {
             >
               {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                 const row = rows[virtualRow.index];
+                if (!row) return null;
                 return (
                   <div
                     role="row"

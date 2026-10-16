@@ -79,9 +79,10 @@ const matchFolderChain = (
   // Try to anchor the chain at each position of the ancestry path.
   // Anchored values may only start at a top-level folder.
   for (let offset = 0; offset <= names.length - segments.length; offset++) {
+    const rootId = ancestorIds[offset];
     if (
       anchored &&
-      !(ancestorIds[offset] && ctx.rootFolderIds?.has(ancestorIds[offset]))
+      !(rootId && ctx.rootFolderIds?.has(rootId))
     ) {
       continue; // anchored chains must start at a top-level folder
     }

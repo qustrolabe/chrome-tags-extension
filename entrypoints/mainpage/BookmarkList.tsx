@@ -17,6 +17,7 @@ export default function BookmarkList() {
 
   const Row = ({ index, style }: RowComponentProps) => {
     const bookmark = displayBookmarks[index];
+    if (!bookmark) return null;
     return (
       <div style={style}>
         <BookmarkCard
@@ -25,7 +26,7 @@ export default function BookmarkList() {
           allBookmarks={allBookmarks}
           trackingStats={stats[bookmark.id]}
           trackingFrecency={stats[bookmark.id]
-            ? computeFrecency(stats[bookmark.id].score, stats[bookmark.id].lastVisited)
+            ? computeFrecency(stats[bookmark.id]!.score, stats[bookmark.id]!.lastVisited)
             : 0}
           showTracking={settings.enabled && settings.showStats}
           onAddFolderFilter={(folderId, negative, strict) => {

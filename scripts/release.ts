@@ -4,7 +4,7 @@ import { execSync } from "child_process";
 
 const allowed = new Set(["major", "minor", "patch"]);
 const input = process.argv[2];
-const releaseAs = allowed.has(input) ? (input as "major" | "minor" | "patch") : null;
+const releaseAs = input !== undefined && allowed.has(input) ? (input as "major" | "minor" | "patch") : null;
 
 const bumpVersion = (type: "major" | "minor" | "patch") => {
   const pkg = JSON.parse(readFileSync("package.json", "utf8"));
