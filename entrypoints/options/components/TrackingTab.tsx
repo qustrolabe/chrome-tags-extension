@@ -149,14 +149,14 @@ export default function TrackingTab() {
             </div>
 
             {confirmLower !== null && (
-              <div className="flex items-center gap-3 rounded-lg border border-amber-400/40 bg-amber-500/10 p-3 text-xs">
-                <span className="flex-1 text-amber-900 dark:text-amber-200">
+              <div className="flex items-center gap-3 rounded-lg border border-token-notice/40 bg-token-notice-fill/10 p-3 text-xs">
+                <span className="flex-1 text-token-notice">
                   Lower MAXAGE to {confirmLower}? This will trigger scaling on the next visit.
                 </span>
                 <button
                   type="button"
                   onClick={confirmLowerMaxAge}
-                  className="rounded-md bg-amber-500 px-3 py-1.5 font-semibold text-white"
+                  className="rounded-md bg-token-notice-solid px-3 py-1.5 font-semibold text-token-notice-solid-fg"
                 >
                   Confirm
                 </button>

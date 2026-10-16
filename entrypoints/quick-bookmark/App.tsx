@@ -148,7 +148,7 @@ function QuickEditor({ bookmark, allBookmarks, isExisting }: { bookmark: Bookmar
               {isExisting ? "Edit bookmark" : "Bookmark created"}
             </h1>
             {isExisting ? (
-              <span className="min-w-0 truncate rounded-sm bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-300">
+              <span className="min-w-0 truncate rounded-sm bg-token-notice-fill/15 px-1.5 py-0.5 text-[10px] font-medium text-token-notice">
                 Already bookmarked — editing in place
               </span>
             ) : (

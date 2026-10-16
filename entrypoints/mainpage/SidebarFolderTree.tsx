@@ -81,11 +81,11 @@ function FolderItem({
             <div
                 className={`group flex cursor-pointer items-center gap-1 rounded-sm border-l-3 p-1 ${
                     filterState === "positive"
-                        ? "border-l-blue-500 bg-blue-500/20 font-medium text-blue-700 dark:text-blue-300"
+                        ? "border-l-token-folder bg-token-folder-fill/20 font-medium text-token-folder"
                         : filterState === "negative"
-                        ? "border-l-red-500 bg-red-500/20 text-red-700 line-through opacity-70 dark:text-red-300"
+                        ? "border-l-token-negative bg-token-negative-fill/20 text-token-negative line-through opacity-70"
                         : filterState === "strict"
-                        ? "border-dashed border-l-teal-500 bg-teal-500/20 font-medium text-teal-700 dark:text-teal-300"
+                        ? "border-dashed border-l-token-folder-strict bg-token-folder-strict-fill/20 font-medium text-token-folder-strict"
                         : "border-l-transparent hover:bg-muted"
                 }`}
                 style={{ paddingLeft: `${depth * 6 + 2}px` }}
@@ -126,8 +126,7 @@ function FolderItem({
                             e.stopPropagation();
                             onFilter(node, false, e.altKey);
                         }}
-                        className="rounded p-1 text-green-600 hover:bg-green-500/30 dark:text-green-400"
-                        title="Add folder filter (Alt+Click for this folder only • click again to remove)"
+                        className="rounded p-1 text-token-folder hover:bg-token-folder-fill/30"                        title="Add folder filter (Alt+Click for this folder only • click again to remove)"
                     >
                         <AiOutlinePlus className="size-3" />
                     </button>

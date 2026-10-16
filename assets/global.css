@@ -84,6 +84,12 @@
     --color-token-invert-ring: var(--token-invert-ring);
     --color-token-remove: var(--token-remove);
     --color-token-remove-fg: var(--token-remove-fg);
+    --color-token-negative: var(--token-negative);
+    --color-token-negative-fill: var(--token-negative-fill);
+    --color-token-notice: var(--token-notice);
+    --color-token-notice-fill: var(--token-notice-fill);
+    --color-token-notice-solid: var(--token-notice-solid);
+    --color-token-notice-solid-fg: var(--token-notice-solid-fg);
     --color-token-selection: var(--token-selection);
 
     --radius-DEFAULT: var(--radius);
@@ -181,8 +187,21 @@
 
     --token-invert: oklch(97.3% 0.071 103.193); /* yellow-100 */
     --token-invert-fg: oklch(55.5% 0.163 48.998); /* amber-700 */
+
+    /* Advisory surfaces — the "already bookmarked" banner and the max-age
+       confirmation. Amber like invert, but a surface pair rather than a row
+       treatment. */
+    --token-notice: oklch(55.5% 0.163 48.998); /* amber-700 */
+    --token-notice-fill: oklch(76.9% 0.188 70.08); /* amber-500 */
+    --token-notice-solid: oklch(76.9% 0.188 70.08); /* amber-500 */
+    --token-notice-solid-fg: oklch(100% 0 none);
     --token-remove: oklch(93.6% 0.032 17.717); /* red-100 */
     --token-remove-fg: oklch(39.6% 0.141 25.723); /* red-900 */
+
+    /* A filter row the user has negated. Distinct from --token-remove, which
+       is a destructive button: this one is persistent state, not an action. */
+    --token-negative: oklch(39.6% 0.141 25.723); /* red-900 */
+    --token-negative-fill: oklch(64.5% 0.246 16.439); /* red-500 */
     --token-selection: oklch(62.3% 0.214 259.815 / 0.3); /* blue-500/30 */
 
     /* Soft Shadows for Light Mode */
@@ -266,8 +285,16 @@
 
     --token-invert: oklch(42.1% 0.095 57.708 / 0.4); /* yellow-900/40 */
     --token-invert-fg: oklch(87.9% 0.169 91.605); /* amber-300 */
+
+    --token-notice: oklch(87.9% 0.169 91.605); /* amber-300 */
+    --token-notice-fill: oklch(76.9% 0.188 70.08); /* amber-500 */
+    --token-notice-solid: oklch(76.9% 0.188 70.08); /* amber-500 */
+    --token-notice-solid-fg: oklch(100% 0 none);
     --token-remove: oklch(39.6% 0.141 25.723 / 0.4); /* red-900/40 */
     --token-remove-fg: oklch(80.8% 0.114 19.571); /* red-300 */
+
+    --token-negative: oklch(80.8% 0.114 19.571); /* red-300 */
+    --token-negative-fill: oklch(64.5% 0.246 16.439); /* red-500 */
     --token-selection: oklch(62.3% 0.214 259.815 / 0.3); /* blue-500/30 */
 
     /* Light glow in Dark Mode — the opposite of light-mode shadows:
@@ -446,10 +473,21 @@
     --token-invert: color-mix(in srgb, oklch(76.9% 0.188 70.08) 18%, #b8b29d);
     --token-invert-fg: oklch(41.4% 0.112 45.904); /* amber-900 */
 
+    --token-notice: oklch(41.4% 0.112 45.904); /* amber-900 */
+    --token-notice-fill: oklch(76.9% 0.188 70.08); /* amber-500 */
+    --token-notice-solid: oklch(76.9% 0.188 70.08); /* amber-500 */
+    --token-notice-solid-fg: oklch(100% 0 none);
+
     /* — remove has no red in this palette, so it takes the theme's own
        destructive terracotta. 4.83:1. */
     --token-remove: #6f3a27;
     --token-remove-fg: #c3bda8;
+
+    /* Terracotta steps off the same family as --token-remove so the negated
+       state still reads as "excluded" without borrowing a red that fights
+       the parchment. 4.83:1 on the canvas. */
+    --token-negative: #6f3a27;
+    --token-negative-fill: #a05434;
 
     --token-selection: color-mix(in srgb, #4b413d 30%, transparent);
 

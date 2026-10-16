@@ -74,17 +74,17 @@ export default function SidebarTagList() {
                             onClick={() => handleTagClick(tag)}
                             className={`flex cursor-pointer items-center gap-1.5 rounded-md border-2 px-2 py-1.5 text-left text-sm transition-colors ${
                                 state === "positive"
-                                    ? "border-green-500 bg-green-500/20 font-medium text-green-700 dark:text-green-300"
+                                    ? "border-token-tag bg-token-tag-fill/20 font-medium text-token-tag"
                                     : state === "negative"
-                                    ? "border-red-500 bg-red-500/20 text-red-700 line-through opacity-70 dark:text-red-300"
+                                    ? "border-token-negative bg-token-negative-fill/20 text-token-negative line-through opacity-70"
                                     : "border-transparent text-foreground hover:bg-muted"
                             }`}
                         >
                             {state === "positive" && (
-                                <AiOutlineCheck className="size-3.5 shrink-0 text-green-600 dark:text-green-400" />
+                                <AiOutlineCheck className="size-3.5 shrink-0 text-token-tag" />
                             )}
                             {state === "negative" && (
-                                <AiOutlineClose className="size-3.5 shrink-0 text-red-600 dark:text-red-400" />
+                                <AiOutlineClose className="size-3.5 shrink-0 text-token-negative" />
                             )}
                             <span className="flex-1 truncate">#{tag}</span>
                             {!state && (
