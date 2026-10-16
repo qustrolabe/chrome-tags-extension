@@ -1,5 +1,3 @@
-import React from "react";
-
 export type TagColorMode = "none" | "v1";
 
 export const TAG_COLOR_MODES: readonly TagColorMode[] = ["none", "v1"];
@@ -9,10 +7,7 @@ export const TAG_COLOR_MODE_LABELS: Record<TagColorMode, string> = {
   v1: "v1 (colored)",
 };
 
-// RGB triples for the v1 palette (Tailwind-500-ish hues), so tinted
-// backgrounds can be applied as inline styles and are not dependent on the
-// Tailwind class scanner picking up dynamically-built utility names.
-const V1_PALETTE: readonly string[] = [
+const V1_PALETTE = [
   "244 63 94",
   "249 115 22",
   "245 158 11",
@@ -30,7 +25,7 @@ const V1_PALETTE: readonly string[] = [
   "217 70 239",
   "236 72 153",
   "100 116 139",
-];
+] as const;
 
 function hashTag(tag: string): number {
   let hash = 2166136261;
@@ -43,45 +38,27 @@ function hashTag(tag: string): number {
   return hash;
 }
 
-function pickRgb(mode: TagColorMode, tag: string): string | null {
-  if (mode !== "v1") return null;
+export function tagColorClass(mode: TagColorMode, tag: string): string {
+  if (mode !== "v1") return "";
 
-  return V1_PALETTE[hashTag(tag.toLowerCase()) % V1_PALETTE.length] ?? null;
+  const index = hashTag(tag.toLowerCase()) % V1_PALETTE.length;
+
+  return `tag-color-${String(index)}`;
 }
 
-export function tagCapsuleStyle(
-  mode: TagColorMode,
-  tag: string,
-): React.CSSProperties | undefined {
-  const rgb = pickRgb(mode, tag);
+// Legacy helpers for callers expecting style objects.
+export function tagCapsuleStyle(mode: TagColorMode, tag: string): React.CSSProperties | undefined {
+  const rgb = V1_PALETTE[hashTag(tag.toLowerCase()) % V1_PALETTE.length];
 
-  if (!rgb) return undefined;
+  if (mode !== "v1") return undefined;
 
-  return { backgroundColor: `rgb(${rgb} / 0.18)` };
+  return { backgroundColor: `rgb(${rgb} / 0.32)` };
 }
 
-export function tagCountStyle(
-  mode: TagColorMode,
-  tag: string,
-): React.CSSProperties | undefined {
-  const rgb = pickRgb(mode, tag);
+export function tagTitleStyle(mode: TagColorMode, tag: string): React.CSSProperties | undefined {
+  const rgb = V1_PALETTE[hashTag(tag.toLowerCase()) % V1_PALETTE.length];
 
-  if (!rgb) return undefined;
+  if (mode !== "v1") return undefined;
 
   return { backgroundColor: `rgb(${rgb} / 0.30)` };
-}
-
-export function tagTitleStyle(
-  mode: TagColorMode,
-  tag: string,
-): React.CSSProperties | undefined {
-  const rgb = pickRgb(mode, tag);
-
-  if (!rgb) return undefined;
-
-  return { backgroundColor: `rgb(${rgb} / 0.22)` };
-}
-
-export function tagTitleClass(mode: TagColorMode, tag: string): string {
-  return pickRgb(mode, tag) ? "" : "";
 }

@@ -1,6 +1,6 @@
 import React from "react";
 import { useTagColor } from "@/context/TagColorContext";
-import { tagTitleStyle } from "@/utils/tagColor.ts";
+import { tagColorClass } from "@/utils/tagColor.ts";
 import { useBookmarks } from "@/context/BookmarksContext";
 import { cycleToken, tokenState } from "@/utils/query/editing.ts";
 import { AiOutlineCheck, AiOutlineClose } from "react-icons/ai";
@@ -77,7 +77,7 @@ export default function SidebarTagList() {
                             {state === "negative" && (
                                 <AiOutlineClose className="size-3.5 shrink-0 text-token-negative" />
                             )}
-                            <span className="flex-1 truncate"><span className="rounded-md px-1.5 py-0.5" style={tagTitleStyle(useTagColor(), tag)}>#{tag}</span></span>
+                            <span className="flex-1 truncate"><span className={`inline-block rounded-md px-1.5 py-0.5 ${tagColorClass(useTagColor(), tag)}`}>#{tag}</span></span>
                             <span className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">{count}</span>
                         </button>
                     );
