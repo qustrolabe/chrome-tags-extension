@@ -71,8 +71,23 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    // Escape unwinds one layer at a time instead of always closing:
+    //
+    //   1. the suggestion dropdown, if it is open  (TagField stops propagation)
+    //   2. the field you are standing in            (blur it, stay open)
+    //   3. nothing left                              (close the window)
+    //
+    // Without step 2 a stray Escape while typing a URL threw away the whole
+    // window, which read as the app hanging up on you rather than backing off.
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") window.close();
+      if (e.key !== "Escape") return;
+      const active = document.activeElement;
+      if (active instanceof HTMLElement && (active.matches("input, textarea, select") || active.isContentEditable)) {
+        e.preventDefault();
+        active.blur();
+        return;
+      }
+      window.close();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
