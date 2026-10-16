@@ -228,7 +228,7 @@ function QuickEditor({ bookmark, allBookmarks, isExisting }: { bookmark: Bookmar
           {deleting ? "Deleting…" : "Delete"}
         </button>
         <div className="flex items-center gap-1">
-          <span className="mr-1 text-[10px] text-muted-foreground">ESC to close without saving</span>
+          <span className="mr-1 text-[10px] text-muted-foreground">ESC leaves a field, then closes</span>
           <button
             type="button"
             onClick={closeWindow}
