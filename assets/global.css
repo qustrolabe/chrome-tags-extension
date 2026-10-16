@@ -47,6 +47,37 @@
     --color-input: var(--input);
     --color-ring: var(--ring);
 
+    /* Query-token colours. The raw palette values were hardcoded in
+       SearchBar.tsx, which made them impossible to theme; automata could not
+       recolour them. Each category gets a text colour (`--token-*`), a hue
+       base used at low alpha for capsules (`--token-*-fill`), and a solid
+       background for the suggestion pills (`--token-*-pill`). Light, dark
+       and automata each define the whole set — see below. */
+    --color-token-tag: var(--token-tag);
+    --color-token-tag-fill: var(--token-tag-fill);
+    --color-token-tag-pill: var(--token-tag-pill);
+    --color-token-url: var(--token-url);
+    --color-token-url-fill: var(--token-url-fill);
+    --color-token-url-pill: var(--token-url-pill);
+    --color-token-title: var(--token-title);
+    --color-token-title-fill: var(--token-title-fill);
+    --color-token-title-pill: var(--token-title-pill);
+    --color-token-folder: var(--token-folder);
+    --color-token-folder-fill: var(--token-folder-fill);
+    --color-token-folder-pill: var(--token-folder-pill);
+    --color-token-folder-strict: var(--token-folder-strict);
+    --color-token-folder-strict-fill: var(--token-folder-strict-fill);
+    --color-token-date: var(--token-date);
+    --color-token-date-pill: var(--token-date-pill);
+    --color-token-action: var(--token-action);
+    --color-token-action-pill: var(--token-action-pill);
+    --color-token-invert: var(--token-invert);
+    --color-token-invert-fg: var(--token-invert-fg);
+    --color-token-invert-ring: var(--token-invert-ring);
+    --color-token-remove: var(--token-remove);
+    --color-token-remove-fg: var(--token-remove-fg);
+    --color-token-selection: var(--token-selection);
+
     --radius-DEFAULT: var(--radius);
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
@@ -97,6 +128,40 @@
     --radius: 0.5rem;
     --border-width: 1px;
 
+    /* Query-token colours — light. Values are the exact OKLCH of the Tailwind
+       shades previously hardcoded in SearchBar.tsx, so light mode is
+       pixel-identical to before this became themeable. */
+    --token-tag: oklch(52.7% 0.154 150.069); /* green-700 */
+    --token-tag-fill: oklch(72.3% 0.219 149.579); /* green-500 */
+    --token-tag-pill: oklch(96.2% 0.044 156.743); /* green-100 */
+
+    --token-url: oklch(55.3% 0.195 38.402); /* orange-700 */
+    --token-url-fill: oklch(70.5% 0.213 47.604); /* orange-500 */
+    --token-url-pill: oklch(95.4% 0.038 75.164); /* orange-100 */
+
+    --token-title: oklch(49.6% 0.265 301.924); /* purple-700 */
+    --token-title-fill: oklch(62.7% 0.265 303.9); /* purple-500 */
+    --token-title-pill: oklch(94.6% 0.033 307.174); /* purple-100 */
+
+    --token-folder: oklch(48.8% 0.243 264.376); /* blue-700 */
+    --token-folder-fill: oklch(62.3% 0.214 259.815); /* blue-500 */
+    --token-folder-pill: oklch(93.2% 0.032 255.585); /* blue-100 */
+
+    --token-folder-strict: oklch(51.1% 0.096 186.391); /* teal-700 */
+    --token-folder-strict-fill: oklch(70.4% 0.14 182.503); /* teal-500 */
+
+    --token-date: oklch(55.5% 0.163 48.998); /* amber-700 */
+    --token-date-pill: oklch(96.2% 0.059 95.617); /* amber-100 */
+
+    --token-action: oklch(26.9% 0 none); /* neutral-800 */
+    --token-action-pill: oklch(92.2% 0 none); /* neutral-200 */
+
+    --token-invert: oklch(97.3% 0.071 103.193); /* yellow-100 */
+    --token-invert-fg: oklch(55.5% 0.163 48.998); /* amber-700 */
+    --token-remove: oklch(93.6% 0.032 17.717); /* red-100 */
+    --token-remove-fg: oklch(39.6% 0.141 25.723); /* red-900 */
+    --token-selection: oklch(62.3% 0.214 259.815 / 0.3); /* blue-500/30 */
+
     /* Soft Shadows for Light Mode */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow-md:
@@ -139,6 +204,38 @@
 
     --radius: 0.5rem;
     --border-width: 1px;
+
+    /* Query-token colours — dark. */
+    --token-tag: oklch(87.1% 0.15 154.449); /* green-300 */
+    --token-tag-fill: oklch(72.3% 0.219 149.579); /* green-500 */
+    --token-tag-pill: oklch(39.3% 0.095 152.535); /* green-900 */
+
+    --token-url: oklch(83.7% 0.128 66.29); /* orange-300 */
+    --token-url-fill: oklch(70.5% 0.213 47.604); /* orange-500 */
+    --token-url-pill: oklch(40.8% 0.123 38.172); /* orange-900 */
+
+    --token-title: oklch(82.7% 0.119 306.383); /* purple-300 */
+    --token-title-fill: oklch(62.7% 0.265 303.9); /* purple-500 */
+    --token-title-pill: oklch(38.1% 0.176 304.987); /* purple-900 */
+
+    --token-folder: oklch(80.9% 0.105 251.813); /* blue-300 */
+    --token-folder-fill: oklch(62.3% 0.214 259.815); /* blue-500 */
+    --token-folder-pill: oklch(37.9% 0.146 265.522); /* blue-900 */
+
+    --token-folder-strict: oklch(85.5% 0.138 181.071); /* teal-300 */
+    --token-folder-strict-fill: oklch(70.4% 0.14 182.503); /* teal-500 */
+
+    --token-date: oklch(87.9% 0.169 91.605); /* amber-300 */
+    --token-date-pill: oklch(41.4% 0.112 45.904); /* amber-900 */
+
+    --token-action: oklch(97% 0 none); /* neutral-100 */
+    --token-action-pill: oklch(37.1% 0 none); /* neutral-700 */
+
+    --token-invert: oklch(42.1% 0.095 57.708 / 0.4); /* yellow-900/40 */
+    --token-invert-fg: oklch(87.9% 0.169 91.605); /* amber-300 */
+    --token-remove: oklch(39.6% 0.141 25.723 / 0.4); /* red-900/40 */
+    --token-remove-fg: oklch(80.8% 0.114 19.571); /* red-300 */
+    --token-selection: oklch(62.3% 0.214 259.815 / 0.3); /* blue-500/30 */
 
     /* Light glow in Dark Mode — the opposite of light-mode shadows:
        cards softly radiate so they stand out from the background. */
@@ -261,6 +358,57 @@
 
     /* Terminal-style labels; the body face stays whatever the host page uses. */
     --font-mono: ui-monospace, "Cascadia Mono", "Consolas", monospace;
+
+    /* Query-token colours — automata. Same hues as light mode but two shades
+       darker (-900 rather than -700), because the canvas is a mid-tone
+       parchment and the light-mode shades read as bright confetti on it.
+       -900 is also less chromatic than -800, which suits the palette. Text
+       contrast lands at 7.8–8.6:1 on the capsule tint and 9.3–10.1:1 on the
+       bare canvas, and Oklab L stays spread across 17–22% so the token types
+       remain distinguishable from each other.
+
+       Pills are the hue mixed into the parchment surface step rather than the
+       -100 tints, which are brighter than the canvas and glare against it. */
+
+    /* — capsules: text is -900, the 15% tint behind it stays -500 as in light */
+    --token-tag: oklch(39.3% 0.095 152.535); /* green-900 */
+    --token-tag-fill: oklch(72.3% 0.219 149.579); /* green-500 */
+    --token-tag-pill: color-mix(in srgb, oklch(72.3% 0.219 149.579) 18%, #b8b29d);
+
+    --token-url: oklch(40.8% 0.123 38.172); /* orange-900 */
+    --token-url-fill: oklch(70.5% 0.213 47.604); /* orange-500 */
+    --token-url-pill: color-mix(in srgb, oklch(70.5% 0.213 47.604) 18%, #b8b29d);
+
+    --token-title: oklch(38.1% 0.176 304.987); /* purple-900 */
+    --token-title-fill: oklch(62.7% 0.265 303.9); /* purple-500 */
+    --token-title-pill: color-mix(in srgb, oklch(62.7% 0.265 303.9) 18%, #b8b29d);
+
+    --token-folder: oklch(37.9% 0.146 265.522); /* blue-900 */
+    --token-folder-fill: oklch(62.3% 0.214 259.815); /* blue-500 */
+    --token-folder-pill: color-mix(in srgb, oklch(62.3% 0.214 259.815) 18%, #b8b29d);
+
+    --token-folder-strict: oklch(38.6% 0.063 188.416); /* teal-900 */
+    --token-folder-strict-fill: oklch(70.4% 0.14 182.503); /* teal-500 */
+
+    --token-date: oklch(41.4% 0.112 45.904); /* amber-900 */
+    --token-date-pill: color-mix(in srgb, oklch(76.9% 0.188 70.08) 18%, #b8b29d);
+
+    /* action stays neutral, but as a solid dark bar so it reads as a command
+       rather than a sixth category. */
+    --token-action: #c3bda8;
+    --token-action-pill: #4b413d;
+
+    /* — invert ("make negative") keeps a hue of its own: amber stands in for
+       light mode's yellow. */
+    --token-invert: color-mix(in srgb, oklch(76.9% 0.188 70.08) 18%, #b8b29d);
+    --token-invert-fg: oklch(41.4% 0.112 45.904); /* amber-900 */
+
+    /* — remove has no red in this palette, so it takes the theme's own
+       destructive terracotta. 4.83:1. */
+    --token-remove: #6f3a27;
+    --token-remove-fg: #c3bda8;
+
+    --token-selection: color-mix(in srgb, #4b413d 30%, transparent);
 
     /* Raw tokens, published for anything that needs to reach past the shadcn-style
        aliases above (--av-stage, --av-pick-hover, --av-warning, ...). */

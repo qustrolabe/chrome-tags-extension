@@ -21,32 +21,41 @@ import type { Suggestion } from "@/utils/query/suggest.ts";
  * identical metrics, and horizontal scroll is synced.
  */
 
+/**
+ * Query-token colours.
+ *
+ * These are theme tokens (`--token-*` in `assets/global.css`), not literal
+ * Tailwind hues: hardcoding the palette here made the capsules and suggestion
+ * pills impossible to restyle per theme. Each theme defines the full set —
+ * see the light / dark / `.automata` blocks in global.css.
+ */
 const TOKEN_COLORS: Record<string, string> = {
-  tag: "bg-green-500/15 text-green-700 dark:text-green-300",
-  url: "bg-orange-500/15 text-orange-700 dark:text-orange-300",
-  title: "bg-purple-500/15 text-purple-700 dark:text-purple-300",
-  folder: "bg-blue-500/15 text-blue-700 dark:text-blue-300",
-  folder_strict: "bg-teal-500/15 text-teal-700 dark:text-teal-300",
+  tag: "bg-token-tag-fill/15 text-token-tag",
+  url: "bg-token-url-fill/15 text-token-url",
+  title: "bg-token-title-fill/15 text-token-title",
+  folder: "bg-token-folder-fill/15 text-token-folder",
+  folder_strict: "bg-token-folder-strict-fill/15 text-token-folder-strict",
 };
 
 const CATEGORY_STYLES: Record<string, string> = {
-  tag: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100",
-  url: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100",
-  title: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100",
-  folder: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100",
-  date: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100",
-  action: "bg-neutral-200 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-100",
+  tag: "bg-token-tag-pill text-token-tag",
+  url: "bg-token-url-pill text-token-url",
+  title: "bg-token-title-pill text-token-title",
+  folder: "bg-token-folder-pill text-token-folder",
+  date: "bg-token-date-pill text-token-date",
+  action: "bg-token-action-pill text-token-action",
 };
 
 const capsuleStyle = (category?: string) =>
   CATEGORY_STYLES[category ?? ""] ??
-  "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-200";
+  "bg-token-action-pill text-token-action";
 
 const tokenStyle = (token: FilterToken): string => {
   // px-1 -mx-1 widens the painted capsule without shifting the text
   // after it (negative margin cancels the padding's layout advance),
   // which keeps the mirror layer aligned with the real input text.
-  const base = TOKEN_COLORS[token.key] ?? "bg-neutral-500/15";
+  const base =
+    TOKEN_COLORS[token.key] ?? "bg-token-action-pill/15 text-token-action";
   const shape = "rounded-[5px] px-0.5 -mx-0.5 -my-1 py-1.5";
   return token.negated
     ? `${base} ${shape} line-through opacity-80`
@@ -222,7 +231,7 @@ export default function SearchBar() {
           type="text"
           spellCheck={false}
           placeholder='Search — tag:"tech" url:"google" last_used:<1w -folder:"Archive"'
-          className="relative z-10 w-full min-w-[100px] grow bg-transparent px-2 py-[7px] font-mono text-sm leading-5 text-transparent caret-foreground selection:bg-blue-500/30 selection:text-transparent placeholder:text-muted-foreground/70 focus:outline-none"
+          className="relative z-10 w-full min-w-[100px] grow bg-transparent px-2 py-[7px] font-mono text-sm leading-5 text-transparent caret-foreground selection:bg-token-selection selection:text-transparent placeholder:text-muted-foreground/70 focus:outline-none"
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
@@ -255,12 +264,12 @@ export default function SearchBar() {
                 className={`flex cursor-pointer items-center gap-2 rounded-sm p-1 ${
                   suggestion.action === "invert"
                     ? index === activeIndex
-                      ? "bg-yellow-300 font-medium ring-1 ring-yellow-500 dark:bg-yellow-700/60"
-                      : "bg-yellow-100 dark:bg-yellow-900/40"
+                      ? "bg-token-invert font-medium text-token-invert-fg ring-1 ring-ring"
+                      : "bg-token-invert text-token-invert-fg"
                     : suggestion.action === "remove"
                     ? index === activeIndex
-                      ? "bg-red-300 font-medium ring-1 ring-red-500 dark:bg-red-700/60"
-                      : "bg-red-100 dark:bg-red-900/40"
+                      ? "bg-token-remove font-medium text-token-remove-fg ring-1 ring-ring"
+                      : "bg-token-remove text-token-remove-fg"
                     : index === activeIndex
                     ? "bg-muted"
                     : "hover:bg-muted"
