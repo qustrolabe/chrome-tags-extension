@@ -318,11 +318,19 @@ export default function BookmarkTable() {
 
   const columnSizes = table.getVisibleLeafColumns().map((col) => col.getSize());
   const gridTemplateColumns = columnSizes.map((size) => `${size}px`).join(" ");
+  const totalColumnWidth = columnSizes.reduce((sum, size) => sum + size, 0);
 
   return (
     <div className="flex h-full flex-col">
       <div ref={parentRef} className="flex-1 overflow-auto">
-        <div className="min-w-full">
+        {/* min-width, not just min-w-full: a grid whose tracks overflow its
+            parent does not widen that parent, so the sticky header's
+            background would stop at the viewport width and rows would scroll
+            visibly underneath every column past that point. The default
+            column set already sums past a typical window, so this is the
+            normal case, not an edge one. Pinning the real width also gives
+            the row borders and the hover fill something full-width to span. */}
+        <div className="w-full" style={{ minWidth: `${totalColumnWidth}px` }}>
           <div
             role="table"
             className="w-full"
