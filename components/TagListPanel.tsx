@@ -12,8 +12,42 @@ interface TagListPanelProps {
   autoFocus?: boolean;
 }
 
+/** A listable row: an existing tag, or the "create this" entry. */
+interface Row {
+  tag: string;
+  count: number;
+  isNew: boolean;
+}
+
+/** Strip the leading # and whitespace so the raw box and the row agree. */
+const normalize = (raw: string): string =>
+  raw.trim().replace(/^#/, "").replace(/\s+/g, "");
+
+/**
+ * Searchable catalogue of every tag in use, with a keyboard-navigable filter.
+ *
+ * ↑/↓ move the selection (Down wraps, Up past the top returns to plain
+ * typing), typing drops the selection, and Enter toggles the selected row —
+ * the same contract as the main search bar and the quick-bookmark tag field.
+ *
+ * The tricky part is that this panel sorts active tags to the top, so
+ * toggling a tag would normally promote it and yank the selection onto a
+ * different row. Two rules resolve that, and they are different rules:
+ *
+ *   - While the selection stays put, the order is frozen, so Enter twice
+ *     reliably toggles the same tag back off.
+ *   - The moment ↑/↓ moves the selection elsewhere, the freeze is released
+ *     and the active-first sort resumes.
+ *
+ * The selection is therefore tracked by lowercased tag name, never by index:
+ * releasing the freeze changes every index, and only the tag survives.
+ */
 export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus }: TagListPanelProps) {
   const [tagSearch, setTagSearch] = useState("");
+  /** Lowercased tag of the selected row; null = nothing selected. */
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  /** Row order captured when a selection starts, replayed until it moves. */
+  const [frozen, setFrozen] = useState<string[] | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -31,7 +65,7 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus 
     setTitle((title.slice(0, idx) + " " + title.slice(end)).replace(/\s+/g, " ").trim());
   };
   const addTag = (raw: string) => {
-    const tag = raw.trim().replace(/^#/, "").replace(/\s+/g, "");
+    const tag = normalize(raw);
     if (!tag || tagSet.has(tag.toLowerCase())) return;
     const base = sortTagsRight(title).trim();
     setTitle(base ? `${base} #${tag}` : `#${tag}`);
@@ -48,8 +82,10 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus 
       .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag));
   }, [allBookmarks]);
 
-  const filteredTags = useMemo(() => {
-    const q = tagSearch.trim().replace(/^#/, "").toLowerCase();
+  const query = normalize(tagSearch);
+
+  const sortedTags = useMemo(() => {
+    const q = query.toLowerCase();
     const base = q ? knownTags.filter((e) => e.tag.toLowerCase().includes(q)) : knownTags;
     // Active tags on top, then by count desc, then alphabetically
     return [...base].sort((a, b) => {
@@ -59,55 +95,186 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus 
       if (b.count !== a.count) return b.count - a.count;
       return a.tag.localeCompare(b.tag);
     });
-  }, [knownTags, tagSearch, tagSet]);
+  }, [knownTags, query, tagSet]);
 
-  const canCreate = useMemo(() => {
-    const q = tagSearch.trim().replace(/^#/, "").replace(/\s+/g, "");
-    if (!q) return false;
-    return !tagSet.has(q.toLowerCase()) && !knownTags.some((e) => e.tag.toLowerCase() === q.toLowerCase());
-  }, [tagSearch, tagSet, knownTags]);
+  const canCreate = useMemo(
+    () =>
+      !!query &&
+      !tagSet.has(query.toLowerCase()) &&
+      !knownTags.some((e) => e.tag.toLowerCase() === query.toLowerCase()),
+    [query, tagSet, knownTags],
+  );
+
+  const rows = useMemo<Row[]>(() => {
+    const live: Row[] = sortedTags.map((e) => ({ tag: e.tag, count: e.count, isNew: false }));
+    if (canCreate) live.push({ tag: query, count: 0, isNew: true });
+
+    // No selection -> live active-first order. Selection without a captured
+    // order can't happen, but fall back to live rather than trusting it.
+    if (!selectedTag || !frozen) return live;
+
+    // Replay the captured order, then append anything that appeared since.
+    // Keyed by lowercased tag so a row promoted by the toggle still matches.
+    const byTag = new Map(live.map((r) => [r.tag.toLowerCase(), r]));
+    const kept: Row[] = [];
+    const used = new Set<string>();
+    for (const t of frozen) {
+      const r = byTag.get(t);
+      if (r && !used.has(t)) {
+        kept.push(r);
+        used.add(t);
+      }
+    }
+    for (const r of live) {
+      const key = r.tag.toLowerCase();
+      if (!used.has(key)) kept.push(r);
+    }
+    return kept;
+  }, [sortedTags, canCreate, query, selectedTag, frozen]);
+
+  /** Resolved against `rows`, so it survives both frozen and live ordering. */
+  const activeIndex = useMemo(() => {
+    if (!selectedTag) return -1;
+    return rows.findIndex((r) => r.tag.toLowerCase() === selectedTag);
+  }, [rows, selectedTag]);
+
+  const clearSelection = () => {
+    setSelectedTag(null);
+    setFrozen(null);
+  };
+
+  /** Enter/click. Stays selected so a second Enter un-toggles the same tag. */
+  const accept = (index: number | undefined) => {
+    const row = index === undefined ? undefined : rows[index];
+    if (!row) {
+      // Nothing selected: commit whatever was typed.
+      if (query) {
+        addTag(query);
+        setTagSearch("");
+        clearSelection();
+      }
+      return;
+    }
+    // Only clear the box when the row stops existing (the create row).
+    if (row.isNew) setTagSearch("");
+    if (row.isNew) addTag(row.tag);
+    else toggleTag(row.tag);
+
+    const key = row.tag.toLowerCase();
+    setSelectedTag(key);
+    // Capture the order on the first accept, so a later toggle can't reflow.
+    setFrozen((prev) => prev ?? rows.map((r) => r.tag.toLowerCase()));
+  };
+
+  /**
+   * Move the selection by one row, as seen in the current (possibly frozen)
+   * order, then release the freeze. Releasing is what lets the active-first
+   * sort run again; carrying the target over by tag name is what keeps the
+   * selection on the same tag afterwards.
+   */
+  const move = (delta: 1 | -1) => {
+    if (rows.length === 0) {
+      clearSelection();
+      return;
+    }
+
+    let next: number;
+    if (delta === 1) {
+      next = activeIndex + 1;
+      if (activeIndex === -1) next = 0;
+      else if (next >= rows.length) next = 0;
+    } else {
+      if (activeIndex <= 0) {
+        clearSelection();
+        return;
+      }
+      next = activeIndex - 1;
+    }
+
+    const target = rows[next];
+    if (!target) {
+      clearSelection();
+      return;
+    }
+    setFrozen(null);
+    setSelectedTag(target.tag.toLowerCase());
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      move(1);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      move(-1);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      accept(activeIndex);
+    }
+  };
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <div className="shrink-0 p-3 pb-2">
-        <label className="block text-xs font-medium">Tags</label>
+        <label htmlFor="tag-panel-search" className="block text-xs font-medium">Tags</label>
         <input
           ref={searchRef}
+          id="tag-panel-search"
           type="text"
           value={tagSearch}
-          onChange={(e) => setTagSearch(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              const q = tagSearch.trim().replace(/^#/, "").replace(/\s+/g, "");
-              if (q) addTag(q);
-            }
+          spellCheck={false}
+          onChange={(e) => {
+            setTagSearch(e.target.value);
+            clearSelection();
           }}
+          onKeyDown={handleKeyDown}
           placeholder="search tags… (sorted by count)"
           className="mt-1 w-full rounded-md border border-border bg-input px-2 py-1.5 text-xs outline-none placeholder:text-muted-foreground/50"
         />
-        <p className="mt-1 text-[10px] text-muted-foreground">Click row to add/remove • Enter to create</p>
+        <p className="mt-1 text-[10px] text-muted-foreground">↑↓ to move • Enter to toggle • Enter on empty to create</p>
       </div>
       <div className="scrollbar-slim min-h-[280px] flex-1 overflow-y-auto overscroll-contain border-y border-border p-2">
-        {filteredTags.length === 0 && !canCreate ? (
+        {rows.length === 0 ? (
           <div className="py-6 text-center text-xs text-muted-foreground">No matching tags</div>
         ) : (
           <div className="flex flex-col gap-0.5">
-            {filteredTags.map((entry) => {
-              const present = tagSet.has(entry.tag.toLowerCase());
+            {rows.map((row, index) => {
+              const selected = index === activeIndex;
+              const ref = (el: HTMLButtonElement | null) => {
+                if (selected && el) el.scrollIntoView({ block: "nearest" });
+              };
+              const cls = `w-full cursor-pointer rounded-md border px-2 py-1.5 text-left text-xs transition-colors ${
+                selected
+                  ? "bg-muted ring-1 ring-ring"
+                  : row.isNew
+                    ? "border-dashed hover:bg-muted"
+                    : "border-transparent hover:bg-muted"
+              }`;
+
+              if (row.isNew) {
+                return (
+                  <button key={`new-${row.tag}`} type="button" ref={ref} onClick={() => accept(index)} className={`${cls} flex items-center gap-2`}>
+                    <span className="flex-1 truncate"><span className="font-bold text-primary">#</span>{row.tag} <span className="text-muted-foreground">(new)</span></span>
+                    <span className="flex items-center justify-center rounded-md bg-primary p-1.5 text-primary-foreground"><AiOutlinePlus className="size-3" /></span>
+                  </button>
+                );
+              }
+
+              const present = tagSet.has(row.tag.toLowerCase());
               return (
                 <button
-                  key={entry.tag}
+                  key={row.tag}
                   type="button"
-                  onClick={() => toggleTag(entry.tag)}
-                  className={`flex w-full cursor-pointer items-center gap-2 rounded-md border px-2 py-1.5 text-left text-sm transition-colors ${present ? "border-primary/30 bg-primary/10" : "border-transparent hover:bg-muted"}`}
-                  title={present ? `Remove #${entry.tag}` : `Add #${entry.tag}`}
+                  ref={ref}
+                  onClick={() => accept(index)}
+                  title={present ? `Remove #${row.tag}` : `Add #${row.tag}`}
+                  className={`${cls} flex items-center gap-2 ${present && !selected ? "border-primary/30 bg-primary/10" : ""}`}
                 >
-                  <span className="flex-1 truncate text-xs font-medium">
-                    <span className="font-bold text-primary">#</span>{entry.tag}
+                  <span className="flex-1 truncate font-medium">
+                    <span className="font-bold text-primary">#</span>{row.tag}
                   </span>
                   <span className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
-                    {entry.count} {entry.count === 1 ? "bookmark" : "bookmarks"}
+                    {row.count} {row.count === 1 ? "bookmark" : "bookmarks"}
                   </span>
                   <span className={`flex items-center justify-center rounded-md p-1.5 text-xs font-bold ${present ? "bg-destructive text-destructive-foreground" : "bg-primary text-primary-foreground"}`}>
                     {present ? <AiOutlineMinus className="size-3" /> : <AiOutlinePlus className="size-3" />}
@@ -115,22 +282,6 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus 
                 </button>
               );
             })}
-            {canCreate && (
-              <button
-                type="button"
-                onClick={() => {
-                  const q = tagSearch.trim().replace(/^#/, "").replace(/\s+/g, "");
-                  if (q) {
-                    addTag(q);
-                    setTagSearch("");
-                  }
-                }}
-                className="flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-border px-2 py-1.5 text-left text-xs hover:bg-muted"
-              >
-                <span className="flex-1 truncate"><span className="font-bold text-primary">#</span>{tagSearch.trim().replace(/^#/, "")} <span className="text-muted-foreground">(new)</span></span>
-                <span className="flex items-center justify-center rounded-md bg-primary p-1.5 text-primary-foreground"><AiOutlinePlus className="size-3" /></span>
-              </button>
-            )}
           </div>
         )}
       </div>

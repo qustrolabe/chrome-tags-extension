@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { extractTags } from "@/utils/query/tags.ts";
 import { sortTagsRight } from "@/components/BookmarkEditDialog.tsx";
 import TagListPanel from "@/components/TagListPanel.tsx";
 import FolderPicker from "@/components/FolderPicker.tsx";
+import TagField from "./TagField.tsx";
+import UrlParams from "./UrlParams.tsx";
 import { initAccent } from "@/utils/accent.ts";
 import {
   THEME_CLASSES,
@@ -77,8 +78,8 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  if (error) return <div className="p-6 text-sm text-destructive">{error}</div>;
-  if (!bookmark) return <div className="p-6 text-sm text-muted-foreground">Loading…</div>;
+  if (error) return <div className="p-2 text-sm text-destructive">{error}</div>;
+  if (!bookmark) return <div className="p-2 text-sm text-muted-foreground">Loading…</div>;
 
   return <QuickEditor bookmark={bookmark} allBookmarks={allBookmarks} isExisting={existing} />;
 }
@@ -87,27 +88,8 @@ function QuickEditor({ bookmark, allBookmarks, isExisting }: { bookmark: Bookmar
   const [title, setTitle] = useState(bookmark.title);
   const [url, setUrl] = useState(bookmark.url ?? "");
   const [folderId, setFolderId] = useState(bookmark.parentId ?? "");
-  const [newTag, setNewTag] = useState("");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
-
-  const tags = useMemo(() => Array.from(new Set(extractTags(title).map((t) => t.toLowerCase()))), [title]);
-
-  const removeTag = (tag: string) => {
-    const idx = title.toLowerCase().indexOf(`#${tag.toLowerCase()}`);
-    if (idx === -1) return;
-    let end = idx;
-    while (end < title.length && !/\s/.test(title[end] ?? "")) end++;
-    setTitle((title.slice(0, idx) + " " + title.slice(end)).replace(/\s+/g, " ").trim());
-  };
-
-  const addTag = (raw: string) => {
-    const tag = raw.trim().replace(/^#/, "").replace(/\s+/g, "");
-    if (!tag || tags.includes(tag.toLowerCase())) { setNewTag(""); return; }
-    const base = sortTagsRight(title).trim();
-    setTitle(base ? `${base} #${tag}` : `#${tag}`);
-    setNewTag("");
-  };
 
   const dirty = title !== bookmark.title || url !== (bookmark.url ?? "") || folderId !== (bookmark.parentId ?? "");
 
@@ -142,55 +124,106 @@ function QuickEditor({ bookmark, allBookmarks, isExisting }: { bookmark: Bookmar
 
   return (
     <div className="flex h-screen max-h-screen flex-col bg-popover text-popover-foreground">
-      {isExisting && (
-        <div className="shrink-0 border-b border-amber-500/20 bg-amber-500/15 px-4 py-2 text-xs font-medium text-amber-700 dark:text-amber-300">
-          Already bookmarked — editing existing bookmark. Changes will update it. Close without saving to keep as-is.
-        </div>
-      )}
-      <div className="grid min-h-0 flex-1 grid-cols-[260px_1fr_300px] overflow-hidden">
-        {/* LEFT: folder picker */}
-        <div className="flex min-h-0 flex-col gap-1 border-r border-border p-4">
-          <label className="block text-xs font-medium">Move to</label>
-          <div className="min-h-0 flex-1">
-            <FolderPicker allBookmarks={allBookmarks} selfId={bookmark.id} value={folderId} onChange={setFolderId} />
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        {/* TOP: title and URL get the full window width */}
+        <div className="shrink-0 border-b border-border p-2">
+          {/* One line in both states, so the window never changes height. */}
+          <div className="mb-1 flex items-center gap-2">
+            <h1 className="shrink-0 text-sm font-bold">
+              {isExisting ? "Edit bookmark" : "Bookmark created"}
+            </h1>
+            {isExisting ? (
+              <span className="min-w-0 truncate rounded-sm bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-300">
+                Already bookmarked — editing in place
+              </span>
+            ) : (
+              <span className="min-w-0 truncate text-[10px] text-muted-foreground">
+                Edit and save, or close to keep as-is
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1">
+            <label htmlFor="qb-title" className="w-10 shrink-0 text-xs font-medium">Title</label>
+            <input
+              id="qb-title"
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="min-w-0 flex-1 rounded-md border border-border bg-input px-2 py-1 text-sm"
+            />
+            <button
+              type="button"
+              title="Move all #tags to the right"
+              disabled={sortTagsRight(title) === title.trim()}
+              onClick={() => setTitle(sortTagsRight(title))}
+              className="shrink-0 cursor-pointer rounded-md bg-secondary px-2 py-1 text-xs font-medium hover:bg-secondary/80 disabled:opacity-40"
+            >
+              tags →
+            </button>
+          </div>
+
+          <div className="mt-1 flex items-center gap-1">
+            <label htmlFor="qb-url" className="w-10 shrink-0 text-xs font-medium">URL</label>
+            <input
+              id="qb-url"
+              type="text"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              spellCheck={false}
+              className="min-w-0 flex-1 rounded-md border border-border bg-input px-2 py-1 font-mono text-xs"
+            />
           </div>
         </div>
-        {/* CENTER: fields */}
-        <div className="flex min-h-0 flex-col overflow-y-auto p-4">
-          <h1 className="text-sm font-bold">{isExisting ? "Edit bookmark" : "Bookmark created — edit & save"}</h1>
-          <p className="mt-0.5 block text-xs text-muted-foreground">
-            {isExisting ? "This URL is already bookmarked." : "Bookmark was created immediately. Edit and Save, or close without saving to keep it as-is."}
-          </p>
 
-          <label className="mt-3 block text-xs font-medium">Title</label>
-          <div className="flex gap-1">
-            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full rounded-md border border-border bg-input px-2 py-1 text-sm" />
-            <button type="button" title="Move all #tags to the right" disabled={sortTagsRight(title) === title.trim()} onClick={() => setTitle(sortTagsRight(title))} className="shrink-0 cursor-pointer rounded-md bg-secondary px-2 text-xs font-medium hover:bg-secondary/80 disabled:opacity-40">tags →</button>
-          </div>
-
-          <label className="mt-3 block text-xs font-medium">Tags</label>
-          <div className="mt-1 flex flex-wrap items-center gap-1 rounded-md border border-border bg-input/50 p-1.5">
-            {tags.map((tag) => (
-              <span key={tag} className="flex items-center gap-1 rounded-[3px] bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary">#{tag}<button type="button" className="cursor-pointer rounded-sm px-0.5 hover:bg-destructive/30" onClick={() => removeTag(tag)}>×</button></span>
-            ))}
-            <input type="text" value={newTag} placeholder="add tag…" onChange={(e) => setNewTag(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(newTag); } }} className="min-w-[90px] flex-1 bg-transparent px-1 text-xs outline-none placeholder:text-muted-foreground/50" />
-          </div>
-
-          <label className="mt-3 block text-xs font-medium">URL</label>
-          <input type="text" value={url} onChange={(e) => setUrl(e.target.value)} spellCheck={false} className="w-full rounded-md border border-border bg-input px-2 py-1 font-mono text-xs" />
-
-          <div className="mt-auto flex items-center justify-between gap-2 pt-4">
-            <button type="button" disabled={deleting} onClick={handleDelete} title="Permanently delete this bookmark" className="cursor-pointer rounded-md bg-destructive px-3 py-1.5 text-xs font-medium text-destructive-foreground hover:bg-destructive/80 disabled:opacity-40">{deleting ? "Deleting…" : "Delete"}</button>
-            <div className="flex gap-2">
-              <button type="button" onClick={closeWindow} title="Close this window without saving changes — bookmark stays as it was (ESC also closes)" className="cursor-pointer rounded-md bg-secondary px-3 py-1.5 text-xs font-medium hover:bg-secondary/80">Close without saving</button>
-              <button type="button" disabled={!dirty || saving} onClick={save} className="cursor-pointer rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:bg-primary/80 disabled:opacity-40">{saving ? "Saving…" : "Save"}</button>
+        {/* MIDDLE ROW: folder tree | tags + url params | tag catalogue */}
+        <div className="grid min-h-0 flex-1 grid-cols-[260px_340px_1fr] overflow-hidden">
+          <div className="flex min-h-0 flex-col gap-1 overflow-hidden border-r border-border p-2">
+            <label className="shrink-0 text-xs font-medium">Move to</label>
+            <div className="min-h-0 flex-1">
+              <FolderPicker allBookmarks={allBookmarks} selfId={bookmark.id} value={folderId} onChange={setFolderId} />
             </div>
           </div>
-          <p className="mt-2 text-center text-[10px] text-muted-foreground">ESC to close without saving</p>
+
+          <div className="flex min-h-0 flex-col gap-1 border-r border-border p-2">
+            <TagField title={title} setTitle={setTitle} allBookmarks={allBookmarks} />
+            <UrlParams url={url} />
+          </div>
+
+          <div className="flex min-h-0 flex-col overflow-hidden">
+            <TagListPanel title={title} setTitle={setTitle} allBookmarks={allBookmarks} />
+          </div>
         </div>
-        {/* RIGHT: tag picker */}
-        <div className="flex min-h-0 flex-col overflow-hidden border-l border-border bg-popover">
-          <TagListPanel title={title} setTitle={setTitle} allBookmarks={allBookmarks} />
+      </div>
+
+      <div className="flex shrink-0 items-center justify-between gap-2 border-t border-border p-2">
+        <button
+          type="button"
+          disabled={deleting}
+          onClick={handleDelete}
+          title="Permanently delete this bookmark"
+          className="cursor-pointer rounded-md bg-destructive px-2 py-1 text-xs font-medium text-destructive-foreground hover:bg-destructive/80 disabled:opacity-40"
+        >
+          {deleting ? "Deleting…" : "Delete"}
+        </button>
+        <div className="flex items-center gap-1">
+          <span className="mr-1 text-[10px] text-muted-foreground">ESC to close without saving</span>
+          <button
+            type="button"
+            onClick={closeWindow}
+            title="Close this window without saving changes — bookmark stays as it was"
+            className="cursor-pointer rounded-md bg-secondary px-2 py-1 text-xs font-medium hover:bg-secondary/80"
+          >
+            Close without saving
+          </button>
+          <button
+            type="button"
+            disabled={!dirty || saving}
+            onClick={save}
+            className="cursor-pointer rounded-md bg-primary px-2 py-1 text-xs font-bold text-primary-foreground hover:bg-primary/80 disabled:opacity-40"
+          >
+            {saving ? "Saving…" : "Save"}
+          </button>
         </div>
       </div>
     </div>
