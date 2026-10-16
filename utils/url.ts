@@ -32,14 +32,17 @@ const safeDecode = (raw: string): string => {
  */
 export const parseUrlParams = (url: string): UrlParam[] => {
   const trimmed = url.trim();
+
   if (!trimmed || !URL.canParse(trimmed)) return [];
 
   let query: string;
+
   try {
     query = new URL(trimmed).search.slice(1);
   } catch {
     return [];
   }
+
   if (!query) return [];
 
   return query
@@ -49,6 +52,7 @@ export const parseUrlParams = (url: string): UrlParam[] => {
       const eq = pair.indexOf("=");
       const rawKey = eq === -1 ? pair : pair.slice(0, eq);
       const rawValue = eq === -1 ? "" : pair.slice(eq + 1);
+
       return {
         key: safeDecode(rawKey),
         value: safeDecode(rawValue),

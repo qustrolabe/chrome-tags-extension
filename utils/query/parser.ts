@@ -46,6 +46,7 @@ export const scan = (query: string): RawToken[] => {
     // Read key up to ':' (only when not quoted)
     let key: string | null = null;
     const keyMatch = /^[a-z_]+(?=:)/i.exec(query.slice(i));
+
     if (keyMatch) {
       key = keyMatch[0].toLowerCase();
       i += keyMatch[0].length + 1; // skip ':'
@@ -58,9 +59,11 @@ export const scan = (query: string): RawToken[] => {
     // field typed `boolean`. Every reader is a truthiness test today, but the
     // first `=== false` or JSON round-trip would have turned that into a bug.
     let incomplete = false;
+
     if (query[i] === '"') {
       quoted = true;
       const close = query.indexOf('"', i + 1);
+
       if (close === -1) {
         // Unterminated quote: take the rest.
         value = query.slice(i + 1);
@@ -73,6 +76,7 @@ export const scan = (query: string): RawToken[] => {
     } else {
       const rest = query.slice(i);
       const bareMatch = /^\S+/.exec(rest);
+
       if (!bareMatch) continue; // lone '-' or 'key:' — no value
       value = bareMatch[0];
       quoted = false;
@@ -105,6 +109,7 @@ export const parseQuery = (query: string): ParsedQuery => {
         end: raw.end,
       } satisfies FilterToken;
     }
+
     return {
       kind: "term",
       text: raw.value,
@@ -124,11 +129,16 @@ export const serializeValue = (value: string): string =>
 /** Serialize a single token back to its canonical text form. */
 export const serializeToken = (token: QueryToken): string => {
   const prefix = token.negated ? "-" : "";
+
   if (token.kind === "term") return `${prefix}${token.text}`;
+
   if (token.incomplete) return `${prefix}${token.key}:"${token.value}`;
+
   const needsQuotes =
     token.quoted || /[\s]/.test(token.value) || token.value === "";
+
   const value = needsQuotes ? `"${token.value}"` : token.value;
+
   return `${prefix}${token.key}:${value}`;
 };
 
@@ -140,7 +150,9 @@ export const serializeQuery = (tokens: QueryToken[]): string =>
 export const removeTokenAt = (query: string, offset: number): string => {
   const { tokens } = parseQuery(query);
   const token = tokens.find((t) => offset > t.start && offset <= t.end);
+
   if (!token) return query;
+
   return (
     query.slice(0, token.start) +
     query.slice(token.end).replace(/^\s+/, " ")
@@ -154,10 +166,12 @@ export const removeTokenAt = (query: string, offset: number): string => {
 export const invertTokenAt = (query: string, offset: number): string | null => {
   const { tokens } = parseQuery(query);
   const token = tokens.find((t) => offset > t.start && offset <= t.end);
+
   if (!token) return null;
   const flipped = { ...token, negated: !token.negated };
   const before = query.slice(0, token.start);
   const after = query.slice(token.end);
   const replacement = serializeToken(flipped);
+
   return before + replacement + after;
 };

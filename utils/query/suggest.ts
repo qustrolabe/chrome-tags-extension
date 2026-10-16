@@ -73,11 +73,13 @@ const activeFragment = (
   caret: number,
 ): { start: number; text: string } => {
   const upto = query.slice(0, caret);
+
   const ws = Math.max(
     upto.lastIndexOf(" "),
     upto.lastIndexOf("\t"),
     upto.lastIndexOf("\n"),
   );
+
   return { start: ws + 1, text: upto.slice(ws + 1) };
 };
 
@@ -91,21 +93,27 @@ interface Fragment {
 const parseFragment = (text: string): Fragment => {
   let rest = text;
   let negated = false;
+
   if (rest.startsWith("-")) {
     negated = true;
     rest = rest.slice(1);
   }
+
   const colon = rest.indexOf(":");
+
   if (colon === -1) {
     return { negated, key: null, valuePrefix: rest, quoted: false };
   }
+
   const key = rest.slice(0, colon).toLowerCase();
   let valuePrefix = rest.slice(colon + 1);
   let quoted = false;
+
   if (valuePrefix.startsWith('"')) {
     quoted = true;
     valuePrefix = valuePrefix.slice(1);
   }
+
   return { negated, key, valuePrefix, quoted };
 };
 
@@ -118,7 +126,9 @@ const buildFilterText = (
   // Text values default to quoted form; date/number templates stay bare.
   const needsQuotes =
     specKind === "text" || frag.quoted || /[\s]/.test(value) || value === "";
+
   const serialized = needsQuotes ? `"${value}"` : value;
+
   return `${frag.negated ? "-" : ""}${key}:${serialized}`;
 };
 
@@ -133,6 +143,7 @@ const valueSuggestions = (
   folderConstraintNodes: FolderSuggestNode[] | null,
 ): Suggestion[] => {
   const spec = getKeySpec(key);
+
   if (!spec) return [];
   const prefix = frag.valuePrefix.toLowerCase();
   const out: Suggestion[] = [];
@@ -173,10 +184,13 @@ const valueSuggestions = (
       const inner = anchored ? raw.slice(1) : raw;
       const endsWithSlash = inner.endsWith("/");
       const segments = splitSegments(inner);
+
       const partial = endsWithSlash
         ? ""
         : (segments[segments.length - 1] ?? "").toLowerCase();
+
       const completed = endsWithSlash ? segments : segments.slice(0, -1);
+
       const chainPrefix =
         (anchored ? "/" : "") +
         (completed.length > 0 ? completed.join("/") + "/" : "");
@@ -187,11 +201,13 @@ const valueSuggestions = (
       // - constrained by another folder token -> children of those nodes,
       // - otherwise -> every folder name in the tree.
       let candidateNames: string[];
+
       if (anchored) {
         const bases =
           completed.length > 0
             ? resolveChain(data.folderTree, completed)
             : data.folderTree;
+
         candidateNames = childNames(bases);
       } else if (completed.length > 0 || folderConstraintNodes) {
         const bases =
@@ -201,6 +217,7 @@ const valueSuggestions = (
                 completed,
               )
             : folderConstraintNodes ?? [];
+
         candidateNames = childNames(bases);
       } else {
         candidateNames = descendantNames(data.folderTree);
@@ -285,6 +302,7 @@ const bareSuggestions = (
     .sort(([, a], [, b]) => b - a)
     .forEach(([tag, count]) => {
       const text = `${neg}tag:"${tag}"`;
+
       if (!existing.has(`tag:${tag.toLowerCase()}`)) {
         pushToken(text, "tag", `${count} bookmarks`);
       }
@@ -296,6 +314,7 @@ const bareSuggestions = (
     .sort()
     .forEach((name) => {
       const text = `${neg}folder:"${name}"`;
+
       if (!existing.has(`folder:${name.toLowerCase()}`)) {
         pushToken(text, "folder", "in this folder or any subfolder");
       }
@@ -323,6 +342,7 @@ const bareSuggestions = (
 /** Key suggestions for a typed prefix like `tag` / `-ur`. */
 const keySuggestions = (frag: Fragment): Suggestion[] => {
   const prefix = (frag.valuePrefix ?? "").toLowerCase();
+
   return KEY_SPECS.filter((spec) => spec.key.startsWith(prefix))
     .slice(0, MAX_SUGGESTIONS)
     .map((spec) => ({
@@ -384,6 +404,7 @@ export const suggest = (
         replaceTo: covering.end,
       },
     ];
+
     // Existing key:value pairs — INCLUDING the token under the caret,
     // whose value is already offered explicitly as the "current value"
     // suggestion below; without this it would appear twice.
@@ -403,6 +424,7 @@ export const suggest = (
         ? splitSegments(t.value)
         : [],
     );
+
     const folderConstraintNodes =
       constraintSegments.length > 0
         ? resolveChain(allNodes(data.folderTree), constraintSegments)
@@ -412,6 +434,7 @@ export const suggest = (
     const innerCaret = caret - covering.start;
     const tokenText = query.slice(covering.start, covering.end);
     const frag = parseFragment(tokenText);
+
     const virtualFrag: Fragment = {
       ...frag,
       valuePrefix: frag.valuePrefix.slice(
@@ -420,6 +443,7 @@ export const suggest = (
           (tokenText.indexOf(":") + 1 + (frag.quoted ? 1 : 0))),
       ),
     };
+
     const completions = valueSuggestions(
       covering.key,
       virtualFrag,
@@ -434,6 +458,7 @@ export const suggest = (
 
     // Always offer the token's current value as-is ("keep this one").
     const coveringText = query.slice(covering.start, covering.end);
+
     const selfSuggestion: Suggestion | null = covering.value
       ? {
           type: "value",
@@ -499,6 +524,7 @@ export const suggest = (
       ? splitSegments(t.value)
       : [],
   );
+
   const folderConstraintNodes =
     constraintSegments.length > 0
       ? resolveChain(allNodes(data.folderTree), constraintSegments)

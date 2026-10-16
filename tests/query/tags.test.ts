@@ -34,6 +34,7 @@ describe("tag index (case merging)", () => {
       { title: "#godot c" },
       { title: "#unrelated" },
     ]);
+
     expect(Object.keys(idx).filter((k) => k.toLowerCase() === "godot"))
       .toHaveLength(1);
     const key = Object.keys(idx).find((k) => k.toLowerCase() === "godot")!;
@@ -47,6 +48,7 @@ describe("tag index (case merging)", () => {
       { title: "#godot" },
       { title: "#Godot" },
     ]);
+
     expect(Object.keys(idx)).toEqual(["godot"]);
   });
 });

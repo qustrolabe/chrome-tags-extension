@@ -45,12 +45,15 @@ export const buildTagRows = ({
 
   const prefix: TagRow[] = [];
   const loose: TagRow[] = [];
+
   for (const { tag, count } of knownTags) {
     const lower = tag.toLowerCase();
+
     if (!q || lower.startsWith(q)) prefix.push({ tag, count, isNew: false });
     else if (lower.includes(q)) loose.push({ tag, count, isNew: false });
   }
 
   const matches = [...prefix, ...loose];
+
   return canCreate ? [{ tag: q, count: 0, isNew: true }, ...matches] : matches;
 };

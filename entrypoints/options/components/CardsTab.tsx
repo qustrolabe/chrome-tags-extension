@@ -74,6 +74,7 @@ export default function CardsTab() {
                     <div className="mt-2 flex flex-col gap-3">
                         {MOCK_BOOKMARKS.map((bookmark, index) => {
                             const stats = MOCK_STATS[index % MOCK_STATS.length]!;
+
                             return (
                                 <BookmarkCard
                                     key={bookmark.id}

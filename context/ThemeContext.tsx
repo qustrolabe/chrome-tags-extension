@@ -23,8 +23,10 @@ export const ThemeProvider = (
 ) => {
   const [theme, setTheme] = useState<Theme>(() => {
     const saved = localStorage.getItem("theme");
+
     return isTheme(saved) ? saved : "light";
   });
+
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -34,6 +36,7 @@ export const ThemeProvider = (
         setTheme(result.theme);
         localStorage.setItem("theme", result.theme);
       }
+
       setMounted(true);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -62,8 +65,10 @@ export const ThemeProvider = (
 
 export const useTheme = () => {
   const context = useContext(ThemeContext);
+
   if (!context) {
     throw new Error("useTheme must be used within a ThemeProvider");
   }
+
   return context;
 };

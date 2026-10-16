@@ -51,6 +51,7 @@ const migrateLegacyView = (view: Partial<SavedView> & { filters?: LegacyFilter[]
             ? view.filters
                 .map((f) => {
                     const neg = f.negative ? "-" : "";
+
                     switch (f.type) {
                         case "tag":
                             return `${neg}tag:${JSON.stringify(f.tag ?? "")}`;
@@ -89,6 +90,7 @@ export const ViewsProvider = ({
                         .map(migrateLegacyView),
                 );
             }
+
             setMounted(true);
         });
     }, []);
@@ -106,6 +108,7 @@ export const ViewsProvider = ({
                 name,
                 query,
             };
+
             setViews((prev) => [...prev, newView]);
             setActiveViewId(newView.id);
         },
@@ -115,6 +118,7 @@ export const ViewsProvider = ({
     const loadView = useCallback(
         (id: string) => {
             const view = views.find((v) => v.id === id);
+
             if (view) {
                 setQuery(view.query);
                 setActiveViewId(id);
@@ -131,12 +135,15 @@ export const ViewsProvider = ({
     const duplicateView = useCallback((id: string) => {
         setViews((prev) => {
             const view = prev.find((v) => v.id === id);
+
             if (!view) return prev;
+
             const duplicate: SavedView = {
                 id: generateId(),
                 name: `${view.name} (copy)`,
                 query: view.query,
             };
+
             return [...prev, duplicate];
         });
     }, []);
@@ -171,8 +178,10 @@ export const ViewsProvider = ({
 
 export const useViews = (): ViewsContextType => {
     const context = useContext(ViewsContext);
+
     if (!context) {
         throw new Error("useViews must be used within a ViewsProvider");
     }
+
     return context;
 };

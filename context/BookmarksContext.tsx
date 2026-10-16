@@ -17,6 +17,7 @@ export type SortOption =
   | "dateLastUsed"
   | "frecency"
   | "visits";
+
 export type SortDirection = "asc" | "desc";
 
 interface BookmarksManagerContextType {
@@ -58,15 +59,19 @@ export const sortBookmarks = (
       const bStats = stats[b.id];
       const aValue = aStats ? computeFrecency(aStats.score, aStats.lastVisited) : 0;
       const bValue = bStats ? computeFrecency(bStats.score, bStats.lastVisited) : 0;
+
       return bValue - aValue;
     },
     visits: (a, b) => {
       const aValue = stats[a.id]?.visits ?? 0;
       const bValue = stats[b.id]?.visits ?? 0;
+
       return bValue - aValue;
     },
   };
+
   const compareFunction = compareFunctions[sortOption];
+
   return [...input_bookmarks].sort((a, b) =>
     sortDirection === "desc" ? compareFunction(a, b) : compareFunction(b, a)
   );
@@ -82,17 +87,22 @@ export const BookmarksManagerProvider = (
 
   const [sortOption, setSortOption] = useState<SortOption>(() => {
     const params = new URLSearchParams(globalThis.location.search);
+
     return params.get("sort") as SortOption || "dateAdded";
   });
+
   const [sortDirection, setSortDirection] = useState<SortDirection>(() => {
     const params = new URLSearchParams(globalThis.location.search);
+
     return params.get("sortDirection") as SortDirection || "desc";
   });
+
   const [sortingMounted, setSortingMounted] = useState(false);
 
   /** The query is persisted in the URL and is the single filter truth. */
   const [query, setQuery] = useState<string>(() => {
     const params = new URLSearchParams(globalThis.location.search);
+
     return params.get("q") ?? "";
   });
 
@@ -112,7 +122,9 @@ export const BookmarksManagerProvider = (
     browser.storage.local.get(["sortOption", "sortDirection"]).then((result) => {
       const storedSort = result.sortOption as SortOption | undefined;
       const storedDirection = result.sortDirection as SortDirection | undefined;
+
       if (storedSort) setSortOption(storedSort);
+
       if (storedDirection) setSortDirection(storedDirection);
       setSortingMounted(true);
     });
@@ -160,9 +172,11 @@ export const BookmarksManagerProvider = (
       ) {
         nodes.forEach((node) => {
           collected.push(node);
+
           if (node.children) traverse(node.children);
         });
       }
+
       traverse(bookmarkTreeNodes);
       setAllBookmarksFlat(collected);
     });
@@ -222,9 +236,11 @@ export const BookmarksManagerProvider = (
 
 export const useBookmarks = (): BookmarksManagerContextType => {
   const context = useContext(BookmarksManagerContext);
+
   if (!context) {
     throw new Error("useBookmarks must be used within a BookmarksProvider");
   }
+
   return context;
 };
 

@@ -6,6 +6,7 @@ import tailwindcss from "@tailwindcss/vite";
 const pkg = JSON.parse(
   readFileSync(new URL("./package.json", import.meta.url), "utf8"),
 );
+
 const version = process.env.npm_package_version ?? pkg.version;
 
 /** Short hash of the build commit, shown next to the version in dev. */
@@ -46,9 +47,11 @@ export default defineConfig({
     // Keep dev artwork out of release zips.
     "build:publicAssets": (wxt, files) => {
       if (wxt.config.mode !== "production") return;
+
       for (let i = files.length - 1; i >= 0; i--) {
         // relativeDest is platform-separated, so normalize before matching.
         const dest = files[i]?.relativeDest.replace(/\\/g, "/");
+
         if (dest?.startsWith("dev-icon/")) files.splice(i, 1);
       }
     },
@@ -60,17 +63,15 @@ export default defineConfig({
 
     return {
       name: `Bookmarks Tags Manager${suffix}`,
-      ...(isDev
-        ? {
-            version_name: `${version}-dev`,
-            // Dev builds get their own artwork so a dev install is never
-            // confused with the installed release build.
-            icons: DEV_ICONS,
-          }
-        : {}),
+  ...(isDev && {
+    version_name: `${version}-dev`,
+    // Dev builds get their own artwork so a dev install is never
+    // confused with the installed release build.
+    icons: DEV_ICONS,
+  }),
       action: {
         default_title: `Open Main Page${suffix}`,
-        ...(isDev ? { default_icon: DEV_ICONS } : {}),
+        ...(isDev && { default_icon: DEV_ICONS }),
       },
       permissions: browser === "firefox"
         ? ["bookmarks", "storage", "tabs", "activeTab", "contextMenus"]

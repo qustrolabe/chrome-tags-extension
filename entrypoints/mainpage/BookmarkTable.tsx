@@ -21,6 +21,7 @@ type Bookmark = chrome.bookmarks.BookmarkTreeNode;
 const cleanLink = (url: string): string => {
   let cleaned = url.replace(/^https?:\/\//i, "");
   cleaned = cleaned.replace(/^www\./i, "");
+
   return cleaned;
 };
 
@@ -31,10 +32,15 @@ const formatDateTime = (date: number | undefined): string => {
   const minutes = Math.floor(diff / 1000 / 60);
   const hours = Math.floor(diff / 1000 / 60 / 60);
   const days = Math.floor(diff / 1000 / 60 / 60 / 24);
+
   if (minutes < 1) return "now";
+
   if (minutes < 60) return `${minutes} min ago`;
+
   if (hours < 24) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+
   if (days < 7) return `${days} day${days > 1 ? "s" : ""} ago`;
+
   return new Intl.DateTimeFormat("en-US", {
     year: "numeric",
     month: "2-digit",
@@ -45,16 +51,20 @@ const formatDateTime = (date: number | undefined): string => {
 const getPath = (bookmark: Bookmark, allBookmarks: Bookmark[]) => {
   let currentId = bookmark.parentId;
   const path: Bookmark[] = [];
+
   while (currentId) {
     const folder = allBookmarks.find((b) => b.id === currentId);
+
     if (!folder) break;
     path.unshift(folder);
     currentId = folder.parentId;
   }
+
   if (path.length > 2) {
     path.shift();
     path.shift();
   }
+
   return path.map((node) => node.title).join(" / ");
 };
 
@@ -62,6 +72,7 @@ export default function BookmarkTable() {
   const {
     bookmarks: { display: displayBookmarks, all: allBookmarks },
   } = useBookmarks();
+
   const { stats } = useTracking();
 
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
@@ -80,6 +91,7 @@ export default function BookmarkTable() {
     x: number;
     y: number;
   } | null>(null);
+
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({});
   const columnResizeMode: ColumnResizeMode = "onChange";
@@ -100,6 +112,7 @@ export default function BookmarkTable() {
       enableResizing: false,
       cell: (info) => {
         const url = info.row.original.url;
+
         return (
           <div className="-mx-3 flex items-center justify-center">
             {url
@@ -137,6 +150,7 @@ export default function BookmarkTable() {
       accessorFn: (row) => row.url ?? "",
       cell: (info) => {
         const value = info.getValue() as string;
+
         return (
           <div className="truncate text-primary/80" title={value}>
             {value ? cleanLink(value) : "URL not available"}
@@ -152,6 +166,7 @@ export default function BookmarkTable() {
       cell: (info) => {
         const value = info.getValue() as string;
         const tags = value.match(/#(\w+)/g)?.map((tag) => tag.slice(1)) ?? [];
+
         return (
           <div className="truncate">
             {tags.length ? tags.map((tag) => `#${tag}`).join(" ") : "—"}
@@ -260,6 +275,7 @@ export default function BookmarkTable() {
   const parentRef = useRef<HTMLDivElement | null>(null);
   const isResizingRef = useRef(false);
   const rows = table.getRowModel().rows;
+
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => parentRef.current,
@@ -272,6 +288,7 @@ export default function BookmarkTable() {
     const handle = () => setContextMenu(null);
     window.addEventListener("click", handle);
     window.addEventListener("scroll", handle, true);
+
     return () => {
       window.removeEventListener("click", handle);
       window.removeEventListener("scroll", handle, true);
@@ -284,8 +301,10 @@ export default function BookmarkTable() {
         isResizingRef.current = false;
       }
     };
+
     window.addEventListener("mouseup", stopResize);
     window.addEventListener("touchend", stopResize);
+
     return () => {
       window.removeEventListener("mouseup", stopResize);
       window.removeEventListener("touchend", stopResize);
@@ -297,9 +316,11 @@ export default function BookmarkTable() {
       if (result[STORAGE_KEYS.visibility]) {
         setColumnVisibility(result[STORAGE_KEYS.visibility] as VisibilityState);
       }
+
       if (result[STORAGE_KEYS.sizing]) {
         setColumnSizing(result[STORAGE_KEYS.sizing] as ColumnSizingState);
       }
+
       setMounted(true);
     });
     // STORAGE_KEYS is a stable const — no need to list its fields as deps
@@ -353,6 +374,7 @@ export default function BookmarkTable() {
                   {headerGroup.headers.map((header) => {
                     const isSortable = header.column.getCanSort();
                     const sorted = header.column.getIsSorted();
+
                     return (
                       <div
                         role="columnheader"
@@ -366,10 +388,13 @@ export default function BookmarkTable() {
                               const isResizing =
                                 isResizingRef.current ||
                                 Boolean(table.getState().columnSizingInfo?.isResizingColumn);
+
                               if (isResizing) {
                                 event.preventDefault();
+
                                 return;
                               }
+
                               header.column.getToggleSortingHandler()?.(event);
                             }
                             : undefined
@@ -442,7 +467,9 @@ export default function BookmarkTable() {
             >
               {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                 const row = rows[virtualRow.index];
+
                 if (!row) return null;
+
                 return (
                   <div
                     role="row"

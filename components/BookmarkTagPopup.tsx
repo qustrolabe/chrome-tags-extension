@@ -59,8 +59,10 @@ function TagForm({
 
     const removeTag = (tag: string) => {
         const idx = title.toLowerCase().indexOf(`#${tag.toLowerCase()}`);
+
         if (idx === -1) return;
         let end = idx;
+
         while (end < title.length && !/\s/.test(title[end] ?? "")) end++;
         setTitle(
             (title.slice(0, idx) + " " + title.slice(end)).replace(/\s+/g, " ").trim(),
@@ -72,9 +74,12 @@ function TagForm({
     const save = async () => {
         if (!dirty) {
             onOpenChange(false);
+
             return;
         }
+
         setSaving(true);
+
         try {
             await browser.bookmarks.update(bookmark.id, { title });
         } finally {

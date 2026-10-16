@@ -19,6 +19,7 @@ export default function SidebarViews() {
         duplicateView,
         clearActiveView,
     } = useViews();
+
     const { query, setQuery } = useBookmarks();
     const [newViewName, setNewViewName] = useState("");
     const [isCreating, setIsCreating] = useState(false);
@@ -32,6 +33,7 @@ export default function SidebarViews() {
 
     const getViewDisplayName = (view: SavedView) => {
         if (view.name.trim()) return view.name;
+
         return view.query || "Empty View";
     };
 
@@ -68,6 +70,7 @@ export default function SidebarViews() {
                             onChange={(e) => setNewViewName(e.target.value)}
                             onKeyDown={(e) => {
                                 if (e.key === "Enter") handleSave();
+
                                 if (e.key === "Escape") setIsCreating(false);
                             }}
                             placeholder="View name..."
@@ -123,6 +126,7 @@ export default function SidebarViews() {
                     <div className="flex flex-col gap-1">
                         {views.map((view) => {
                             const isActive = activeViewId === view.id;
+
                             const isConfirmingDelete =
                                 confirmDeleteId === view.id;
 

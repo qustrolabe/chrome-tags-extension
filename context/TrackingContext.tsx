@@ -30,12 +30,14 @@ const TrackingContext = createContext<TrackingContextType | undefined>(undefined
 const normalizeStats = (stats: TrackingStatsMap | undefined | null): TrackingStatsMap => {
   if (!stats) return {};
   const normalized: TrackingStatsMap = {};
+
   for (const [id, value] of Object.entries(stats)) {
     const visits = clampNonNegative(value?.visits ?? 0);
     const score = clampNonNegative(value?.score ?? 0);
     const lastVisited = clampNonNegative(value?.lastVisited ?? 0);
     normalized[id] = { visits, score, lastVisited };
   }
+
   return normalized;
 };
 
@@ -56,12 +58,15 @@ export const TrackingProvider = ({ children }: { children: React.ReactNode }) =>
       if (typeof result[TRACKING_STORAGE_KEYS.enabled] === "boolean") {
         setEnabledState(result[TRACKING_STORAGE_KEYS.enabled] as boolean);
       }
+
       if (typeof result[TRACKING_STORAGE_KEYS.showStats] === "boolean") {
         setShowStatsState(result[TRACKING_STORAGE_KEYS.showStats] as boolean);
       }
+
       if (typeof result[TRACKING_STORAGE_KEYS.maxAge] === "number") {
         setMaxAgeState(result[TRACKING_STORAGE_KEYS.maxAge] as number);
       }
+
       setStats(normalizeStats(result[TRACKING_STORAGE_KEYS.stats] as TrackingStatsMap));
       setMounted(true);
     });
@@ -75,22 +80,29 @@ export const TrackingProvider = ({ children }: { children: React.ReactNode }) =>
         key in changes ? changes[key]?.newValue : undefined;
 
       const enabledChange = getChange(TRACKING_STORAGE_KEYS.enabled);
+
       if (typeof enabledChange === "boolean") {
         setEnabledState(enabledChange);
       }
+
       const showStatsChange = getChange(TRACKING_STORAGE_KEYS.showStats);
+
       if (typeof showStatsChange === "boolean") {
         setShowStatsState(showStatsChange);
       }
+
       const maxAgeChange = getChange(TRACKING_STORAGE_KEYS.maxAge);
+
       if (typeof maxAgeChange === "number") setMaxAgeState(maxAgeChange);
       const statsChange = getChange(TRACKING_STORAGE_KEYS.stats);
+
       if (statsChange !== undefined) {
         setStats(normalizeStats(statsChange as TrackingStatsMap));
       }
     };
 
     browser.storage.onChanged.addListener(handleStorageChange);
+
     return () => browser.storage.onChanged.removeListener(handleStorageChange);
   }, []);
 
@@ -140,9 +152,11 @@ export const TrackingProvider = ({ children }: { children: React.ReactNode }) =>
 
 export const useTracking = () => {
   const context = useContext(TrackingContext);
+
   if (!context) {
     throw new Error("useTracking must be used within a TrackingProvider");
   }
+
   return context;
 };
 

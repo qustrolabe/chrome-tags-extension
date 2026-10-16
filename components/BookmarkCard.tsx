@@ -42,10 +42,15 @@ const formatDateTime = (date: number | undefined): string => {
     const days = Math.floor(diff / 1000 / 60 / 60 / 24);
 
     if (seconds < 5) return "now";
+
     if (minutes < 1) return `${seconds} sec ago`;
+
     if (minutes < 60) return `${minutes} min ago`;
+
     if (hours < 24) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+
     if (days < 7) return `${days} day${days > 1 ? "s" : ""} ago`;
+
     return new Intl.DateTimeFormat("en-US", {
         year: "numeric",
         month: "2-digit",
@@ -60,6 +65,7 @@ const formatDateTime = (date: number | undefined): string => {
 const cleanLink = (url: string): string => {
     let cleaned = url.replace(/^https?:\/\//i, "");
     cleaned = cleaned.replace(/^www\./i, "");
+
     return cleaned;
 };
 
@@ -102,6 +108,7 @@ export default function BookmarkCard({
                 }
             }
         }
+
         setIsEditing(!isEditing);
     };
 
@@ -122,6 +129,7 @@ export default function BookmarkCard({
     const knownTags = useMemo(() => {
         if (!isEditing) return [] as { tag: string; count: number }[];
         const withUrl = allBookmarks.filter((b) => b.url !== undefined);
+
         return Object.entries(buildTagIndex(withUrl))
             .map(([tag, count]) => ({ tag, count }))
             .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag));
@@ -132,12 +140,16 @@ export default function BookmarkCard({
     /** Approximate pixel X of the caret inside the input. */
     const measureCaretX = (text: string): number => {
         const input = inputRef.current;
+
         if (!input || !text) return 0;
+
         if (!canvasRef.current) canvasRef.current = document.createElement("canvas");
         const ctx = canvasRef.current.getContext("2d");
+
         if (!ctx) return 0;
         const style = globalThis.getComputedStyle(input);
         ctx.font = `${style.fontSize} ${style.fontFamily}`;
+
         // account for horizontal scrolling of long titles
         return Math.max(0, ctx.measureText(text).width - input.scrollLeft);
     };
@@ -149,16 +161,21 @@ export default function BookmarkCard({
         const input = inputRef.current;
         const upto = value.slice(0, caret);
         const match = /(?:^|\s)#([^\s#]*)$/.exec(upto);
+
         if (!match || match[1] === undefined || !input) return null;
         const prefix = match[1].toLowerCase();
+
         const matches = knownTags
             .filter((entry) => entry.tag.startsWith(prefix))
             .slice(0, 8);
+
         const rect = input.getBoundingClientRect();
+
         const left = Math.min(
             rect.left + measureCaretX(value.slice(0, caret - match[1].length - 1)),
             globalThis.innerWidth - 220,
         );
+
         return {
             start: caret - match[1].length,
             left,
@@ -171,6 +188,7 @@ export default function BookmarkCard({
 
     const updateSuggestions = () => {
         const input = inputRef.current;
+
         if (!input) return;
         setSuggest(computeSuggest(input.value, input.selectionStart ?? 0));
     };
@@ -178,8 +196,10 @@ export default function BookmarkCard({
     const acceptSuggestion = (tag: string) => {
         if (!suggest || !inputRef.current) return;
         const caret = suggest.caret;
+
         const next =
             title.slice(0, suggest.start) + tag + " " + title.slice(caret);
+
         setTitle(next);
         setSuggest(null);
         const pos = suggest.start + tag.length + 1;
@@ -200,8 +220,10 @@ export default function BookmarkCard({
                     highlighted:
                         (suggest.highlighted + 1) % suggest.matches.length,
                 });
+
                 return;
             }
+
             if (e.key === "ArrowUp") {
                 e.preventDefault();
                 setSuggest({
@@ -210,8 +232,10 @@ export default function BookmarkCard({
                         ? -1
                         : suggest.highlighted - 1,
                 });
+
                 return;
             }
+
             if (
                 (e.key === "Tab" || e.key === "Enter") &&
                 suggest.highlighted >= 0
@@ -219,22 +243,29 @@ export default function BookmarkCard({
                 e.preventDefault();
                 e.stopPropagation();
                 const tag = suggest.matches[suggest.highlighted]?.tag;
+
                 if (tag === undefined) return;
                 acceptSuggestion(tag);
+
                 return;
             }
+
             if (e.key === "Escape") {
                 e.stopPropagation();
                 setSuggest(null);
+
                 return;
             }
         }
+
         handleEnter(e);
     };
 
     const handleDelete = () => {
         setConfirmOpen(false);
+
         if (isSettingsPreview) return;
+
         if (onDelete) onDelete(bookmark.id);
         else browser.bookmarks.remove(bookmark.id);
     };
@@ -248,6 +279,7 @@ export default function BookmarkCard({
         // In main app, it's passed from BookmarkList.
         while (currentId) {
             const folder = source.find((b) => b.id === currentId);
+
             if (!folder) break;
             p.unshift(folder);
             currentId = folder.parentId;

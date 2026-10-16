@@ -73,10 +73,12 @@ const tokenStyle = (token: FilterToken): string => {
   // which keeps the mirror layer aligned with the real input text.
   const base =
     TOKEN_COLORS[token.key] ?? "bg-token-action-pill/15 text-token-action";
-  const shape = "rounded-[5px] px-0.5 -mx-0.5 -my-1 py-1.5";
+
+  const capsuleClasses = "rounded-[5px] px-0.5 -mx-0.5 -my-1 py-1.5";
+
   return token.negated
-    ? `${base} ${shape} line-through opacity-80`
-    : `${base} ${shape}`;
+    ? `${base} ${capsuleClasses} line-through opacity-80`
+    : `${base} ${capsuleClasses}`;
 };
 
 /** Split query into segments; filter tokens get highlighted. */
@@ -85,14 +87,18 @@ const splitSegmentsForMirror = (
 ): { text: string; token?: QueryToken }[] => {
   const parts: { text: string; token?: QueryToken }[] = [];
   let pos = 0;
+
   for (const token of parseQuery(query).tokens) {
     if (token.start > pos) {
       parts.push({ text: query.slice(pos, token.start) });
     }
+
     parts.push({ text: query.slice(token.start, token.end), token });
     pos = token.end;
   }
+
   if (pos < query.length) parts.push({ text: query.slice(pos) });
+
   return parts;
 };
 
@@ -141,7 +147,9 @@ export default function SearchBar() {
     setDismissed(false);
     requestAnimationFrame(() => {
       const input = inputRef.current;
+
       if (!input) return;
+
       // Don't yank caret/focus if the user already typed past our insert.
       if (input.value !== next || document.activeElement !== input) return;
       input.setSelectionRange(pos, pos);
@@ -152,19 +160,25 @@ export default function SearchBar() {
     if (suggestion.type === "action") {
       if (suggestion.action === "invert") {
         const next = invertTokenAt(query, suggestion.replaceTo);
+
         if (next !== null) updateQuery(next);
+
         return;
       }
+
       if (suggestion.action === "remove") {
         updateQuery(removeTokenAt(query, suggestion.replaceTo));
+
         return;
       }
     }
+
     if (suggestion.insert !== undefined) {
       const next =
         query.slice(0, suggestion.replaceFrom) +
         suggestion.insert +
         query.slice(suggestion.replaceTo);
+
       updateQuery(
         next,
         suggestion.replaceFrom + suggestion.insert.length,
@@ -174,26 +188,32 @@ export default function SearchBar() {
 
   const syncCaret = () => {
     const input = inputRef.current;
+
     if (input) setCaret(input.selectionStart ?? input.value.length);
   };
 
   const handleKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
     // Let IME composition (e.g. CJK candidates) handle its own keys.
     if (e.nativeEvent.isComposing) return;
+
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setDismissed(false);
       setHighlightedIndex((prev) => {
         const len = suggestions.length;
+
         if (len === 0) return -1;
         const next = Math.max(prev, -1) + 1;
+
         return next >= len ? 0 : next;
       });
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setHighlightedIndex((prev) => {
         const len = suggestions.length;
+
         if (len === 0 || prev <= 0) return -1; // leaving the list / nothing selected
+
         return prev - 1;
       });
     } else if (e.key === "Enter" || e.key === "Tab") {
@@ -202,7 +222,9 @@ export default function SearchBar() {
         : activeIndex === -1
         ? 0
         : activeIndex;
+
       const suggestion = suggestions[index];
+
       if (suggestion) {
         e.preventDefault();
         acceptSuggestion(suggestion);

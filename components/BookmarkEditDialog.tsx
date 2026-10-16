@@ -22,6 +22,7 @@ export const sortTagsRight = (title: string): string => {
     const words = title.trim().split(/\s+/).filter(Boolean);
     const tags = words.filter((w) => TAG_TOKEN.test(w));
     const rest = words.filter((w) => !TAG_TOKEN.test(w));
+
     return [...rest, ...tags].join(" ");
 };
 
@@ -81,8 +82,10 @@ function EditForm({
     const removeTag = (tag: string) => {
         // Remove the FIRST "#tag" token occurrence.
         const idx = title.toLowerCase().indexOf(`#${tag.toLowerCase()}`);
+
         if (idx === -1) return;
         let end = idx;
+
         while (end < title.length && !/\s/.test(title[end] ?? "")) end++;
         setTitle(
             (title.slice(0, idx) + " " + title.slice(end))
@@ -93,10 +96,13 @@ function EditForm({
 
     const addTag = (raw: string) => {
         const tag = raw.trim().replace(/^#/, "").replace(/\s+/g, "");
+
         if (!tag || tags.includes(tag.toLowerCase())) {
             setNewTag("");
+
             return;
         }
+
         const base = sortTagsRight(title).trim();
         setTitle(base ? `${base} #${tag}` : `#${tag}`);
         setNewTag("");
@@ -112,17 +118,21 @@ function EditForm({
     const save = async () => {
         const folderChanged = folderId !== (bookmark.parentId ?? "") && !!folderId;
         setSaving(true);
+
         try {
             if (title !== bookmark.title) {
                 await browser.bookmarks.update(bookmark.id, { title });
             }
+
             if (url !== (bookmark.url ?? "")) {
                 await browser.bookmarks.update(bookmark.id, { url });
             }
+
             if (folderChanged) {
                 await browser.bookmarks.move(bookmark.id, {
                     parentId: folderId,
                 });
+
                 // Only persist last folder when it actually changed (Chrome-like)
                 try { await browser.storage.local.set({ lastBookmarkFolderId: folderId }); } catch {}
             }

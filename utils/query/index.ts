@@ -1,10 +1,17 @@
 export * from "./types.ts";
+
 export * from "./parser.ts";
+
 export * from "./engine.ts";
+
 export * from "./registry.ts";
+
 export * from "./bounds.ts";
+
 export * from "./glob.ts";
+
 export * from "./suggest.ts";
+
 export * from "./editing.ts";
 
 import type { BookmarkLike, MatchContext } from "./types.ts";
@@ -25,6 +32,7 @@ export const createMatchContext = (
       .filter((b) => b.url === undefined)
       .map((b) => [b.id, b.title]),
   );
+
   const ancestorsByNodeId = new Map<string, string[]>();
   const byId = new Map(allBookmarks.map((node) => [node.id, node]));
 
@@ -41,16 +49,20 @@ export const createMatchContext = (
     tagsOf: (b) => extractTags(b.title),
     ancestorIdsOf: (b) => {
       const cached = ancestorsByNodeId.get(b.id);
+
       if (cached) return cached;
       // Walk parents via the hoisted lookup (built once per snapshot).
       const ids: string[] = [];
       let current = b.parentId ? byId.get(b.parentId) : undefined;
+
       while (current) {
         ids.push(current.id);
         current = current.parentId ? byId.get(current.parentId) : undefined;
       }
+
       ids.reverse(); // root -> parent
       ancestorsByNodeId.set(b.id, ids);
+
       return ids;
     },
     folderNameById,
@@ -65,6 +77,7 @@ export const applyQuery = <T extends BookmarkLike>(
   ctx: MatchContext,
 ): T[] => {
   const parsed = parseQuery(query);
+
   return bookmarks.filter((b) => matchBookmark(parsed, b, ctx));
 };
 

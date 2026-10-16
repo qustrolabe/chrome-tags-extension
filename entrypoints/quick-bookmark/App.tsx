@@ -15,6 +15,7 @@ type Bookmark = chrome.bookmarks.BookmarkTreeNode;
 
 function getQuery() {
   const p = new URLSearchParams(window.location.search);
+
   return { id: p.get("id") ?? "", existing: p.get("existing") === "1" };
 }
 
@@ -25,7 +26,10 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!id) { setError("Missing bookmark id"); return; }
+    if (!id) { setError("Missing bookmark id");
+
+ return; }
+
     const load = async () => {
       try {
         const [nodes] = await Promise.all([
@@ -33,26 +37,38 @@ export default function App() {
           browser.bookmarks.getTree().then((tree) => {
             const flat: Bookmark[] = [];
             const stack = [...tree];
+
             while (stack.length) {
               const n = stack.pop();
+
               if (!n) continue;
               flat.push(n as Bookmark);
+
               if (n.children) for (const c of n.children) stack.push(c as Bookmark);
             }
+
             return flat;
           }),
         ]);
+
         if (nodes[0]) setBookmark(nodes[0] as Bookmark);
         else setError("Bookmark not found");
         const tree = await browser.bookmarks.getTree();
         const flat: Bookmark[] = [];
         const stack2 = [...tree];
-        while (stack2.length) { const n = stack2.pop(); if (!n) continue; flat.push(n as Bookmark); if (n.children) for (const c of n.children) stack2.push(c as Bookmark); }
+
+        while (stack2.length) { const n = stack2.pop();
+
+ if (!n) continue; flat.push(n as Bookmark);
+
+ if (n.children) for (const c of n.children) stack2.push(c as Bookmark); }
+
         setAllBookmarks(flat);
       } catch (e: any) {
         setError(e?.message ?? String(e));
       }
     };
+
     load();
   }, [id]);
 
@@ -61,10 +77,13 @@ export default function App() {
     // Sync theme from storage (same logic as ThemeContext initial sync)
     browser.storage.local.get("theme").then((res) => {
       const stored = res.theme;
+
       if (isTheme(stored)) {
         document.documentElement.classList.remove(...THEME_CLASSES);
         document.documentElement.classList.add(stored);
+
         try { localStorage.setItem("theme", stored); } catch {}
+
         document.documentElement.style.backgroundColor = THEME_PRELOAD_BG[stored];
       }
     });
@@ -82,18 +101,24 @@ export default function App() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       const active = document.activeElement;
+
       if (active instanceof HTMLElement && (active.matches("input, textarea, select") || active.isContentEditable)) {
         e.preventDefault();
         active.blur();
+
         return;
       }
+
       window.close();
     };
+
     window.addEventListener("keydown", onKey);
+
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
   if (error) return <div className="p-2 text-sm text-destructive">{error}</div>;
+
   if (!bookmark) return <div className="p-2 text-sm text-muted-foreground">Loading…</div>;
 
   return <QuickEditor bookmark={bookmark} allBookmarks={allBookmarks} isExisting={existing} />;
@@ -113,11 +138,15 @@ function QuickEditor({ bookmark, allBookmarks, isExisting }: { bookmark: Bookmar
   const save = async () => {
     const folderChanged = folderId !== (bookmark.parentId ?? "") && !!folderId;
     setSaving(true);
+
     try {
       if (title !== bookmark.title) await browser.bookmarks.update(bookmark.id, { title });
+
       if (url !== (bookmark.url ?? "")) await browser.bookmarks.update(bookmark.id, { url });
+
       if (folderChanged) {
         await browser.bookmarks.move(bookmark.id, { parentId: folderId });
+
         try { await browser.storage.local.set({ lastBookmarkFolderId: folderId }); } catch {}
       }
     } finally {
@@ -129,6 +158,7 @@ function QuickEditor({ bookmark, allBookmarks, isExisting }: { bookmark: Bookmar
   const handleDelete = async () => {
     if (!confirm(`Delete bookmark "${bookmark.title}"?`)) return;
     setDeleting(true);
+
     try {
       await browser.bookmarks.remove(bookmark.id);
     } finally {

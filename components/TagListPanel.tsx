@@ -64,17 +64,22 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus 
 
   const removeTag = (tag: string) => {
     const idx = title.toLowerCase().indexOf(`#${tag.toLowerCase()}`);
+
     if (idx === -1) return;
     let end = idx;
+
     while (end < title.length && !/\s/.test(title[end] ?? "")) end++;
     setTitle((title.slice(0, idx) + " " + title.slice(end)).replace(/\s+/g, " ").trim());
   };
+
   const addTag = (raw: string) => {
     const tag = normalize(raw);
+
     if (!tag || tagSet.has(tag.toLowerCase())) return;
     const base = sortTagsRight(title).trim();
     setTitle(base ? `${base} #${tag}` : `#${tag}`);
   };
+
   const toggleTag = (tag: string) => {
     if (tagSet.has(tag.toLowerCase())) removeTag(tag);
     else addTag(tag);
@@ -82,6 +87,7 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus 
 
   const knownTags = useMemo(() => {
     const withUrl = allBookmarks.filter((b) => b.url !== undefined);
+
     return Object.entries(buildTagIndex(withUrl))
       .map(([tag, count]) => ({ tag, count }))
       .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag));
@@ -92,12 +98,16 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus 
   const sortedTags = useMemo(() => {
     const q = query.toLowerCase();
     const base = q ? knownTags.filter((e) => e.tag.toLowerCase().includes(q)) : knownTags;
+
     // Active tags on top, then by count desc, then alphabetically
     return [...base].sort((a, b) => {
       const aActive = tagSet.has(a.tag.toLowerCase()) ? 1 : 0;
       const bActive = tagSet.has(b.tag.toLowerCase()) ? 1 : 0;
+
       if (aActive !== bActive) return bActive - aActive;
+
       if (b.count !== a.count) return b.count - a.count;
+
       return a.tag.localeCompare(b.tag);
     });
   }, [knownTags, query, tagSet]);
@@ -118,7 +128,9 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus 
    */
   const liveRows = useMemo<Row[]>(() => {
     const live: Row[] = sortedTags.map((e) => ({ tag: e.tag, count: e.count, isNew: false }));
+
     if (canCreate) live.push({ tag: query, count: 0, isNew: true });
+
     return live;
   }, [sortedTags, canCreate, query]);
 
@@ -132,23 +144,29 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus 
     const byTag = new Map(liveRows.map((r) => [r.tag.toLowerCase(), r]));
     const kept: Row[] = [];
     const used = new Set<string>();
+
     for (const t of frozen) {
       const r = byTag.get(t);
+
       if (r && !used.has(t)) {
         kept.push(r);
         used.add(t);
       }
     }
+
     for (const r of liveRows) {
       const key = r.tag.toLowerCase();
+
       if (!used.has(key)) kept.push(r);
     }
+
     return kept;
   }, [liveRows, selectedTag, frozen]);
 
   /** Resolved against `rows`, so it survives both frozen and live ordering. */
   const activeIndex = useMemo(() => {
     if (!selectedTag) return -1;
+
     return rows.findIndex((r) => r.tag.toLowerCase() === selectedTag);
   }, [rows, selectedTag]);
 
@@ -169,6 +187,7 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus 
   /** Enter/click. Stays selected so a second Enter un-toggles the same tag. */
   const accept = (index: number | undefined) => {
     const row = index === undefined ? undefined : rows[index];
+
     if (!row) {
       // Nothing selected: commit whatever was typed.
       if (query) {
@@ -176,10 +195,13 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus 
         setTagSearch("");
         clearSelection();
       }
+
       return;
     }
+
     // Only clear the box when the row stops existing (the create row).
     if (row.isNew) setTagSearch("");
+
     if (row.isNew) addTag(row.tag);
     else toggleTag(row.tag);
 
@@ -212,27 +234,35 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus 
   const move = (delta: 1 | -1) => {
     if (rows.length === 0) {
       clearSelection();
+
       return;
     }
 
     let next: number;
+
     if (delta === 1) {
       next = activeIndex + 1;
+
       if (activeIndex === -1) next = 0;
       else if (next >= rows.length) next = 0;
     } else {
       if (activeIndex <= 0) {
         clearSelection();
+
         return;
       }
+
       next = activeIndex - 1;
     }
 
     const target = rows[next];
+
     if (!target) {
       clearSelection();
+
       return;
     }
+
     setFrozen(null);
     setSelectedTag(target.tag.toLowerCase());
   };
@@ -277,9 +307,11 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus 
           <div className="flex flex-col gap-0.5">
             {rows.map((row, index) => {
               const selected = index === activeIndex;
+
               const ref = (el: HTMLButtonElement | null) => {
                 if (selected && el) el.scrollIntoView({ block: "nearest" });
               };
+
               const cls = `w-full cursor-pointer rounded-md border px-2 py-1.5 text-left text-xs transition-colors ${
                 selected
                   ? "bg-muted ring-1 ring-ring"
@@ -298,6 +330,7 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus 
               }
 
               const present = tagSet.has(row.tag.toLowerCase());
+
               return (
                 <button
                   key={row.tag}

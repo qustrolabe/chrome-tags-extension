@@ -35,8 +35,10 @@ export default function UrlParams({ url }: UrlParamsProps) {
         <div className="scrollbar-slim flex max-h-16 flex-wrap gap-1 overflow-y-auto rounded-md border border-border bg-input/40 p-1">
           {params.map((param, index) => {
             const shown = formatUrlParam(param);
+
             const truncated =
               shown.length > MAX_CHARS ? `${shown.slice(0, MAX_CHARS)}…` : shown;
+
             return (
               <span
                 key={`${param.key}-${index}`}

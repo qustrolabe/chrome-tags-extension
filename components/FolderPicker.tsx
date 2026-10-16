@@ -21,29 +21,38 @@ export default function FolderPicker(
     const tree = useMemo(() => {
         const folders = allBookmarks.filter((b) => b.url === undefined);
         const byId = new Map(folders.map((f) => [f.id, f]));
+
         const inOwnSubtree = (f: Bookmark): boolean => {
             let cur: Bookmark | undefined = f;
+
             while (cur) {
                 if (cur.id === selfId) return true;
                 cur = cur.parentId ? byId.get(cur.parentId) : undefined;
             }
+
             return false;
         };
+
         const byParent = new Map<string, Bookmark[]>();
+
         for (const f of folders) {
             if (f.id === "0") continue;
+
             if (inOwnSubtree(f)) continue;
             const key = f.parentId ?? "0";
             const list = byParent.get(key) ?? [];
             list.push(f);
             byParent.set(key, list);
         }
+
         const seen = new Set<string>();
+
         const build = (nodes: Bookmark[]): FolderNode[] =>
             nodes
                 .filter((f) => {
                     if (seen.has(f.id)) return false;
                     seen.add(f.id);
+
                     return true;
                 })
                 .map((f) => ({
@@ -52,6 +61,7 @@ export default function FolderPicker(
                     children: build(byParent.get(f.id) ?? []),
                 }))
                 .sort((a, b) => a.title.localeCompare(b.title));
+
         return build(byParent.get("0") ?? []);
     }, [allBookmarks, selfId]);
 
@@ -59,25 +69,32 @@ export default function FolderPicker(
 
     const computeInitial = (bookmarks: typeof allBookmarks, val: string): Set<string> => {
         const initial = new Set<string>();
+
         for (const f of bookmarks) {
             if (f.url === undefined && f.parentId === "0") initial.add(f.id);
         }
+
         let cur = bookmarks.find((b) => b.id === val);
+
         while (cur?.parentId) {
             initial.add(cur.parentId);
             cur = bookmarks.find((b) => b.id === cur!.parentId);
         }
+
         return initial;
     };
 
     const [expanded, setExpanded] = useState<Set<string>>(() => {
         try {
             const raw = localStorage.getItem(STORAGE_KEY);
+
             if (raw) {
                 const arr = JSON.parse(raw) as string[];
+
                 if (Array.isArray(arr) && arr.length > 0) return new Set(arr);
             }
         } catch {}
+
         return computeInitial(allBookmarks, value);
     });
 
@@ -91,20 +108,27 @@ export default function FolderPicker(
             if (prev.size === 0) return computeInitial(allBookmarks, value);
             const next = new Set(prev);
             let added = false;
+
             // Ensure at least root folders are present if none are expanded (user hasn't intentionally collapsed all roots)
             const hasRoot = [...next].some((id) => {
                 const f = allBookmarks.find((b) => b.id === id);
+
                 return f?.parentId === "0";
             });
+
             if (!hasRoot) {
                 for (const f of allBookmarks) if (f.url === undefined && f.parentId === "0") { next.add(f.id); added = true; }
             }
+
             // Ensure ancestors of current value are expanded
             let cur = allBookmarks.find((b) => b.id === value);
+
             while (cur?.parentId) {
                 if (!next.has(cur.parentId)) { next.add(cur.parentId); added = true; }
+
                 cur = allBookmarks.find((b) => b.id === cur!.parentId);
             }
+
             return added ? next : prev;
         });
         // computeInitial is a stable pure helper; listing it would recreate effect each render
@@ -118,31 +142,40 @@ export default function FolderPicker(
     const toggle = (id: string) => {
         setExpanded((prev) => {
             const next = new Set(prev);
+
             if (next.has(id)) next.delete(id);
             else next.add(id);
+
             return next;
         });
     };
 
     const collapseAll = () => {
         const roots = new Set<string>();
+
         for (const f of allBookmarks) if (f.url === undefined && f.parentId === "0") roots.add(f.id);
         setExpanded(roots);
     };
 
     const filteredTree = useMemo(() => {
         const q = query.trim().toLowerCase();
+
         if (q === "") return null;
+
         const filter = (nodes: FolderNode[]): FolderNode[] => {
             const result: FolderNode[] = [];
+
             for (const node of nodes) {
                 const kids = filter(node.children);
+
                 if (node.title.toLowerCase().includes(q) || kids.length > 0) {
                     result.push({ ...node, children: kids });
                 }
             }
+
             return result;
         };
+
         return filter(tree);
     }, [query, tree]);
 

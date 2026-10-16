@@ -18,9 +18,11 @@ export const ViewModeProvider = ({ children }: { children: React.ReactNode }) =>
   useEffect(() => {
     browser.storage.local.get([STORAGE_KEY]).then((result) => {
       const saved = result[STORAGE_KEY];
+
       if (saved === "list" || saved === "table") {
         setModeState(saved);
       }
+
       setMounted(true);
     });
   }, []);
@@ -43,9 +45,11 @@ export const ViewModeProvider = ({ children }: { children: React.ReactNode }) =>
 
 export const useViewMode = () => {
   const context = useContext(ViewModeContext);
+
   if (!context) {
     throw new Error("useViewMode must be used within a ViewModeProvider");
   }
+
   return context;
 };
 

@@ -24,6 +24,7 @@ export default defineBackground(() => {
   const normalizeStats = (stats: TrackingStatsMap | undefined | null): TrackingStatsMap => {
     if (!stats) return {};
     const normalized: TrackingStatsMap = {};
+
     for (const [id, value] of Object.entries(stats)) {
       normalized[id] = {
         visits: clampNonNegative(value?.visits ?? 0),
@@ -31,6 +32,7 @@ export default defineBackground(() => {
         lastVisited: clampNonNegative(value?.lastVisited ?? 0),
       };
     }
+
     return normalized;
   };
 
@@ -40,6 +42,7 @@ export default defineBackground(() => {
       TRACKING_STORAGE_KEYS.maxAge,
       TRACKING_STORAGE_KEYS.stats,
     ]);
+
     trackingEnabled = typeof result[TRACKING_STORAGE_KEYS.enabled] === "boolean"
       ? (result[TRACKING_STORAGE_KEYS.enabled] as boolean)
       : DEFAULT_TRACKING_ENABLED;
@@ -53,17 +56,22 @@ export default defineBackground(() => {
     const tree = await browser.bookmarks.getTree();
     urlIndex.clear();
     const stack = [...tree];
+
     while (stack.length) {
       const node = stack.pop();
+
       if (!node) continue;
+
       if (node.url) {
         const existing = urlIndex.get(node.url);
+
         if (existing) {
           existing.push(node.id);
         } else {
           urlIndex.set(node.url, [node.id]);
         }
       }
+
       if (node.children) {
         for (const child of node.children) {
           stack.push(child);
@@ -76,6 +84,7 @@ export default defineBackground(() => {
     if (rebuildTimer !== null) {
       clearTimeout(rebuildTimer);
     }
+
     rebuildTimer = setTimeout(() => {
       rebuildTimer = null;
       buildUrlIndex();
@@ -88,8 +97,10 @@ export default defineBackground(() => {
 
   const applyMaxAgeScaling = () => {
     const total = Object.values(statsCache).reduce((sum, stat) => sum + stat.score, 0);
+
     if (total < maxAge || total === 0) return;
     const scale = (maxAge * 0.9) / total;
+
     for (const stat of Object.values(statsCache)) {
       stat.score = stat.score * scale;
     }
@@ -98,14 +109,18 @@ export default defineBackground(() => {
   const handleVisit = async (url: string, tabId?: number) => {
     if (!trackingEnabled) return;
     const bookmarkIds = urlIndex.get(url);
+
     if (!bookmarkIds || bookmarkIds.length === 0) return;
 
     const now = Date.now();
+
     if (typeof tabId === "number") {
       const recent = recentVisits.get(tabId);
+
       if (recent && recent.url === url && now - recent.ts < DEDUPE_MS) {
         return;
       }
+
       recentVisits.set(tabId, { url, ts: now });
     }
 
@@ -126,18 +141,24 @@ export default defineBackground(() => {
   const findBookmarksByUrl = async (url: string): Promise<chrome.bookmarks.BookmarkTreeNode[]> => {
     try {
       const results = await browser.bookmarks.search({ url });
+
       return results.filter((n) => n.url === url);
     } catch {
       // Fallback: walk the tree
       const tree = await browser.bookmarks.getTree();
       const out: chrome.bookmarks.BookmarkTreeNode[] = [];
       const stack = [...tree];
+
       while (stack.length) {
         const node = stack.pop();
+
         if (!node) continue;
+
         if (node.url === url) out.push(node);
+
         if (node.children) for (const c of node.children) stack.push(c);
       }
+
       return out;
     }
   };
@@ -146,38 +167,51 @@ export default defineBackground(() => {
     try {
       const stored = await browser.storage.local.get(LAST_FOLDER_KEY);
       const lastId = stored[LAST_FOLDER_KEY] as string | undefined;
+
       if (lastId) {
         try {
           const nodes = await browser.bookmarks.get(lastId);
           const n = nodes[0] as chrome.bookmarks.BookmarkTreeNode | undefined;
+
           if (n && !n.url) return lastId; // still a folder
         } catch {}
       }
     } catch {}
+
     // Fallback to Bookmarks bar
     try {
       const tree = await browser.bookmarks.getTree();
       const stack = [...tree];
       const folders: chrome.bookmarks.BookmarkTreeNode[] = [];
+
       while (stack.length) {
         const n = stack.pop();
+
         if (!n) continue;
+
         if (!n.url) folders.push(n as any);
+
         if (n.children) for (const c of n.children) stack.push(c as any);
       }
+
       const bar = folders.find((f) => f.parentId === "0" && f.title.toLowerCase() === "bookmarks bar");
+
       if (bar) return bar.id;
       // Chrome id "1" is often Bookmarks bar
       const byId1 = folders.find((f) => f.id === "1");
+
       if (byId1) return byId1.id;
       const firstRoot = folders.find((f) => f.parentId === "0");
+
       if (firstRoot) return firstRoot.id;
     } catch {}
+
     return undefined;
   };
 
   const openQuickBookmarkWindow = async (bookmarkId: string, isExisting: boolean) => {
     const url = browser.runtime.getURL(`/quick-bookmark.html?id=${encodeURIComponent(bookmarkId)}&existing=${isExisting ? "1" : "0"}`);
+
     try {
       await browser.windows.create({
         url,
@@ -194,49 +228,61 @@ export default defineBackground(() => {
 
   const getContextMenus = (): typeof browser.contextMenus | undefined => {
     const b = (browser as any).contextMenus as typeof browser.contextMenus | undefined;
+
     if (b) return b;
     const c = (globalThis as any).chrome?.contextMenus as typeof browser.contextMenus | undefined;
+
     return c;
   };
 
   const setupContextMenu = () => {
     const ctx = getContextMenus();
+
     if (!ctx) {
       console.warn("[background] contextMenus API not available", { hasBrowser: !!(browser as any).contextMenus, hasChrome: !!(globalThis as any).chrome?.contextMenus });
+
       return;
     }
+
     const create = () => {
       const createOne = (id: string, title: string, contexts: string[]) => {
         try {
           ctx.create({ id, title, contexts } as any, () => {
             const err = (browser.runtime as any).lastError ?? (globalThis as any).chrome?.runtime?.lastError;
+
             if (err?.message) console.warn(`[background] contextMenus.create ${id} lastError`, err);
           });
         } catch (e) {
           console.warn(`[background] contextMenus.create ${id} threw`, e);
         }
       };
+
       // Label dev builds so the menu is identifiable next to the release one.
       const devSuffix = IS_DEV ? " (dev)" : "";
       createOne("bookmark-page", `Bookmark this page${devSuffix}`, ["page"]);
       createOne("bookmark-link", `Bookmark this link${devSuffix}`, ["link"]);
       console.log("[background] context menus created");
     };
+
     // Prefer promise form (WXT/brower polyfill), fallback to callback form (chrome)
     try {
       const res: any = (ctx as any).removeAll();
+
       if (res && typeof res.then === "function") {
         res.then(create).catch((e: any) => {
           console.warn("[background] removeAll promise failed", e);
           create();
         });
+
         return;
       }
     } catch {}
+
     // callback form
     try {
       (ctx as any).removeAll(() => {
         const err = (browser.runtime as any).lastError ?? (globalThis as any).chrome?.runtime?.lastError;
+
         if (err) console.warn("[background] removeAll lastError", err);
         create();
       });
@@ -254,15 +300,19 @@ export default defineBackground(() => {
     const isLink = info.menuItemId === "bookmark-link";
     // keep backward compat with old id
     const isLegacy = (info.menuItemId as string) === "bookmark-this";
+
     if (!isPage && !isLink && !isLegacy) return;
     const url = isLink ? (info.linkUrl || "").trim() : (tab?.url || (info.pageUrl as string) || "").trim();
     // For legacy, prefer linkUrl if present (old emergent behavior)
     const legacyUrl = isLegacy ? (info.linkUrl || tab?.url || (info.pageUrl as string) || "").trim() : url;
     const finalUrl = isLegacy ? legacyUrl : url;
+
     const title = isLink
       ? ((info as any).linkText as string | undefined)?.trim() || finalUrl
       : tab?.title?.trim() || finalUrl;
+
     if (!finalUrl) return;
+
     if (
       finalUrl.startsWith("chrome://") ||
       // finalUrl.startsWith("chrome-extension://") ||
@@ -274,9 +324,11 @@ export default defineBackground(() => {
     }
 
     const existing = await findBookmarksByUrl(finalUrl);
+
     if (existing.length > 0) {
       const bookmark = existing[0]!;
       await openQuickBookmarkWindow(bookmark.id, true);
+
       return;
     }
 
@@ -293,9 +345,11 @@ export default defineBackground(() => {
   const bookmarkActiveTab = async () => {
     try {
       const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+
       if (!tab?.url) return;
       const finalUrl = tab.url.trim();
       const title = tab.title?.trim() || finalUrl;
+
       if (
         finalUrl.startsWith("chrome://") ||
         // finalUrl.startsWith("chrome-extension://") ||
@@ -305,11 +359,15 @@ export default defineBackground(() => {
       ) {
         return;
       }
+
       const existing = await findBookmarksByUrl(finalUrl);
+
       if (existing.length > 0) {
         await openQuickBookmarkWindow(existing[0]!.id, true);
+
         return;
       }
+
       const parentId = await getDefaultFolderId();
       const created = await browser.bookmarks.create({ title, url: finalUrl, parentId });
       scheduleRebuild();
@@ -327,11 +385,13 @@ export default defineBackground(() => {
   // Immediate attempt for reloads / dev rebuilds where onInstalled won't fire
   setupContextMenu();
   const ctxMenus = getContextMenus();
+
   if (ctxMenus?.onClicked) {
     ctxMenus.onClicked.addListener(handleBookmarkThis);
   } else {
     console.warn("[background] contextMenus.onClicked not available, menu clicks will not work");
   }
+
   // Keyboard shortcut (user-assignable in chrome://extensions/shortcuts)
   try {
     (browser as any).commands?.onCommand?.addListener((cmd: string) => {
@@ -359,17 +419,23 @@ export default defineBackground(() => {
   browser.storage.onChanged.addListener((changes) => {
     if (TRACKING_STORAGE_KEYS.enabled in changes) {
       const change = changes[TRACKING_STORAGE_KEYS.enabled];
+
       if (change) trackingEnabled = Boolean(change.newValue);
     }
+
     if (TRACKING_STORAGE_KEYS.maxAge in changes) {
       const change = changes[TRACKING_STORAGE_KEYS.maxAge];
+
       if (change) {
         const value = change.newValue;
+
         if (typeof value === "number") maxAge = value;
       }
     }
+
     if (TRACKING_STORAGE_KEYS.stats in changes) {
       const change = changes[TRACKING_STORAGE_KEYS.stats];
+
       if (change) statsCache = normalizeStats(change.newValue as TrackingStatsMap);
     }
   });
@@ -382,6 +448,7 @@ export default defineBackground(() => {
       delete statsCache[id];
       persistStats();
     }
+
     scheduleRebuild();
   });
 
@@ -394,8 +461,10 @@ export default defineBackground(() => {
   browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     if (changeInfo.url) {
       handleVisit(changeInfo.url, tabId);
+
       return;
     }
+
     if (changeInfo.status === "complete" && tab.url) {
       handleVisit(tab.url, tabId);
     }

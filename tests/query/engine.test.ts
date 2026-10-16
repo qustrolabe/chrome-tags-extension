@@ -36,6 +36,7 @@ const mkCtx = (
       "10": ["1", "5"],
       "11": ["1", "5", "7"],
     };
+
     return chains[b.id] ?? [];
   },
   folderNameById: new Map(Object.entries(FOLDERS)),
@@ -131,6 +132,7 @@ describe("engine — text keys", () => {
     const rootCtx = mkCtx({
       rootFolderIds: new Set(["1"]), // "Bookmarks Bar" is top-level
     });
+
     // bookmark 10's parent is folder 5 (Projects, not a root folder)
     expect(
       matches('folder_strict:""', mkBookmark({ id: "10" }), rootCtx),
@@ -147,12 +149,14 @@ describe("engine — text keys", () => {
     ).toBe(true);
     // unanchored still finds it anywhere
     expect(matches('folder:"Projects"', mkBookmark({ id: "11" }), rootCtx)).toBe(true);
+
     // a folder literally named "root" is an ordinary name again
     const namedRoot = mkCtx({
       ...rootCtx,
       folderNameById: new Map([...rootCtx.folderNameById, ["9", "root"]]),
       ancestorIdsOf: (b) => (b.id === "30" ? ["9"] : rootCtx.ancestorIdsOf(b)),
     });
+
     expect(
       matches('folder_strict:"root"', mkBookmark({ id: "30", parentId: "9" }), namedRoot),
     ).toBe(true);
@@ -211,6 +215,7 @@ describe("engine — combinations", () => {
   test("full realistic query", () => {
     const query =
       'url:"example" tag:"tech" -tag:"web" folder:"Projects" last_used:<1w visits:>5';
+
     expect(matches(query, mkBookmark())).toBe(true);
 
     const failing = 'url:"example" tag:"tech" -tag:"web" title:"zzz"';

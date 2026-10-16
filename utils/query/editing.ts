@@ -12,6 +12,7 @@ const findToken = (
   value: string,
 ) => {
   const { tokens } = parseQuery(query);
+
   return tokens.find(
     (token) =>
       token.kind === "filter" &&
@@ -30,16 +31,19 @@ export const cycleToken = (
   value: string,
 ): string => {
   const { tokens } = parseQuery(query);
+
   const index = tokens.findIndex(
     (token) =>
       token.kind === "filter" &&
       token.key === key &&
       token.value.toLowerCase() === value.toLowerCase(),
   );
+
   const existing = index === -1 ? undefined : tokens[index];
 
   if (!existing) {
     const tokenText = `${key}:${serializeValue(value)}`;
+
     return query.trim() === ""
       ? tokenText
       : `${query.trimEnd()} ${tokenText}`;
@@ -48,10 +52,12 @@ export const cycleToken = (
   const rest = tokens.map((token, i) =>
     i === index ? { ...token, negated: !token.negated } : token,
   );
+
   if (!existing.negated) {
     // positive -> negative: keep in place
     return serializeQuery(rest);
   }
+
   // negative -> removed entirely
   return serializeQuery(rest.filter((_, i) => i !== index));
 };
@@ -63,7 +69,9 @@ export const tokenState = (
   value: string,
 ): "positive" | "negative" | null => {
   const existing = findToken(query, key, value);
+
   if (!existing) return null;
+
   return existing.negated ? "negative" : "positive";
 };
 
@@ -82,23 +90,29 @@ export const setTokenState = (
   state: "positive" | "negative" | null,
 ): string => {
   let next = query;
+
   // Remove every occurrence first.
   for (;;) {
     const { tokens } = parseQuery(next);
+
     const index = tokens.findIndex(
       (token) =>
         token.kind === "filter" &&
         token.key === key &&
         token.value.toLowerCase() === value.toLowerCase(),
     );
+
     if (index === -1) break;
     const token = tokens[index];
+
     if (!token) break;
     next = (
       next.slice(0, token.start) +
       next.slice(token.end)
     ).replace(/\s{2,}/g, " ").trim();
   }
+
   if (state === null) return next;
+
   return appendToken(next, `${state === "negative" ? "-" : ""}${key}:${serializeValue(value)}`);
 };

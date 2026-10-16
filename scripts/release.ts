@@ -24,6 +24,7 @@ const bumpVersion = (type: "major" | "minor" | "patch") => {
   const newVersion = `${major}.${minor}.${patch}`;
   pkg.version = newVersion;
   writeFileSync("package.json", JSON.stringify(pkg, null, 2) + "\n");
+
   return newVersion;
 };
 

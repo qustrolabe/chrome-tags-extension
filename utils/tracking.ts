@@ -28,9 +28,13 @@ export const computeFrecency = (
 ) => {
   if (!score || !lastVisited) return 0;
   const age = Math.max(0, now - lastVisited);
+
   if (age < HOUR_MS) return score * 4;
+
   if (age < DAY_MS) return score * 2;
+
   if (age < WEEK_MS) return score * 0.5;
+
   return score * 0.25;
 };
 

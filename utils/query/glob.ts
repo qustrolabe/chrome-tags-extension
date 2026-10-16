@@ -17,6 +17,7 @@ export const globMatch = (pattern: string, text: string): boolean => {
     .split("*")
     .map((segment) => segment.replace(/[.+^${}()|[\]\\]/g, "\\$&"))
     .join(".*");
+
   return new RegExp(`^${escaped}$`).test(t);
 };
 
@@ -37,5 +38,6 @@ export const patternMatch = (pattern: string, text: string): boolean => {
   if (!pattern.includes("*")) {
     return pattern.toLowerCase() === text.toLowerCase();
   }
+
   return globMatch(pattern, text);
 };

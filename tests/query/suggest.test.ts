@@ -132,6 +132,7 @@ describe("suggest — values from real data", () => {
     const query = "foo tag:new";
     const caret = query.length;
     const s = suggest(query, caret, DATA);
+
     for (const suggestion of s) {
       expect(suggestion.replaceFrom).toBe(4);
       expect(suggestion.replaceTo).toBe(caret);
@@ -199,9 +200,11 @@ describe("suggest — token actions (caret inside existing token)", () => {
     // appear both as "current value" and as a data completion.
     const query = 'tag:"tech"';
     const s = suggest(query, 6, { ...DATA, tags: { ...DATA.tags, tech: 246 } });
+
     const techEntries = s.filter(
       (x) => x.type === "value" && x.insert === 'tag:"tech"',
     );
+
     expect(techEntries).toHaveLength(1);
     expect(techEntries[0].comment).toBe("current value");
   });

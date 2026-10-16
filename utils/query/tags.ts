@@ -40,32 +40,39 @@ export const buildTagIndex = (
     for (const tag of extractTags(bookmark.title)) {
       const key = tag.toLowerCase();
       let entry = byLower.get(key);
+
       if (!entry) {
         entry = { total: 0, variants: new Map() };
         byLower.set(key, entry);
       }
+
       entry.total += 1;
       entry.variants.set(tag, (entry.variants.get(tag) ?? 0) + 1);
     }
   }
 
   const index: Record<string, number> = {};
+
   for (const [key, entry] of byLower) {
     // Display = most frequent casing; ties -> shortest, then alphabetical.
     let best = key;
     let bestCount = -1;
+
     for (const [variant, count] of entry.variants) {
       const better =
         count > bestCount ||
         (count === bestCount &&
           (variant.length < best.length ||
             (variant.length === best.length && variant < best)));
+
       if (better) {
         best = variant;
         bestCount = count;
       }
     }
+
     index[best] = entry.total;
   }
+
   return index;
 };

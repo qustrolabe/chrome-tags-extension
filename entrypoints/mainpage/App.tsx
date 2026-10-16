@@ -33,6 +33,7 @@ export default function App() {
   useEffect(() => {
     initAccent();
   }, []);
+
   return (
     <div className="bg-background text-foreground">
       <ThemeProvider>

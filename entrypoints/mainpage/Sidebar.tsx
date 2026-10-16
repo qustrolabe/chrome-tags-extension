@@ -23,6 +23,7 @@ export default function Sidebar() {
                 {MODE_TABS.map((tab) => {
                     const Icon = tab.icon;
                     const isActive = mode === tab.id;
+
                     return (
                         <button
                             key={tab.id}

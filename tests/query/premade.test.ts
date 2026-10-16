@@ -15,6 +15,7 @@ const BOOKMARKS = [
 ];
 
 const CTX = createMatchContext(BOOKMARKS, {}, 1_800_000_000_000);
+
 const DATA = {
   tags: { godot: 1, gamedev: 1, rust: 1, lang: 1, news: 1 },
   folderTree: [{ name: "Bookmarks Bar", children: [] }],
@@ -40,9 +41,11 @@ describe('premade state: typing tag:"', () => {
     const s = suggest('tag:"', 5, DATA);
     const values = s.filter((x) => x.type === "value");
     expect(values.length).toBeGreaterThanOrEqual(5);
+
     for (const tag of ["godot", "gamedev", "rust", "lang", "news"]) {
       expect(values.some((v) => v.insert === `tag:"${tag}"`)).toBe(true);
     }
+
     // no actions — we're not inside a complete token
     expect(s.every((x) => x.type === "value")).toBe(true);
   });

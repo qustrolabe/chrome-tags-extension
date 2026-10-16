@@ -13,11 +13,14 @@ export default function BookmarkList() {
     query,
     setQuery,
   } = useBookmarks();
+
   const { stats, settings } = useTracking();
 
   const Row = ({ index, style }: RowComponentProps) => {
     const bookmark = displayBookmarks[index];
+
     if (!bookmark) return null;
+
     return (
       <div style={style}>
         <BookmarkCard
@@ -31,6 +34,7 @@ export default function BookmarkList() {
           showTracking={settings.enabled && settings.showStats}
           onAddFolderFilter={(folderId, negative, strict) => {
             const folder = allBookmarks.find((b) => b.id === folderId);
+
             if (!folder?.title) return;
             setQuery(
               setTokenState(

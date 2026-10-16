@@ -22,11 +22,13 @@ export const ACCENT_PRESETS = [
 /** Relative luminance of a #rrggbb hex color (0 = dark, 1 = light). */
 function luminance(hex: string): number {
     const m = /^#?([0-9a-f]{6})$/i.exec(hex);
+
     if (!m?.[1]) return 0;
     const n = parseInt(m[1], 16);
     const r = (n >> 16) & 0xff;
     const g = (n >> 8) & 0xff;
     const b = n & 0xff;
+
     return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
 }
 
@@ -36,11 +38,14 @@ function luminance(hex: string): number {
  */
 export function applyAccent(color: string | null): void {
     const el = document.documentElement;
+
     if (!color) {
         el.style.removeProperty("--primary");
         el.style.removeProperty("--primary-foreground");
+
         return;
     }
+
     el.style.setProperty("--primary", color);
     el.style.setProperty(
         "--primary-foreground",
@@ -50,6 +55,7 @@ export function applyAccent(color: string | null): void {
 
 export async function saveAccent(color: string | null): Promise<void> {
     applyAccent(color);
+
     if (color === null) {
         await browser.storage.local.remove(ACCENT_KEY);
     } else {

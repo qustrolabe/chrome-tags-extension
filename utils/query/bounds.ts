@@ -37,8 +37,10 @@ export const DATE_UNITS = Object.keys(UNIT_MS);
 /** Parse a duration like "30min", "2d", "1y". Returns ms or null. */
 export const parseDuration = (raw: string): number | null => {
   const m = /^(\d+(?:\.\d+)?)(min|h|d|w|mo|y)$/.exec(raw);
+
   if (!m || !m[1] || !m[2]) return null;
   const unitMs = UNIT_MS[m[2]];
+
   return parseFloat(m[1]) * (unitMs ?? 0);
 };
 
@@ -55,6 +57,7 @@ const parseComparison = (
     rest = rest.slice(1);
   } else {
     const twoCharOp = COMPARE_OPS.find((candidate) => rest.startsWith(candidate));
+
     if (twoCharOp) {
       op = twoCharOp;
       rest = rest.slice(twoCharOp.length);
@@ -62,12 +65,16 @@ const parseComparison = (
   }
 
   const m = /^(\d+(?:\.\d+)?)(min|h|d|w|mo|y)?$/.exec(rest);
+
   if (!m || !m[1]) return null;
+
   if (requireUnit && !m[2]) return null;
+
   if (!requireUnit && m[2]) return null;
 
   const unitMs = m[2] ? UNIT_MS[m[2]] : undefined;
   const value = parseFloat(m[1]) * (unitMs ?? 1);
+
   return { op, value };
 };
 
@@ -89,11 +96,13 @@ export const parseBounds = (
     if (match.index !== consumed) return null; // garbage between chunks
     consumed = chunkRegex.lastIndex;
     const comparison = parseComparison(match[0], opts.requireUnit);
+
     if (!comparison) return null;
     bounds.push(comparison);
   }
 
   if (bounds.length === 0 || consumed !== raw.length) return null;
+
   return bounds;
 };
 

@@ -33,7 +33,9 @@ export default function SidebarTagList() {
         ([tagA, countA], [tagB, countB]) => {
             const score = (state: string | null) => {
                 if (state === "positive") return 2;
+
                 if (state === "negative") return 1;
+
                 return 0;
             };
 
@@ -68,6 +70,7 @@ export default function SidebarTagList() {
             <div className="flex flex-col gap-0.5">
                 {sortedTags.map(([tag, count]) => {
                     const state = getTagState(tag);
+
                     return (
                         <button
                             key={tag}

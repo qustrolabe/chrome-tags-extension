@@ -97,6 +97,7 @@ describe("parser — serialize roundtrip", () => {
     reparsed.tokens.forEach((token, i) => {
       expect(token.kind).toBe(parsed.tokens[i].kind);
       expect(token.negated).toBe(parsed.tokens[i].negated);
+
       if (token.kind === "filter" && parsed.tokens[i].kind === "filter") {
         expect(token.key).toBe(parsed.tokens[i].key);
         expect(token.value).toBe(parsed.tokens[i].value);

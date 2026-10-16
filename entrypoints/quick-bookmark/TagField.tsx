@@ -38,10 +38,12 @@ export default function TagField({ title, setTitle, allBookmarks }: TagFieldProp
     () => Array.from(new Set(extractTags(title).map((t) => t.toLowerCase()))),
     [title],
   );
+
   const tagSet = useMemo(() => new Set(tags), [tags]);
 
   const knownTags = useMemo(() => {
     const withUrl = allBookmarks.filter((b) => b.url !== undefined);
+
     return Object.entries(buildTagIndex(withUrl))
       .map(([tag, count]) => ({ tag, count }))
       .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag));
@@ -64,8 +66,10 @@ export default function TagField({ title, setTitle, allBookmarks }: TagFieldProp
 
   const removeTag = (tag: string) => {
     const idx = title.toLowerCase().indexOf(`#${tag.toLowerCase()}`);
+
     if (idx === -1) return;
     let end = idx;
+
     while (end < title.length && !/\s/.test(title[end] ?? "")) end++;
     setTitle((title.slice(0, idx) + " " + title.slice(end)).replace(/\s+/g, " ").trim());
   };
@@ -73,6 +77,7 @@ export default function TagField({ title, setTitle, allBookmarks }: TagFieldProp
   const addTag = (raw: string) => {
     const tag = raw.trim().replace(/^#/, "").replace(/\s+/g, "");
     setText("");
+
     if (!tag || tagSet.has(tag.toLowerCase())) return;
     const base = sortTagsRight(title).trim();
     setTitle(base ? `${base} #${tag}` : `#${tag}`);
@@ -86,10 +91,12 @@ export default function TagField({ title, setTitle, allBookmarks }: TagFieldProp
   const accept = (index: number | undefined) => {
     setHighlighted(-1);
     const row = index === undefined ? undefined : rows[index];
+
     if (row) {
       // Accepting a row always clears the box, otherwise a toggle leaves the
       // just-applied text behind and the next Enter would re-add it.
       setText("");
+
       if (row.isNew) addTag(row.tag);
       else toggleTag(row.tag);
     } else if (query) {
@@ -106,6 +113,7 @@ export default function TagField({ title, setTitle, allBookmarks }: TagFieldProp
       setHighlighted((prev) => {
         if (rows.length === 0) return -1;
         const next = Math.max(prev, -1) + 1;
+
         return next >= rows.length ? 0 : next;
       });
     } else if (e.key === "ArrowUp") {
@@ -181,6 +189,7 @@ export default function TagField({ title, setTitle, allBookmarks }: TagFieldProp
         >
           {rows.map((row, index) => {
             const present = tagSet.has(row.tag.toLowerCase());
+
             return (
               <li
                 key={`${row.tag}-${row.isNew ? "new" : "known"}`}

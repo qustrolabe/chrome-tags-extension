@@ -24,7 +24,9 @@ function buildFolderTree(bookmarks: Bookmark[]): FolderNode[] {
     // Create nodes
     folders.forEach((folder) => {
         let title = folder.title;
+
         if (folder.id === "0") title = "Root";
+
         if (!title) title = `Folder ${folder.id}`;
         folderMap.set(folder.id, {
             id: folder.id,
@@ -171,6 +173,7 @@ export default function SidebarFolderTree() {
     const [expandedIds, setExpandedIds] = useState<Set<string>>(
         new Set(["0", "1", "2"]),
     );
+
     const [search, setSearch] = useState("");
 
     const tree = useMemo(() => buildFolderTree(bookmarks), [bookmarks]);
@@ -180,11 +183,15 @@ export default function SidebarFolderTree() {
     // While searching, matching branches render expanded automatically.
     const filteredTree = useMemo(() => {
         const q = search.trim().toLowerCase();
+
         if (q === "") return null;
+
         const filter = (nodes: FolderNode[]): FolderNode[] => {
             const result: FolderNode[] = [];
+
             for (const node of nodes) {
                 const kids = filter(node.children);
+
                 if (
                     node.title.toLowerCase().includes(q) ||
                     kids.length > 0
@@ -192,19 +199,23 @@ export default function SidebarFolderTree() {
                     result.push({ ...node, children: kids });
                 }
             }
+
             return result;
         };
+
         return filter(tree);
     }, [search, tree]);
 
     const toggleExpanded = (id: string) => {
         setExpandedIds((prev) => {
             const next = new Set(prev);
+
             if (next.has(id)) {
                 next.delete(id);
             } else {
                 next.add(id);
             }
+
             return next;
         });
     };
@@ -213,11 +224,15 @@ export default function SidebarFolderTree() {
         folder: FolderNode,
     ): "positive" | "negative" | "strict" | null => {
         const recursiveState = tokenState(query, "folder", folder.title);
+
         if (recursiveState === "negative") return "negative";
+
         if (recursiveState === "positive") return "positive";
+
         if (tokenState(query, "folder_strict", folder.title) !== null) {
             return "strict";
         }
+
         return null;
     };
 
@@ -229,6 +244,7 @@ export default function SidebarFolderTree() {
         // Clicking the button matching the current state clears the
         // folder's filter entirely.
         const current = getFilterState(folder);
+
         const requested = negative && strict
             ? "strict"
             : strict
@@ -236,12 +252,16 @@ export default function SidebarFolderTree() {
             : negative
             ? "negative"
             : "positive";
+
         let next = setTokenState(query, "folder", folder.title, null);
         next = setTokenState(next, "folder_strict", folder.title, null);
+
         if (current === requested) {
             setQuery(next);
+
             return;
         }
+
         const key = strict ? "folder_strict" : "folder";
         next = setTokenState(
             next,

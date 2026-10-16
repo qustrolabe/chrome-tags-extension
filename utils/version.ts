@@ -26,6 +26,7 @@ export const DEV_TITLE_PREFIX = "(dev) ";
 /** Prefix the document title in dev builds. Idempotent. */
 export const applyDevTitle = () => {
   if (!IS_DEV) return;
+
   if (document.title.startsWith(DEV_TITLE_PREFIX)) return;
   document.title = `${DEV_TITLE_PREFIX}${document.title}`;
 };

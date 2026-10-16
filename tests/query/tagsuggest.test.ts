@@ -15,6 +15,7 @@ describe("tag suggestions with an empty query", () => {
       currentTags: new Set(),
       query: "",
     });
+
     expect(rows).toHaveLength(4);
     expect(rows.some((r) => r.isNew)).toBe(false);
   });
@@ -27,6 +28,7 @@ describe("tag suggestions while typing", () => {
       currentTags: new Set(),
       query: "te",
     });
+
     // "te" is itself new, so its create row leads; then the prefix matches.
     expect(rows.map((r) => r.tag)).toEqual(["te", "tech", "testing"]);
     expect(rows.map((r) => r.isNew)).toEqual([true, false, false]);
@@ -38,6 +40,7 @@ describe("tag suggestions while typing", () => {
       currentTags: new Set(),
       query: "dev",
     });
+
     expect(rows.map((r) => r.tag)).toEqual(["dev", "gamedev"]);
   });
 
@@ -47,6 +50,7 @@ describe("tag suggestions while typing", () => {
       currentTags: new Set(),
       query: "tech",
     });
+
     expect(rows.map((r) => r.tag)).toEqual(["tech"]);
   });
 
@@ -56,6 +60,7 @@ describe("tag suggestions while typing", () => {
       currentTags: new Set(),
       query: "godot",
     });
+
     expect(rows.map((r) => r.tag)).toEqual(["Godot"]);
   });
 });
@@ -67,6 +72,7 @@ describe("the create row", () => {
       currentTags: new Set(),
       query: "rust",
     });
+
     expect(rows[0]).toEqual({ tag: "rust", count: 0, isNew: true });
   });
 
@@ -76,6 +82,7 @@ describe("the create row", () => {
       currentTags: new Set(),
       query: "tech",
     });
+
     expect(rows.some((r) => r.isNew)).toBe(false);
   });
 
@@ -85,6 +92,7 @@ describe("the create row", () => {
       currentTags: new Set(["tech"]),
       query: "TECH",
     });
+
     expect(rows.some((r) => r.isNew)).toBe(false);
   });
 
@@ -94,6 +102,7 @@ describe("the create row", () => {
       currentTags: new Set(),
       query: "zzzz",
     });
+
     expect(rows).toEqual([{ tag: "zzzz", count: 0, isNew: true }]);
   });
 });

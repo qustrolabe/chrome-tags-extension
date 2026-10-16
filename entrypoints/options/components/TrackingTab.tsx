@@ -5,6 +5,7 @@ import { useTracking } from "@/context/TrackingContext";
 export default function TrackingTab() {
   const { settings, totalScore, setEnabled, setShowStats, setMaxAge, clearStats } =
     useTracking();
+
   const [clearConfirm, setClearConfirm] = useState(false);
   const [maxAgeInput, setMaxAgeInput] = useState(String(settings.maxAge));
   const [confirmLower, setConfirmLower] = useState<number | null>(null);
@@ -15,6 +16,7 @@ export default function TrackingTab() {
 
   const numericMaxAge = useMemo(() => {
     const parsed = Number(maxAgeInput);
+
     return Number.isFinite(parsed) ? Math.max(1, Math.floor(parsed)) : settings.maxAge;
   }, [maxAgeInput, settings.maxAge]);
 
@@ -23,8 +25,10 @@ export default function TrackingTab() {
   const applyMaxAge = () => {
     if (numericMaxAge < settings.maxAge) {
       setConfirmLower(numericMaxAge);
+
       return;
     }
+
     setConfirmLower(null);
     setMaxAge(numericMaxAge);
   };
@@ -38,8 +42,10 @@ export default function TrackingTab() {
   const handleClear = () => {
     if (!clearConfirm) {
       setClearConfirm(true);
+
       return;
     }
+
     clearStats();
     setClearConfirm(false);
   };

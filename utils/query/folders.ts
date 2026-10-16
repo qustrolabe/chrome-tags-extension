@@ -23,19 +23,23 @@ export const buildFolderTree = (
   for (const bookmark of bookmarks) {
     if (bookmark.url !== undefined) continue;
     byId.set(bookmark.id, { name: bookmark.title, children: [] });
+
     if (bookmark.parentId) parentOf.set(bookmark.id, bookmark.parentId);
   }
 
   const roots: FolderSuggestNode[] = [];
+
   for (const [id, node] of byId) {
     const parentId = parentOf.get(id);
     const parent = parentId ? byId.get(parentId) : undefined;
+
     if (parent && parent !== node) {
       parent.children.push(node);
     } else {
       roots.push(node);
     }
   }
+
   return roots;
 };
 
@@ -48,13 +52,16 @@ export const resolveChain = (
   segments: string[],
 ): FolderSuggestNode[] => {
   let current = roots;
+
   for (const segment of segments) {
     const next = current.flatMap((node) =>
       node.children.filter((child) => patternMatch(segment, child.name)),
     );
+
     if (next.length === 0) return [];
     current = next;
   }
+
   return current;
 };
 
@@ -66,21 +73,27 @@ export const childNames = (nodes: FolderSuggestNode[]): string[] => [
 /** Unique names of the nodes and all their descendants. */
 export const descendantNames = (nodes: FolderSuggestNode[]): string[] => {
   const names = new Set<string>();
+
   const visit = (node: FolderSuggestNode) => {
     names.add(node.name);
     node.children.forEach(visit);
   };
+
   nodes.forEach(visit);
+
   return [...names];
 };
 
 /** Flatten the whole tree into a node list (for anywhere-anchored chains). */
 export const allNodes = (nodes: FolderSuggestNode[]): FolderSuggestNode[] => {
   const out: FolderSuggestNode[] = [];
+
   const visit = (node: FolderSuggestNode) => {
     out.push(node);
     node.children.forEach(visit);
   };
+
   nodes.forEach(visit);
+
   return out;
 };
