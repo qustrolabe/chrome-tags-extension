@@ -177,20 +177,26 @@ function QuickEditor({ bookmark, allBookmarks, isExisting }: { bookmark: Bookmar
         </div>
 
         {/* MIDDLE ROW: folder tree | tags + url params | tag catalogue */}
-        <div className="grid min-h-0 flex-1 grid-cols-[260px_340px_1fr] overflow-hidden">
-          <div className="flex min-h-0 flex-col gap-1 overflow-hidden border-r border-border p-2">
+        {/* Equal thirds, so widening the window grows all three columns
+            evenly instead of dumping the slack into the catalogue. minmax(0,…)
+            lets each column shrink below its content width when narrow. */}
+        <div className="grid min-h-0 flex-1 grid-cols-3 overflow-hidden">
+          {/* min-w-0 on each track: grid-cols-3 uses minmax(0,1fr), so without
+              it a wide child (long URL, long tag name) pushes the track out
+              of alignment with its neighbours. */}
+          <div className="flex min-h-0 min-w-0 flex-col gap-1 overflow-hidden border-r border-border p-2">
             <label className="shrink-0 text-xs font-medium">Move to</label>
             <div className="min-h-0 flex-1">
               <FolderPicker allBookmarks={allBookmarks} selfId={bookmark.id} value={folderId} onChange={setFolderId} />
             </div>
           </div>
 
-          <div className="flex min-h-0 flex-col gap-1 border-r border-border p-2">
+          <div className="flex min-h-0 min-w-0 flex-col gap-1 border-r border-border p-2">
             <TagField title={title} setTitle={setTitle} allBookmarks={allBookmarks} />
             <UrlParams url={url} />
           </div>
 
-          <div className="flex min-h-0 flex-col overflow-hidden">
+          <div className="flex min-h-0 min-w-0 flex-col overflow-hidden">
             <TagListPanel title={title} setTitle={setTitle} allBookmarks={allBookmarks} />
           </div>
         </div>
