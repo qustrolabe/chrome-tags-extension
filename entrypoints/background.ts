@@ -5,6 +5,7 @@ import {
   type TrackingStatsMap,
   clampNonNegative,
 } from "@/utils/tracking";
+import { IS_DEV } from "@/utils/version.ts";
 
 const DEDUPE_MS = 30_000;
 
@@ -211,8 +212,10 @@ export default defineBackground(() => {
           console.warn(`[background] contextMenus.create ${id} threw`, e);
         }
       };
-      createOne("bookmark-page", "Bookmark this page", ["page"]);
-      createOne("bookmark-link", "Bookmark this link", ["link"]);
+      // Label dev builds so the menu is identifiable next to the release one.
+      const devSuffix = IS_DEV ? " (dev)" : "";
+      createOne("bookmark-page", `Bookmark this page${devSuffix}`, ["page"]);
+      createOne("bookmark-link", `Bookmark this link${devSuffix}`, ["link"]);
       console.log("[background] context menus created");
     };
     // Prefer promise form (WXT/brower polyfill), fallback to callback form (chrome)

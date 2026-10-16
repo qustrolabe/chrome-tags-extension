@@ -1,5 +1,6 @@
 import React from "react";
 import SettingsCard from "./SettingsCard";
+import { VERSION_LABEL } from "@/utils/version.ts";
 
 export default function AboutTab() {
     return (
@@ -7,7 +8,7 @@ export default function AboutTab() {
             <div>
                 <h2 className="mb-2 text-2xl font-bold">About</h2>
                 <p className="text-muted-foreground">
-                    Chrome Tags Extension version {__APP_VERSION__}
+                    Chrome Tags Extension version {VERSION_LABEL}
                 </p>
             </div>
 

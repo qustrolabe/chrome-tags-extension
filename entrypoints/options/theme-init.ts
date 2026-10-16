@@ -1,3 +1,7 @@
+import { applyDevTitle } from "@/utils/version.ts";
+
+applyDevTitle();
+
 (() => {
   try {
     const theme = localStorage.getItem("theme");
