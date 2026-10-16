@@ -1,5 +1,5 @@
 import React from "react";
-import { AiOutlineMoon, AiOutlineSun } from "react-icons/ai";
+import { AiOutlineBlock, AiOutlineMoon, AiOutlineSun } from "react-icons/ai";
 import { type Theme } from "@/context/ThemeContext";
 
 interface SidebarProps {
@@ -58,10 +58,12 @@ export default function Sidebar({
                     {[
                         { id: "light", icon: AiOutlineSun, label: "Light" },
                         { id: "dark", icon: AiOutlineMoon, label: "Dark" },
+                        { id: "automata", icon: AiOutlineBlock, label: "Automata" },
                     ].map((t) => (
                         <button
                             key={t.id}
                             onClick={() => onThemeChange(t.id as Theme)}
+                            title={t.label}
                             className={`flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-medium transition-all ${
                                 theme === t.id
                                     ? "bg-background text-primary shadow-sm"

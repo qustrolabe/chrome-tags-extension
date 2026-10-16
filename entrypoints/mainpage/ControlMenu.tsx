@@ -1,4 +1,5 @@
 import {
+    AiOutlineBlock,
     AiOutlineMenu,
     AiOutlineMoon,
     AiOutlineSetting,
@@ -6,7 +7,7 @@ import {
 } from "react-icons/ai";
 import { Popover } from "radix-ui";
 
-import { useTheme } from "@/context/ThemeContext";
+import { useTheme, type Theme } from "@/context/ThemeContext";
 import { APP_VERSION, GIT_COMMIT, IS_DEV } from "@/utils/version.ts";
 
 export default function ControlMenu(
@@ -22,7 +23,8 @@ export default function ControlMenu(
     const THEME_OPTIONS = [
         { id: "light", icon: AiOutlineSun, title: "Light Mode" },
         { id: "dark", icon: AiOutlineMoon, title: "Dark Mode" },
-    ] as const;
+        { id: "automata", icon: AiOutlineBlock, title: "Automata Mode" },
+    ] satisfies readonly { id: Theme; icon: typeof AiOutlineSun; title: string }[];
 
     return (
         <Popover.Root>
@@ -65,7 +67,7 @@ export default function ControlMenu(
                                                 ? "bg-background text-primary shadow-sm"
                                                 : "text-muted-foreground hover:bg-background/40"
                                         }`}
-                                        onClick={() => setTheme(id as any)}
+                                        onClick={() => setTheme(id)}
                                         title={title}
                                     >
                                         <Icon className="size-4" />

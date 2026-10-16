@@ -191,3 +191,113 @@
 .scrollbar-slim::-webkit-scrollbar-thumb:hover {
     background: var(--color-muted-foreground);
 }
+
+/* ================================================================
+   AUTOMATA
+   Flat, square-cornered, parchment-and-dark-brown palette. Light
+   `color-scheme`, so form controls and scrollbars stay light too.
+   Unreachable from `@variant dark` — only the `.dark` class triggers it.
+   ================================================================ */
+.automata {
+    color-scheme: light;
+
+    /* Parchment family */
+    --background: #c3bda8; /* canvas */
+    --foreground: #4b413d; /* body */
+
+    --card: #b8b29d; /* surfaceRaised */
+    --card-foreground: #4b413d;
+
+    --popover: #c3bda8; /* surface */
+    --popover-foreground: #4b413d;
+
+    --primary: #4b413d; /* accent */
+    --primary-foreground: #c3bda8; /* onPick */
+
+    --secondary: #b8b29d;
+    --secondary-foreground: #4b413d;
+
+    --muted: #b0ab98; /* surfaceHover */
+    --muted-foreground: #594e4a; /* muted */
+
+    --accent: #b8b29d;
+    --accent-foreground: #4b413d;
+
+    --destructive: #6f3a27;
+    --destructive-foreground: #c3bda8;
+
+    --border: color-mix(in srgb, #4b413d 16%, #c3bda8); /* --av-line */
+    --input: #b8b29d; /* field */
+    --ring: #b0603c; /* focus rings are terracotta, per spec */
+
+    /* One deliberate deviation from the spec above. `highlight` #b0603c is a
+       mid-luminance terracotta and reads at only 2.2–2.4:1 in both directions,
+       so it cannot carry the cream or the dark brown as text. Delete buttons and
+       error text use a darker step of the same ramp instead: 4.83:1. Keep the
+       literal #b0603c for --ring and for the raw --av-highlight / --av-warning
+       tokens, which are used as marks and accents rather than as text. */
+
+    /* squareCorners: every radius token collapses to 0, so `rounded`, `rounded-sm`
+       through `rounded-full` and `rounded-[3px]` all resolve to square. */
+    --radius: 0rem;
+    --radius-DEFAULT: 0rem;
+    --radius-none: 0rem;
+    --radius-full: 0rem;
+    --radius-sm: 0rem;
+    --radius-md: 0rem;
+    --radius-lg: 0rem;
+    --radius-xl: 0rem;
+    --radius-2xl: 0rem;
+    --radius-3xl: 0rem;
+    --radius-4xl: 0rem;
+
+    --border-width: 1px;
+
+    /* Flat by design — Nier Automata has no elevation, only surface steps. */
+    --shadow-sm: none;
+    --shadow-md: none;
+    --shadow-lg: none;
+    --shadow-xl: none;
+
+    /* Terminal-style labels; the body face stays whatever the host page uses. */
+    --font-mono: ui-monospace, "Cascadia Mono", "Consolas", monospace;
+
+    /* Raw tokens, published for anything that needs to reach past the shadcn-style
+       aliases above (--av-stage, --av-pick-hover, --av-warning, ...). */
+    --av-canvas: #c3bda8;
+    --av-surface: #c3bda8;
+    --av-surface-raised: #b8b29d;
+    --av-surface-hover: #b0ab98;
+    --av-field: #b8b29d;
+    --av-body: #4b413d;
+    --av-title: #4b413d;
+    --av-muted: #594e4a;
+    --av-accent: #4b413d;
+    --av-highlight: #b0603c;
+    --av-warning: #b0603c;
+    --av-pick: #4b413d;
+    --av-pick-hover: #594e4a;
+    --av-on-pick: #c3bda8;
+    --av-action: #b8b29d;
+    --av-action-hover: #b0ab98;
+    --av-on-action: #4b413d;
+    --av-stage: #b8b29d;
+    --av-line: color-mix(in srgb, #4b413d 16%, #c3bda8);
+    --av-line-strong: color-mix(in srgb, #4b413d 32%, #c3bda8);
+}
+
+/* Belt-and-braces for border-radius that isn't token-driven — `rounded-full`
+   compiles to a literal, and `rounded-[3px]` / `rounded-[4px]` are arbitrary
+   values. Tailwind folds this stylesheet into its own `utilities` layer, so the
+   class is doubled to raise specificity to (0,2,0): that outranks every plain
+   `rounded-*` utility (0,1,0) regardless of the order the two are emitted in. */
+.automata.automata,
+.automata.automata *,
+.automata.automata *::before,
+.automata.automata *::after {
+    border-radius: 0;
+}
+
+.automata .scrollbar-slim::-webkit-scrollbar-thumb {
+    border-radius: 0;
+}

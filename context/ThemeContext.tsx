@@ -1,6 +1,12 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-export type Theme = "light" | "dark";
+import {
+  THEME_CLASSES,
+  isTheme,
+  type Theme,
+} from "@/utils/theme.ts";
+
+export type { Theme };
 
 export type ThemeContextType = {
   theme: Theme;
@@ -17,16 +23,16 @@ export const ThemeProvider = (
 ) => {
   const [theme, setTheme] = useState<Theme>(() => {
     const saved = localStorage.getItem("theme");
-    return (saved as Theme) || "light";
+    return isTheme(saved) ? saved : "light";
   });
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     // Initial sync with chrome storage — one-shot, `theme` intentionally not a dep
     browser.storage.local.get("theme").then((result) => {
-      if (result.theme && result.theme !== theme) {
-        setTheme(result.theme as Theme);
-        localStorage.setItem("theme", result.theme as string);
+      if (isTheme(result.theme) && result.theme !== theme) {
+        setTheme(result.theme);
+        localStorage.setItem("theme", result.theme);
       }
       setMounted(true);
     });
@@ -39,7 +45,7 @@ export const ThemeProvider = (
     localStorage.setItem("theme", theme);
 
     const root = document.documentElement;
-    root.classList.remove("light", "dark", "brutalism", "brutalism-dark");
+    root.classList.remove(...THEME_CLASSES);
     root.classList.add(theme);
   }, [theme]);
 

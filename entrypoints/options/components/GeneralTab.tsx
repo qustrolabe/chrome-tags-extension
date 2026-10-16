@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { AiOutlineMoon, AiOutlineSun } from "react-icons/ai";
+import { AiOutlineBlock, AiOutlineMoon, AiOutlineSun } from "react-icons/ai";
 import { type Theme } from "@/context/ThemeContext";
 import SettingsCard from "./SettingsCard";
 import {
@@ -11,6 +11,33 @@ interface GeneralTabProps {
     theme: Theme;
     setTheme: (theme: Theme) => void;
 }
+
+/** The three selectable themes, each with a swatch previewing its own palette. */
+const THEME_CARDS = [
+    {
+        id: "light",
+        label: "Light Mode",
+        Icon: AiOutlineSun,
+        preview: "border-neutral-200 bg-white [&>svg]:text-yellow-500",
+    },
+    {
+        id: "dark",
+        label: "Dark Mode",
+        Icon: AiOutlineMoon,
+        preview: "border-neutral-800 bg-neutral-900 [&>svg]:text-primary",
+    },
+    {
+        id: "automata",
+        label: "Automata Mode",
+        Icon: AiOutlineBlock,
+        preview: "border-[#4b413d]/30 bg-[#c3bda8] [&>svg]:text-[#b0603c]",
+    },
+] satisfies readonly {
+    id: Theme;
+    label: string;
+    Icon: typeof AiOutlineSun;
+    preview: string;
+}[];
 
 export default function GeneralTab({ theme, setTheme }: GeneralTabProps) {
     const [accent, setAccent] = useState<string | null>(null);
@@ -40,50 +67,36 @@ export default function GeneralTab({ theme, setTheme }: GeneralTabProps) {
             <div className="grid gap-6">
                 <SettingsCard
                     title="Theme"
-                    description="Switch between light and dark modes."
+                    description="Switch between light, dark and automata."
                 >
-                    <div className="flex gap-4">
-                        <button
-                            onClick={() => setTheme("light")}
-                            className={`group relative flex-1 cursor-pointer rounded-xl border-2 p-4 transition-all ${
-                                theme === "light"
-                                    ? "border-primary bg-primary/5"
-                                    : "border-border hover:border-muted-foreground/30"
-                            }`}
-                        >
-                            <div className="mb-3 flex aspect-video items-center justify-center rounded-lg border border-neutral-200 bg-white">
-                                <AiOutlineSun className="size-8 text-yellow-500" />
-                            </div>
-                            <span className="text-sm font-medium">
-                                Light Mode
-                            </span>
-                            {theme === "light" && (
-                                <div className="absolute top-2 right-2 flex size-5 scale-90 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                                    <AiOutlineCheck className="size-3" />
-                                </div>
-                            )}
-                        </button>
-
-                        <button
-                            onClick={() => setTheme("dark")}
-                            className={`group relative flex-1 cursor-pointer rounded-xl border-2 p-4 transition-all ${
-                                theme === "dark"
-                                    ? "border-primary bg-primary/5"
-                                    : "border-border hover:border-muted-foreground/30"
-                            }`}
-                        >
-                            <div className="mb-3 flex aspect-video items-center justify-center rounded-lg border border-neutral-800 bg-neutral-900">
-                                <AiOutlineMoon className="size-8 text-primary" />
-                            </div>
-                            <span className="text-sm font-medium">
-                                Dark Mode
-                            </span>
-                            {theme === "dark" && (
-                                <div className="absolute top-2 right-2 flex size-5 scale-90 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                                    <AiOutlineCheck className="size-3" />
-                                </div>
-                            )}
-                        </button>
+                    <div className="grid grid-cols-3 gap-4">
+                        {THEME_CARDS.map(
+                            ({ id, label, preview, Icon }) => (
+                                <button
+                                    key={id}
+                                    onClick={() => setTheme(id)}
+                                    className={`group relative cursor-pointer rounded-xl border-2 p-4 transition-all ${
+                                        theme === id
+                                            ? "border-primary bg-primary/5"
+                                            : "border-border hover:border-muted-foreground/30"
+                                    }`}
+                                >
+                                    <div
+                                        className={`mb-3 flex aspect-video items-center justify-center rounded-lg border ${preview}`}
+                                    >
+                                        <Icon className="size-8" />
+                                    </div>
+                                    <span className="text-sm font-medium">
+                                        {label}
+                                    </span>
+                                    {theme === id && (
+                                        <div className="absolute top-2 right-2 flex size-5 scale-90 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                                            <AiOutlineCheck className="size-3" />
+                                        </div>
+                                    )}
+                                </button>
+                            ),
+                        )}
                     </div>
                 </SettingsCard>
 
