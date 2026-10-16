@@ -25,12 +25,16 @@ export const THEME_PRELOAD_BG: Record<Theme, string> = {
     automata: "#c3bda8",
 };
 
+/**
+ * Membership set for `isTheme`. Holding it as `ReadonlySet<unknown>` lets the
+ * guard answer for an untrusted value directly, so no `typeof` narrowing and
+ * no cast of `THEME_IDS` to a wider array is needed to make the check.
+ */
+const THEME_ID_SET: ReadonlySet<unknown> = new Set(THEME_IDS);
+
 /** Narrow an untrusted value (localStorage / storage.local) to a Theme. */
 export function isTheme(value: unknown): value is Theme {
-    return (
-        typeof value === "string" &&
-        (THEME_IDS as readonly string[]).includes(value)
-    );
+    return THEME_ID_SET.has(value);
 }
 
 /** Classes that may be left on <html> by older builds; cleared on every apply. */

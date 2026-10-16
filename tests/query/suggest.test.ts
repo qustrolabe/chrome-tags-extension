@@ -1,8 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { cycleToken, tokenState } from "../../utils/query/editing.ts";
 import { suggest } from "../../utils/query/suggest.ts";
-
-import { suggest } from "../../utils/query/suggest.ts";
 import type { FolderSuggestNode } from "../../utils/query/folders.ts";
 
 const FOLDER_TREE: FolderSuggestNode[] = [

@@ -9,7 +9,6 @@ import {
   type FolderSuggestNode,
 } from "./folders.ts";
 import type { FilterToken, ParsedQuery } from "./types.ts";
-import type { FilterToken, ParsedQuery } from "./types.ts";
 
 /**
  * Caret-aware suggestion engine.

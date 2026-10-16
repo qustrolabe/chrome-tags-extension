@@ -15,7 +15,11 @@ export default defineBackground(() => {
   let statsCache: TrackingStatsMap = {};
   const urlIndex = new Map<string, string[]>();
   const recentVisits = new Map<number, { url: string; ts: number }>();
-  let rebuildTimer: number | null = null;
+  // `ReturnType<typeof setTimeout>` rather than `number`: with both DOM lib and
+  // @types/node in scope the global is an overload set, and the timer handle the
+  // runtime hands back is whichever one actually won. Asserting `number` here
+  // was papering over that mismatch.
+  let rebuildTimer: ReturnType<typeof setTimeout> | null = null;
 
   const normalizeStats = (stats: TrackingStatsMap | undefined | null): TrackingStatsMap => {
     if (!stats) return {};
@@ -75,7 +79,7 @@ export default defineBackground(() => {
     rebuildTimer = setTimeout(() => {
       rebuildTimer = null;
       buildUrlIndex();
-    }, 250) as unknown as number;
+    }, 250);
   };
 
   const persistStats = async () => {
