@@ -2,6 +2,11 @@
 
 @source "../utils/tagColor.ts";
 
+/* @queryfield/react's default token/capsule classes live in the package, so
+   Tailwind has to scan it explicitly — otherwise every capsule colour the
+   search field relies on would be tree-shaken out of the stylesheet. */
+@source "../queryfield/packages/react/src";
+
 /* background-color displayed before react app is loaded */
 :root {
     background-color: oklch(97% 0 0);

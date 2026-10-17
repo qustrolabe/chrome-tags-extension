@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import type { Bookmark } from "@/context/BookmarksContext";
 import { useBookmarks } from "@/context/BookmarksContext";
-import { setTokenState, tokenState } from "@/utils/query/editing.ts";
+import { setTokenState, tokenState } from "@queryfield/core";
 import {
     AiOutlineFolder,
     AiOutlineFolderOpen,

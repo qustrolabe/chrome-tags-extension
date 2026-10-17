@@ -6,7 +6,7 @@ import { Tooltip, AlertDialog } from "radix-ui";
 import { AiOutlineDelete, AiOutlineEdit, AiOutlineTool } from "react-icons/ai";
 import BookmarkEditDialog from "@/components/BookmarkEditDialog.tsx";
 import BookmarkTagPopup from "@/components/BookmarkTagPopup.tsx";
-import { extractTags, buildTagIndex } from "@/utils/query/tags.ts";
+import { extractTags, buildTagIndex } from "@queryfield/core";
 import { faviconURL } from "@/utils/favicon.ts";
 
 type Bookmark = chrome.bookmarks.BookmarkTreeNode;

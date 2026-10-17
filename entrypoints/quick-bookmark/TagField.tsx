@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { buildTagIndex, extractTags } from "@/utils/query/tags.ts";
+import { buildTagIndex, extractTags } from "@queryfield/core";
 import { buildTagRows } from "@/utils/tagsuggest.ts";
 import { sortTagsRight } from "@/components/BookmarkEditDialog.tsx";
 

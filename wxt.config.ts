@@ -1,11 +1,19 @@
 import { execSync } from "node:child_process";
 import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "wxt";
 import tailwindcss from "@tailwindcss/vite";
 
 const pkg = JSON.parse(
   readFileSync(new URL("./package.json", import.meta.url), "utf8"),
 );
+
+/**
+ * Absolute path to a repo-relative file, for bundler aliases.
+ * Mirrors the `@queryfield/*` entries in `tsconfig.json`.
+ */
+const repoPath = (relative: string) =>
+  fileURLToPath(new URL(relative, import.meta.url));
 
 const version = process.env.npm_package_version ?? pkg.version;
 
@@ -35,6 +43,18 @@ export default defineConfig({
 
   vite: () => ({
     plugins: [tailwindcss()],
+    resolve: {
+      alias: {
+        // Mirrors the `@queryfield/*` entries in tsconfig.json. They are
+        // exact-specifier aliases: the packages are imported by barrel only.
+        "@queryfield/core": repoPath(
+          "./queryfield/packages/core/src/index.ts",
+        ),
+        "@queryfield/react": repoPath(
+          "./queryfield/packages/react/src/index.ts",
+        ),
+      },
+    },
     define: {
       __APP_VERSION__: JSON.stringify(version),
       __GIT_COMMIT__: JSON.stringify(gitCommit),

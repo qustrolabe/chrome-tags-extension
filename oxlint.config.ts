@@ -6,6 +6,8 @@ export default defineConfig({
     ".output/**",
     "tools/oxlint/anti-slop/**",
     "node_modules/**",
+    // Standalone query-field extraction — its own project, own toolchain.
+    "queryfield/**",
   ],
   jsPlugins: [
     { name: "anti-slop", specifier: "./tools/oxlint/anti-slop/index.ts" },

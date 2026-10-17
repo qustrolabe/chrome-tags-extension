@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Dialog } from "radix-ui";
-import { extractTags } from "@/utils/query/tags.ts";
+import { extractTags } from "@queryfield/core";
 import { sortTagsRight } from "@/components/BookmarkEditDialog.tsx";
 import TagListPanel from "@/components/TagListPanel.tsx";
 

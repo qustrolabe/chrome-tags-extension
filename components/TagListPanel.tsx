@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useRef, useEffect } from "react";
 import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
-import { extractTags, buildTagIndex } from "@/utils/query/tags.ts";
+import { extractTags, buildTagIndex } from "@queryfield/core";
 import { useTagColor } from "@/context/TagColorContext";
 import { tagColorClass } from "@/utils/tagColor.ts";
 import { sortTagsRight } from "@/components/BookmarkEditDialog.tsx";

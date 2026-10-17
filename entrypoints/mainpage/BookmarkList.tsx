@@ -4,7 +4,7 @@ import { List, type RowComponentProps } from "react-window";
 import { useBookmarks } from "@/context/BookmarksContext.tsx";
 import { useTracking } from "@/context/TrackingContext";
 import { computeFrecency } from "@/utils/tracking";
-import { setTokenState } from "@/utils/query/editing.ts";
+import { setTokenState } from "@queryfield/core";
 import BookmarkCard from "@/components/BookmarkCard";
 
 export default function BookmarkList() {

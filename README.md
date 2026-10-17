@@ -10,9 +10,12 @@ bookmarks. **Backup your bookmarks** before using it.
 
 ## Build
 
-To build the extension, run:
+Clone with submodules, then build:
 
 ```bash
+git clone --recurse-submodules https://github.com/qustrolabe/chrome-tags-extension.git
+cd chrome-tags-extension
+bun install
 bun run build
 ```
 

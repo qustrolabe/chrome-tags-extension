@@ -1,12 +1,8 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useTracking } from "@/context/TrackingContext";
 import { computeFrecency } from "@/utils/tracking";
-import { buildTagIndex } from "@/utils/query/tags.ts";
-import {
-  applyQuery,
-  createMatchContext,
-} from "@/utils/query/index.ts";
-import type { BookmarkLike } from "@/utils/query/types.ts";
+import { buildTagIndex, applyQuery, createMatchContext } from "@queryfield/core";
+import type { BookmarkLike } from "@queryfield/core";
 
 export type Bookmark = chrome.bookmarks.BookmarkTreeNode;
 

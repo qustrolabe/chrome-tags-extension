@@ -1,0 +1,3 @@
+[submodule "queryfield"]
+	path = queryfield
+	url = https://github.com/qustrolabe/queryfield.git

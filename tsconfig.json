@@ -2,7 +2,27 @@
   "extends": "./.wxt/tsconfig.json",
   "compilerOptions": {
     "allowImportingTsExtensions": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    // Redeclared: tsconfig `paths` from `extends` are replaced, not merged, so
+    // the WXT root aliases have to be repeated here alongside the queryfield
+    // ones. (Without `baseUrl`, each entry resolves relative to this file.)
+    "paths": {
+      "@": ["."],
+      "@/*": ["./*"],
+      "~": ["."],
+      "~/*": ["./*"],
+      "@@": ["."],
+      "@@/*": ["./*"],
+      "~~": ["."],
+      "~~/*": ["./*"],
+      // Standalone query-field packages. They ship TypeScript sources via their
+      // `exports` maps, so these point straight at `src`. `wxt.config.ts`
+      // mirrors them in `resolve.alias` for the bundler.
+      "@queryfield/core": ["./queryfield/packages/core/src/index.ts"],
+      "@queryfield/core/*": ["./queryfield/packages/core/src/*"],
+      "@queryfield/react": ["./queryfield/packages/react/src/index.ts"],
+      "@queryfield/react/*": ["./queryfield/packages/react/src/*"]
+    }
   },
-  "exclude": [".output", "tests"]
+  "exclude": [".output", "tests", "queryfield"]
 }
