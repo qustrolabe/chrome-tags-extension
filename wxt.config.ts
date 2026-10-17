@@ -30,6 +30,26 @@ const gitCommit = (() => {
   }
 })();
 
+/**
+ * Commits between the build commit and the last release tag. `0` means this
+ * build *is* that release; anything else is unreleased work, which the UI
+ * marks with a `+N` suffix so it is never mistaken for the shipped build.
+ */
+const commitsSinceRelease = (() => {
+  try {
+    const described = execSync("git describe --tags --long", {
+      stdio: ["ignore", "pipe", "ignore"],
+    })
+      .toString()
+      .trim();
+
+    // "v0.6.1-91-g49974d2" -> 91; no match (no tags) -> 0
+    return parseInt(/-(\d+)-g[0-9a-f]+$/.exec(described)?.[1] ?? "0", 10);
+  } catch {
+    return 0; // not a git checkout, or no tags — treat it as a release
+  }
+})();
+
 /** Amber-tagged artwork used by dev builds only. */
 const DEV_ICONS = {
   16: "dev-icon/16.png",
@@ -58,6 +78,7 @@ export default defineConfig({
     define: {
       __APP_VERSION__: JSON.stringify(version),
       __GIT_COMMIT__: JSON.stringify(gitCommit),
+      __GIT_AHEAD__: JSON.stringify(commitsSinceRelease),
     },
   }),
   webExt: {

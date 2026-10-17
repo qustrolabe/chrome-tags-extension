@@ -8,7 +8,7 @@ import {
 import { Popover } from "radix-ui";
 
 import { useTheme, type Theme } from "@/context/ThemeContext";
-import { APP_VERSION, GIT_COMMIT, IS_DEV } from "@/utils/version.ts";
+import { APP_VERSION, APP_VERSION_LABEL, COMMITS_SINCE_RELEASE, GIT_COMMIT, IS_DEV } from "@/utils/version.ts";
 
 export default function ControlMenu(
     { onOpenSettings }: { onOpenSettings?: () => void },
@@ -77,7 +77,14 @@ export default function ControlMenu(
                         </div>
 
                         <div className="mt-1 flex items-center justify-between gap-2 border-t border-border/50 px-2 pt-2 text-[10px] text-muted-foreground">
-                            <span className="font-mono">v{APP_VERSION}</span>
+                            <span
+                                className="font-mono"
+                                title={COMMITS_SINCE_RELEASE > 0
+                                    ? `Built ${COMMITS_SINCE_RELEASE} commits after the v${APP_VERSION} release`
+                                    : undefined}
+                            >
+                                v{APP_VERSION_LABEL}
+                            </span>
                             {IS_DEV && (
                                 <span className="flex items-center gap-1.5">
                                     {GIT_COMMIT && (

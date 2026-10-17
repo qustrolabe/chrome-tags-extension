@@ -15,10 +15,21 @@ export const APP_VERSION = __APP_VERSION__;
 /** Short commit hash, injected by `wxt.config.ts`. Empty outside git. */
 export const GIT_COMMIT = __GIT_COMMIT__;
 
-/** "0.6.1" in a release, "0.6.1-dev · cfbb930" in a dev build. */
+/** Commits between this build and the last release tag. 0 on a release commit. */
+export const COMMITS_SINCE_RELEASE = __GIT_AHEAD__;
+
+/** "+91" on an unreleased build, "" when the build is the tagged commit. */
+export const AHEAD_SUFFIX = COMMITS_SINCE_RELEASE > 0
+  ? `+${COMMITS_SINCE_RELEASE}`
+  : "";
+
+/** "0.6.1" on the release commit, "0.6.1+91" on anything built after it. */
+export const APP_VERSION_LABEL = `${APP_VERSION}${AHEAD_SUFFIX}`;
+
+/** "0.6.1+91" in a release, "0.6.1+91-dev · cfbb930" in a dev build. */
 export const VERSION_LABEL = IS_DEV
-  ? `${APP_VERSION}-dev${GIT_COMMIT ? ` · ${GIT_COMMIT}` : ""}`
-  : APP_VERSION;
+  ? `${APP_VERSION_LABEL}-dev${GIT_COMMIT ? ` · ${GIT_COMMIT}` : ""}`
+  : APP_VERSION_LABEL;
 
 /** Marks the document title so open tabs are tellable apart. */
 export const DEV_TITLE_PREFIX = "(dev) ";
