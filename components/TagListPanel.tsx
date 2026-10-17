@@ -311,7 +311,6 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus,
           placeholder="search tags… (sorted by count)"
           className="mt-1 w-full rounded-md border border-border bg-secondary/80 px-2 py-1.5 text-xs outline-none placeholder:text-muted-foreground/50"
         />
-        <p className="mt-1 text-[10px] text-muted-foreground">↑↓ to move • Enter to toggle • Enter on empty to create</p>
       </div>
       <div className={nativeScroll ? "min-h-0 flex-1 p-2" : `scrollbar-slim ${compact ? "min-h-0" : "min-h-[280px]"} flex-1 overflow-y-auto overscroll-contain border-y border-border p-2`}>
         {rows.length === 0 ? (

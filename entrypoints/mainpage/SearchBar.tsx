@@ -269,7 +269,7 @@ export default function SearchBar() {
           ref={inputRef}
           type="text"
           spellCheck={false}
-          placeholder='Search — tag:"tech" url:"google" last_used:<1w -folder:"Archive"'
+          placeholder='tag:"tech" url:"google" last_used:<1w -folder:"Archive"'
           className="relative z-10 w-full min-w-[100px] grow bg-transparent px-2 py-[7px] font-mono text-sm leading-5 text-transparent caret-foreground selection:bg-token-selection selection:text-transparent placeholder:text-muted-foreground/70 focus:outline-none"
           value={query}
           onChange={(e) => {
