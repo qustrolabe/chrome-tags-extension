@@ -1,9 +1,10 @@
 import { useState } from "react";
 import {
+  AiOutlineBarChart,
+  AiOutlineDatabase,
   AiOutlineInfoCircle,
   AiOutlineLayout,
   AiOutlineSetting,
-  AiOutlineBarChart,
 } from "react-icons/ai";
 import { useTheme } from "@/context/ThemeContext";
 import { useEffect } from "react";
@@ -13,8 +14,9 @@ import GeneralTab from "./components/GeneralTab";
 import CardsTab from "./components/CardsTab";
 import AboutTab from "./components/AboutTab";
 import TrackingTab from "./components/TrackingTab";
+import DataTab from "./components/DataTab";
 
-type TabId = "general" | "cards" | "tracking" | "about";
+type TabId = "general" | "cards" | "tracking" | "data" | "about";
 
 export default function App() {
   useEffect(() => {
@@ -27,6 +29,7 @@ export default function App() {
     { id: "general", label: "General", icon: AiOutlineSetting },
     { id: "cards", label: "Bookmark Cards", icon: AiOutlineLayout },
     { id: "tracking", label: "Tracking", icon: AiOutlineBarChart },
+    { id: "data", label: "Data", icon: AiOutlineDatabase },
     { id: "about", label: "About", icon: AiOutlineInfoCircle },
   ] as const;
 
@@ -50,6 +53,8 @@ export default function App() {
           {activeTab === "cards" && <CardsTab />}
 
           {activeTab === "tracking" && <TrackingTab />}
+
+          {activeTab === "data" && <DataTab />}
 
           {activeTab === "about" && <AboutTab />}
         </div>

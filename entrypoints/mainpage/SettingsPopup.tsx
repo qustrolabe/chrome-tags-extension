@@ -1,24 +1,27 @@
 import React, { useState } from "react";
 import { Dialog } from "radix-ui";
 import {
+    AiOutlineBarChart,
+    AiOutlineDatabase,
     AiOutlineInfoCircle,
     AiOutlineLayout,
     AiOutlineSetting,
-    AiOutlineBarChart,
 } from "react-icons/ai";
 
 import { useTheme, type Theme } from "@/context/ThemeContext";
 import GeneralTab from "@/entrypoints/options/components/GeneralTab.tsx";
 import CardsTab from "@/entrypoints/options/components/CardsTab.tsx";
 import TrackingTab from "@/entrypoints/options/components/TrackingTab.tsx";
+import DataTab from "@/entrypoints/options/components/DataTab.tsx";
 import AboutTab from "@/entrypoints/options/components/AboutTab.tsx";
 
-type TabId = "general" | "cards" | "tracking" | "about";
+type TabId = "general" | "cards" | "tracking" | "data" | "about";
 
 const TABS = [
     { id: "general", label: "General", icon: AiOutlineSetting },
     { id: "cards", label: "Cards", icon: AiOutlineLayout },
     { id: "tracking", label: "Tracking", icon: AiOutlineBarChart },
+    { id: "data", label: "Data", icon: AiOutlineDatabase },
     { id: "about", label: "About", icon: AiOutlineInfoCircle },
 ] as const;
 
@@ -80,6 +83,7 @@ function SettingsBody() {
                 )}
                 {activeTab === "cards" && <CardsTab />}
                 {activeTab === "tracking" && <TrackingTab />}
+                {activeTab === "data" && <DataTab />}
                 {activeTab === "about" && <AboutTab />}
             </div>
         </>
