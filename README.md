@@ -1,4 +1,4 @@
-# chrome-tags-extension
+# bookmark-tags
 
 ![preview](https://github.com/user-attachments/assets/3ad64a13-8030-42fe-9be4-cd84cc1f9040)
 
@@ -13,8 +13,8 @@ bookmarks. **Backup your bookmarks** before using it.
 Clone with submodules, then build:
 
 ```bash
-git clone --recurse-submodules https://github.com/qustrolabe/chrome-tags-extension.git
-cd chrome-tags-extension
+git clone --recurse-submodules https://github.com/qustrolabe/bookmark-tags.git
+cd bookmark-tags
 bun install
 bun run build
 ```

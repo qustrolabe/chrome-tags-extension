@@ -8,7 +8,7 @@ export default function AboutTab() {
             <div>
                 <h2 className="mb-2 text-2xl font-bold">About</h2>
                 <p className="text-muted-foreground">
-                    Chrome Tags Extension version {VERSION_LABEL}
+                    bookmark-tags version {VERSION_LABEL}
                 </p>
             </div>
 
@@ -23,7 +23,7 @@ export default function AboutTab() {
                         </p>
                         <div className="flex gap-4 pt-2">
                             <a
-                                href="https://github.com/qustrolabe/chrome-tags-extension"
+                                href="https://github.com/qustrolabe/bookmark-tags"
                                 target="_blank"
                                 rel="noreferrer"
                                 className="rounded-lg bg-muted px-4 py-2 text-sm font-medium transition-colors hover:bg-muted-foreground/10"

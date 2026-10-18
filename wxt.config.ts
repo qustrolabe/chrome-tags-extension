@@ -108,7 +108,7 @@ export default defineConfig({
     const suffix = isDev ? " (DEV)" : "";
 
     return {
-      name: `Bookmarks Tags Manager${suffix}`,
+      name: `bookmark-tags${suffix}`,
   ...(isDev && {
     version_name: `${version}-dev`,
     // Dev builds get their own artwork so a dev install is never
@@ -136,7 +136,7 @@ export default defineConfig({
         : { email: "qustrolabe@gmail.com" },
       browser_specific_settings: {
         gecko: {
-          id: "bookmarks-tags-manager@qustrolabe.com",
+          id: "bookmark-tags@qustrolabe.com",
           strict_min_version: "116",
         },
       },
