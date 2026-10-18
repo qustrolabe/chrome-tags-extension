@@ -1,6 +1,6 @@
 # bookmark-tags
 
-![preview](https://github.com/user-attachments/assets/3ad64a13-8030-42fe-9be4-cd84cc1f9040)
+<img width="1920" height="912" alt="preview" src="https://github.com/user-attachments/assets/550551d0-d9c9-40ce-b42a-a984a84ec13a" />
 
 Chrome extension that allows you to add tags to bookmarks and filter them. Tags
 are part of the bookmark title so they sync with your bookmarks.
