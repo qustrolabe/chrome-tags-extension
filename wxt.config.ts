@@ -74,6 +74,11 @@ export default defineConfig({
           "./queryfield/packages/react/src/index.ts",
         ),
       },
+      // `queryfield/` keeps its own install, so a bare `react` import from
+      // inside the packages resolves to that copy while app code gets the
+      // app's. Both then end up in the bundle and hooks run against internals
+      // the renderer never populated. Pin every importer to the app's copies.
+      dedupe: ["react", "react-dom"],
     },
     define: {
       __APP_VERSION__: JSON.stringify(version),
