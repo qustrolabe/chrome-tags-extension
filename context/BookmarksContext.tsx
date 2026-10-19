@@ -141,10 +141,15 @@ export const BookmarksManagerProvider = (
     [allBookmarksFlat, stats],
   );
 
+  // Bookmark leaves only; folder titles can carry "#" too but no tags.
+  const bookmarkItems = useMemo(
+    () => allBookmarksFlat.filter((b) => b.url !== undefined),
+    [allBookmarksFlat],
+  );
+
   // Sort and filter bookmarks into displayBookmarks
   const displayBookmarks = useMemo(() => {
-    const bookmarkOnly = allBookmarksFlat.filter((b) => b.url !== undefined);
-    const filteredBookmarks = applyQuery(query, bookmarkOnly, matchContext);
+    const filteredBookmarks = applyQuery(query, bookmarkItems, matchContext);
 
     return sortBookmarks(
       filteredBookmarks,
@@ -152,12 +157,18 @@ export const BookmarksManagerProvider = (
       sortDirection,
       stats,
     );
-  }, [allBookmarksFlat, sortOption, sortDirection, query, stats, matchContext]);
+  }, [bookmarkItems, sortOption, sortDirection, query, stats, matchContext]);
 
-  // Get all available tags from currently displayed bookmarks.
-  // Case-merged: "Godot" and "godot" are one entry (most common casing)
-  // with a combined count.
-  const availableTags = buildTagIndex(displayBookmarks);
+  // Suggestion tags come from the whole library, not the current result set.
+  // A negative fragment filters its own tag out of displayBookmarks, so the
+  // very tag being excluded would stop being suggested (`-godo` lost
+  // `-tag:"godot"` while the folder tree, built from `all`, still offered it).
+  // Case-merged: "Godot" and "godot" are one entry (most common casing) with
+  // a combined count.
+  const availableTags = useMemo(
+    () => buildTagIndex(bookmarkItems),
+    [bookmarkItems],
+  );
 
   const fetchBookmarks = () => {
     browser.bookmarks.getTree().then((bookmarkTreeNodes) => {
