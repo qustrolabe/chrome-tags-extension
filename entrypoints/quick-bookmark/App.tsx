@@ -172,18 +172,13 @@ function QuickEditor({ bookmark, allBookmarks, isExisting }: { bookmark: Bookmar
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {/* TOP: title and URL get the full window width */}
         <div className="shrink-0 border-b border-border p-2">
-          {/* One line in both states, so the window never changes height. */}
           <div className="mb-1 flex items-center gap-2">
             <h1 className="shrink-0 text-sm font-bold">
               {isExisting ? "Edit bookmark" : "Bookmark created"}
             </h1>
-            {isExisting ? (
+            {isExisting && (
               <span className="min-w-0 truncate rounded-sm bg-token-notice-fill/15 px-1.5 py-0.5 text-[10px] font-medium text-token-notice">
-                Already bookmarked — editing in place
-              </span>
-            ) : (
-              <span className="min-w-0 truncate text-[10px] text-muted-foreground">
-                Edit and save, or close to keep as-is
+                Already bookmarked
               </span>
             )}
           </div>
@@ -262,7 +257,7 @@ function QuickEditor({ bookmark, allBookmarks, isExisting }: { bookmark: Bookmar
           <button
             type="button"
             onClick={closeWindow}
-            title="Close this window without saving changes — bookmark stays as it was"
+            title="Close without saving"
             className="cursor-pointer rounded-md bg-secondary px-2 py-1 text-xs font-medium hover:bg-secondary/80"
           >
             Close without saving

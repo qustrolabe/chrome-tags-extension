@@ -93,7 +93,7 @@ function TagForm({
             <div className="shrink-0 p-4 pb-2">
                 <Dialog.Title className="text-sm font-bold">Edit tags</Dialog.Title>
                 <Dialog.Description className="mt-0.5 block text-xs text-muted-foreground">
-                    Add or remove tags — tags are #tokens in the title.
+                    tags are #tokens in the title
                 </Dialog.Description>
 
                 <label className="mt-3 block text-xs font-medium">Title</label>
@@ -133,7 +133,7 @@ function TagForm({
                             </button>
                         </span>
                     ))}
-                    {tags.length === 0 && <span className="px-1 text-xs text-muted-foreground/60">no tags — use panel below</span>}
+                    {tags.length === 0 && <span className="px-1 text-xs text-muted-foreground/60">no tags</span>}
                 </div>
             </div>
 

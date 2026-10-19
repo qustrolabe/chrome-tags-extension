@@ -308,7 +308,7 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus,
           }}
           onKeyDown={handleKeyDown}
           onBlur={clearSelection}
-          placeholder="search tags… (sorted by count)"
+          placeholder="search tags…"
           className="mt-1 w-full rounded-md border border-border bg-secondary/80 px-2 py-1 text-xs outline-none placeholder:text-muted-foreground/50"
         />
       </div>
