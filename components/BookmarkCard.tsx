@@ -6,7 +6,7 @@ import { Tooltip, AlertDialog } from "radix-ui";
 import { AiOutlineDelete, AiOutlineEdit, AiOutlineTool } from "react-icons/ai";
 import BookmarkEditDialog from "@/components/BookmarkEditDialog.tsx";
 import BookmarkTagPopup from "@/components/BookmarkTagPopup.tsx";
-import { extractTags, buildTagIndex } from "@queryfield/core";
+import { extractTags, buildTagIndex, rankTagMatches } from "@queryfield/core";
 import { faviconURL } from "@/utils/favicon.ts";
 
 type Bookmark = chrome.bookmarks.BookmarkTreeNode;
@@ -167,9 +167,10 @@ export default function BookmarkCard({
         if (!match || match[1] === undefined || !input) return null;
         const prefix = match[1].toLowerCase();
 
-        const matches = knownTags
-            .filter((entry) => entry.tag.startsWith(prefix))
-            .slice(0, 8);
+        // Tiered match (`rankTagMatches`), so a query that hits any segment or
+        // substring of a tag finds it; also case-insensitive (display casing
+        // is kept).
+        const matches = rankTagMatches(knownTags, prefix).slice(0, 8);
 
         const rect = input.getBoundingClientRect();
 

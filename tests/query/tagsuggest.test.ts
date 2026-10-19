@@ -114,3 +114,41 @@ describe("tag suggestions with nothing to suggest", () => {
     ).toEqual([]);
   });
 });
+
+const AI = [
+  { tag: "ai/imagegen", count: 40 },
+  { tag: "image", count: 5 },
+  { tag: "my-imagegen", count: 3 },
+];
+
+describe("tag suggestions across path segments and typos", () => {
+  test("a nested tag matches on its last segment", () => {
+    const rows = buildTagRows({
+      knownTags: AI,
+      currentTags: new Set(),
+      query: "image",
+    });
+
+    // whole-tag prefix, then segment prefix, then substring
+    expect(rows.map((r) => r.tag)).toEqual([
+      "image",
+      "ai/imagegen",
+      "my-imagegen",
+    ]);
+  });
+
+  test("a misspelled fragment still finds the tag, after the create row", () => {
+    const rows = buildTagRows({
+      knownTags: AI,
+      currentTags: new Set(),
+      query: "mageg",
+    });
+
+    expect(rows.map((r) => r.tag)).toEqual([
+      "mageg",
+      "ai/imagegen",
+      "my-imagegen",
+    ]);
+    expect(rows[0].isNew).toBe(true);
+  });
+});

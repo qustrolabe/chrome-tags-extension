@@ -6,6 +6,8 @@
  * here?" answerable without reading React state.
  */
 
+import { rankTagMatches } from "@queryfield/core";
+
 /** One dropdown row: either a tag that already exists, or a brand new one. */
 export interface TagRow {
   /** Display casing, as indexed. New rows use the lowercased query. */
@@ -27,7 +29,9 @@ export interface TagSuggestInput {
 
 /**
  * Build the dropdown contents. Order is: the "create" row (when the query is
- * genuinely new), then prefix matches, then substring matches.
+ * genuinely new), then matches by quality — whole-tag prefix, path-segment
+ * prefix, substring, then fuzzy subsequence (`rankTagMatches`, so a query that
+ * only lands on one segment of a nested tag still finds it).
  *
  * The create row leads deliberately — typing a new name and pressing Enter
  * should do the obvious thing without arrowing first. Exact matches are
@@ -43,17 +47,9 @@ export const buildTagRows = ({
   const isKnown = knownTags.some((e) => e.tag.toLowerCase() === q);
   const canCreate = !!q && !isKnown && !currentTags.has(q);
 
-  const prefix: TagRow[] = [];
-  const loose: TagRow[] = [];
-
-  for (const { tag, count } of knownTags) {
-    const lower = tag.toLowerCase();
-
-    if (!q || lower.startsWith(q)) prefix.push({ tag, count, isNew: false });
-    else if (lower.includes(q)) loose.push({ tag, count, isNew: false });
-  }
-
-  const matches = [...prefix, ...loose];
+  const matches: TagRow[] = rankTagMatches(knownTags, q).map(
+    ({ tag, count }) => ({ tag, count, isNew: false }),
+  );
 
   return canCreate ? [{ tag: q, count: 0, isNew: true }, ...matches] : matches;
 };
