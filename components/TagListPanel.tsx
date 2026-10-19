@@ -3,7 +3,7 @@ import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
 import { extractTags, buildTagIndex } from "@queryfield/core";
 import { useTagColor } from "@/context/TagColorContext";
 import { tagColorClass } from "@/utils/tagColor.ts";
-import { sortTagsRight } from "@/components/BookmarkEditDialog.tsx";
+import { sortTagsRight } from "@/utils/titleTags.ts";
 
 type Bookmark = chrome.bookmarks.BookmarkTreeNode;
 

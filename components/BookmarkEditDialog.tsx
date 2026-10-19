@@ -1,268 +1,194 @@
-import React, { useMemo, useState } from "react";
+import { useState } from "react";
 import { Dialog } from "radix-ui";
-import { extractTags } from "@queryfield/core";
 import TagListPanel from "@/components/TagListPanel.tsx";
+import TagField from "@/components/TagField.tsx";
+import UrlParams from "@/components/UrlParams.tsx";
 import FolderPicker from "@/components/FolderPicker.tsx";
+import { sortTagsRight } from "@/utils/titleTags.ts";
 
 type Bookmark = chrome.bookmarks.BookmarkTreeNode;
 
 interface BookmarkEditDialogProps {
-    bookmark: Bookmark;
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
-    /** Flat list of all nodes for folder picking; empty disables it. */
-    allBookmarks?: Bookmark[];
+  bookmark: Bookmark;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  /** Flat list of all nodes for folder picking; empty disables it. */
+  allBookmarks?: Bookmark[];
 }
 
-/** A title word that is exactly a #tag token. */
-const TAG_TOKEN = /^#[^\s#]+$/;
-
-/** Move all #tags to the right end of the title. */
-export const sortTagsRight = (title: string): string => {
-    const words = title.trim().split(/\s+/).filter(Boolean);
-    const tags = words.filter((w) => TAG_TOKEN.test(w));
-    const rest = words.filter((w) => !TAG_TOKEN.test(w));
-
-    return [...rest, ...tags].join(" ");
-};
-
 /**
- * Experimental full editor: title, URL, parent folder and a dedicated
- * tag chips UI (tags are #tokens inside the title, so everything edits
- * the same string underneath).
+ * Full editor: title, URL, parent folder and a dedicated tag chips UI (tags
+ * are #tokens inside the title, so everything edits the same string
+ * underneath).
+ *
+ * Laid out like the quick-bookmark window — title and URL across the top at
+ * full width, then folder | tags + URL params | tag catalogue — and built from
+ * the same three components, so the two editors cannot drift apart again.
  */
 export default function BookmarkEditDialog({
-    bookmark,
-    open,
-    onOpenChange,
-    allBookmarks = [],
+  bookmark,
+  open,
+  onOpenChange,
+  allBookmarks = [],
 }: BookmarkEditDialogProps) {
-    return (
-        <Dialog.Root open={open} onOpenChange={onOpenChange}>
-            <Dialog.Portal>
-                <Dialog.Overlay className="fixed inset-0 z-90 bg-black/60" />
-                <Dialog.Content className="fixed top-1/2 left-1/2 z-100 h-[560px] max-h-[calc(100vh-2rem)] w-[960px] max-w-[calc(100vw-2rem)] -translate-1/2 overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground">
-                    {/* Remounts on every open -> state resets naturally. */}
-                    {open && (
-                        <EditForm
-                            bookmark={bookmark}
-                            onOpenChange={onOpenChange}
-                            allBookmarks={allBookmarks}
-                        />
-                    )}
-                </Dialog.Content>
-            </Dialog.Portal>
-        </Dialog.Root>
-    );
+  return (
+    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-90 bg-black/60" />
+        <Dialog.Content className="fixed top-1/2 left-1/2 z-100 h-[620px] max-h-[calc(100vh-2rem)] w-[1020px] max-w-[calc(100vw-2rem)] -translate-1/2 overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground">
+          {/* Remounts on every open -> state resets naturally. */}
+          {open && (
+            <EditForm
+              bookmark={bookmark}
+              onOpenChange={onOpenChange}
+              allBookmarks={allBookmarks}
+            />
+          )}
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
 }
 
 function EditForm({
-    bookmark,
-    onOpenChange,
-    allBookmarks,
+  bookmark,
+  onOpenChange,
+  allBookmarks,
 }: {
-    bookmark: Bookmark;
-    onOpenChange: (open: boolean) => void;
-    allBookmarks: Bookmark[];
+  bookmark: Bookmark;
+  onOpenChange: (open: boolean) => void;
+  allBookmarks: Bookmark[];
 }) {
-    const [title, setTitle] = useState(bookmark.title);
-    const [url, setUrl] = useState(bookmark.url ?? "");
-    const [folderId, setFolderId] = useState(bookmark.parentId ?? "");
-    const [newTag, setNewTag] = useState("");
-    const [saving, setSaving] = useState(false);
+  const [title, setTitle] = useState(bookmark.title);
+  const [url, setUrl] = useState(bookmark.url ?? "");
+  const [folderId, setFolderId] = useState(bookmark.parentId ?? "");
+  const [saving, setSaving] = useState(false);
 
-    // Folder navigation state now lives in <FolderPicker> below.
+  const dirty =
+    title !== bookmark.title ||
+    url !== (bookmark.url ?? "") ||
+    folderId !== (bookmark.parentId ?? "");
 
-    const tags = useMemo(
-        () =>
-            Array.from(new Set(extractTags(title).map((t) => t.toLowerCase()))),
-        [title],
-    );
+  const save = async () => {
+    const folderChanged = folderId !== (bookmark.parentId ?? "") && !!folderId;
+    setSaving(true);
 
-    const removeTag = (tag: string) => {
-        // Remove the FIRST "#tag" token occurrence.
-        const idx = title.toLowerCase().indexOf(`#${tag.toLowerCase()}`);
+    try {
+      if (title !== bookmark.title) {
+        await browser.bookmarks.update(bookmark.id, { title });
+      }
 
-        if (idx === -1) return;
-        let end = idx;
+      if (url !== (bookmark.url ?? "")) {
+        await browser.bookmarks.update(bookmark.id, { url });
+      }
 
-        while (end < title.length && !/\s/.test(title[end] ?? "")) end++;
-        setTitle(
-            (title.slice(0, idx) + " " + title.slice(end))
-                .replace(/\s+/g, " ")
-                .trim(),
-        );
-    };
+      if (folderChanged) {
+        await browser.bookmarks.move(bookmark.id, { parentId: folderId });
 
-    const addTag = (raw: string) => {
-        const tag = raw.trim().replace(/^#/, "").replace(/\s+/g, "");
+        // Only persist last folder when it actually changed (Chrome-like)
+        try { await browser.storage.local.set({ lastBookmarkFolderId: folderId }); } catch {}
+      }
+    } finally {
+      setSaving(false);
+      onOpenChange(false);
+    }
+  };
 
-        if (!tag || tags.includes(tag.toLowerCase())) {
-            setNewTag("");
+  return (
+    <div className="flex h-full flex-col bg-popover text-popover-foreground">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        {/* TOP: title and URL get the full dialog width */}
+        <div className="shrink-0 border-b border-border p-2">
+          {/* One line, so the header never changes height. */}
+          <div className="mb-1 flex items-center gap-2">
+            <Dialog.Title className="shrink-0 text-sm font-bold">
+              Edit bookmark
+            </Dialog.Title>
+            <Dialog.Description className="min-w-0 truncate text-[10px] text-muted-foreground">
+              Changes apply when you press Save
+            </Dialog.Description>
+          </div>
 
-            return;
-        }
+          <div className="flex items-center gap-1">
+            <label htmlFor="adv-edit-title" className="w-10 shrink-0 text-xs font-medium">Title</label>
+            <input
+              id="adv-edit-title"
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="min-w-0 flex-1 rounded-md border border-border bg-input px-2 py-1 text-sm"
+            />
+            <button
+              type="button"
+              title="Move all #tags to the right"
+              disabled={sortTagsRight(title) === title.trim()}
+              onClick={() => setTitle(sortTagsRight(title))}
+              className="shrink-0 cursor-pointer rounded-md bg-secondary px-2 py-1 text-xs font-medium hover:bg-secondary/80 disabled:opacity-40"
+            >
+              tags →
+            </button>
+          </div>
 
-        const base = sortTagsRight(title).trim();
-        setTitle(base ? `${base} #${tag}` : `#${tag}`);
-        setNewTag("");
-    };
-
-    // Tag suggestions now handled by TagListPanel on the right.
-
-    const dirty =
-        title !== bookmark.title ||
-        url !== (bookmark.url ?? "") ||
-        folderId !== (bookmark.parentId ?? "");
-
-    const save = async () => {
-        const folderChanged = folderId !== (bookmark.parentId ?? "") && !!folderId;
-        setSaving(true);
-
-        try {
-            if (title !== bookmark.title) {
-                await browser.bookmarks.update(bookmark.id, { title });
-            }
-
-            if (url !== (bookmark.url ?? "")) {
-                await browser.bookmarks.update(bookmark.id, { url });
-            }
-
-            if (folderChanged) {
-                await browser.bookmarks.move(bookmark.id, {
-                    parentId: folderId,
-                });
-
-                // Only persist last folder when it actually changed (Chrome-like)
-                try { await browser.storage.local.set({ lastBookmarkFolderId: folderId }); } catch {}
-            }
-        } finally {
-            setSaving(false);
-            onOpenChange(false);
-        }
-    };
-
-    return (
-        <div className="grid h-full grid-cols-[260px_1fr_300px] overflow-hidden">
-            {/* LEFT: folder navigator */}
-            <div className="flex min-h-0 flex-col gap-1 border-r border-border p-4">
-                <label className="block text-xs font-medium">
-                    Move to
-                </label>
-                <div className="min-h-0 flex-1">
-                    <FolderPicker
-                        allBookmarks={allBookmarks}
-                        selfId={bookmark.id}
-                        value={folderId}
-                        onChange={setFolderId}
-                    />
-                </div>
-            </div>
-
-            {/* CENTER: fields */}
-            <div className="scrollbar-slim flex min-h-0 flex-col overflow-y-auto p-4">
-                <Dialog.Title className="text-sm font-bold">
-                    Edit bookmark
-                </Dialog.Title>
-                <Dialog.Description className="mt-0.5 block text-xs text-muted-foreground">
-                    Changes apply when you press Save.
-                </Dialog.Description>
-
-                {/* Title */}
-                <label className="mt-3 block text-xs font-medium">
-                    Title
-                </label>
-                <div className="flex gap-1">
-                    <input
-                        type="text"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        className="w-full rounded-md border border-border bg-input px-2 py-1 text-sm"
-                    />
-                    <button
-                        type="button"
-                        title="Move all #tags to the right of the title"
-                        disabled={sortTagsRight(title) === title.trim()}
-                        onClick={() => setTitle(sortTagsRight(title))}
-                        className="shrink-0 cursor-pointer rounded-md bg-secondary px-2 text-xs font-medium transition-colors hover:bg-secondary/80 disabled:cursor-default disabled:opacity-40"
-                    >
-                        tags →
-                    </button>
-                </div>
-
-                {/* Tag chips */}
-                <label className="mt-3 block text-xs font-medium">
-                    Tags
-                </label>
-                <div className="mt-1 flex flex-wrap items-center gap-1 rounded-md border border-border bg-input/50 p-1.5">
-                    {tags.map((tag) => (
-                        <span
-                            key={tag}
-                            className="flex cursor-default items-center gap-1 rounded-[3px] bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary"
-                        >
-                            #{tag}
-                            <button
-                                type="button"
-                                className="cursor-pointer rounded-sm px-0.5 hover:bg-destructive/30"
-                                title={`Remove ${tag}`}
-                                onClick={() => removeTag(tag)}
-                            >
-                                ×
-                            </button>
-                        </span>
-                    ))}
-                    <input
-                        type="text"
-                        value={newTag}
-                        placeholder="add tag…"
-                        onChange={(e) => setNewTag(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                                e.preventDefault();
-                                addTag(newTag);
-                            }
-                        }}
-                        className="min-w-[90px] flex-1 bg-transparent px-1 text-xs outline-none placeholder:text-muted-foreground/50"
-                    />
-                </div>
-
-                {/* URL */}
-                <label className="mt-3 block text-xs font-medium">
-                    URL
-                </label>
-                <input
-                    type="text"
-                    value={url}
-                    onChange={(e) => setUrl(e.target.value)}
-                    spellCheck={false}
-                    className="w-full rounded-md border border-border bg-input px-2 py-1 font-mono text-xs"
-                />
-
-                {/* Actions */}
-                <div className="mt-auto flex justify-end gap-2 pt-4">
-                    <Dialog.Close asChild>
-                        <button
-                            type="button"
-                            className="cursor-pointer rounded-md bg-secondary px-3 py-1.5 text-xs font-medium transition-colors hover:bg-secondary/80"
-                        >
-                            Cancel
-                        </button>
-                    </Dialog.Close>
-                    <button
-                        type="button"
-                        disabled={!dirty || saving}
-                        className="cursor-pointer rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/80 disabled:cursor-default disabled:opacity-40"
-                        onClick={save}
-                    >
-                        {saving ? "Saving…" : "Save"}
-                    </button>
-                </div>
-            </div>
-
-            {/* RIGHT: tag picker (same as Edit tags popup) */}
-            <div className="flex min-h-0 flex-col overflow-hidden border-l border-border bg-popover">
-                <TagListPanel title={title} setTitle={setTitle} allBookmarks={allBookmarks} />
-            </div>
+          <div className="mt-1 flex items-center gap-1">
+            <label htmlFor="adv-edit-url" className="w-10 shrink-0 text-xs font-medium">URL</label>
+            <input
+              id="adv-edit-url"
+              type="text"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              spellCheck={false}
+              className="min-w-0 flex-1 rounded-md border border-border bg-input px-2 py-1 font-mono text-xs"
+            />
+          </div>
         </div>
-    );
+
+        {/* MIDDLE ROW: folder tree | tags + url params | tag catalogue */}
+        {/* Equal thirds, matching the quick-bookmark window exactly. */}
+        <div className="grid min-h-0 flex-1 grid-cols-3 overflow-hidden">
+          <div className="flex min-h-0 min-w-0 flex-col gap-1 overflow-hidden border-r border-border p-2">
+            <label className="shrink-0 text-xs font-medium">Move to</label>
+            <div className="min-h-0 flex-1">
+              <FolderPicker
+                allBookmarks={allBookmarks}
+                selfId={bookmark.id}
+                value={folderId}
+                onChange={setFolderId}
+              />
+            </div>
+          </div>
+
+          <div className="flex min-h-0 min-w-0 flex-col gap-1 border-r border-border p-2">
+            <TagField title={title} setTitle={setTitle} allBookmarks={allBookmarks} />
+            <UrlParams url={url} />
+          </div>
+
+          <div className="flex min-h-0 min-w-0 flex-col overflow-hidden">
+            <TagListPanel title={title} setTitle={setTitle} allBookmarks={allBookmarks} />
+          </div>
+        </div>
+      </div>
+
+      <div className="flex shrink-0 items-center justify-between gap-2 border-t border-border p-2">
+        <span className="text-[10px] text-muted-foreground">ESC closes without saving</span>
+        <div className="flex items-center gap-1">
+          <Dialog.Close asChild>
+            <button
+              type="button"
+              className="cursor-pointer rounded-md bg-secondary px-2 py-1 text-xs font-medium hover:bg-secondary/80"
+            >
+              Cancel
+            </button>
+          </Dialog.Close>
+          <button
+            type="button"
+            disabled={!dirty || saving}
+            onClick={save}
+            className="cursor-pointer rounded-md bg-primary px-2 py-1 text-xs font-bold text-primary-foreground hover:bg-primary/80 disabled:opacity-40"
+          >
+            {saving ? "Saving…" : "Save"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }

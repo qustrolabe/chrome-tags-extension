@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Dialog } from "radix-ui";
 import { extractTags } from "@queryfield/core";
-import { sortTagsRight } from "@/components/BookmarkEditDialog.tsx";
+import { sortTagsRight } from "@/utils/titleTags.ts";
 import TagListPanel from "@/components/TagListPanel.tsx";
 
 type Bookmark = chrome.bookmarks.BookmarkTreeNode;

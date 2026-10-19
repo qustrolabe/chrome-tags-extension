@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { buildTagIndex, extractTags } from "@queryfield/core";
 import { buildTagRows } from "@/utils/tagsuggest.ts";
-import { sortTagsRight } from "@/components/BookmarkEditDialog.tsx";
+import { sortTagsRight } from "@/utils/titleTags.ts";
 
 type Bookmark = chrome.bookmarks.BookmarkTreeNode;
 

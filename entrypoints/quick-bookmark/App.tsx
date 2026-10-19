@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { sortTagsRight } from "@/components/BookmarkEditDialog.tsx";
+import { sortTagsRight } from "@/utils/titleTags.ts";
 import TagListPanel from "@/components/TagListPanel.tsx";
 import FolderPicker from "@/components/FolderPicker.tsx";
-import TagField from "./TagField.tsx";
-import UrlParams from "./UrlParams.tsx";
+import TagField from "@/components/TagField.tsx";
+import UrlParams from "@/components/UrlParams.tsx";
 import { initAccent } from "@/utils/accent.ts";
 import {
   THEME_CLASSES,
