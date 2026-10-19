@@ -294,7 +294,7 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus,
 
   return (
     <div className={`flex min-h-0 flex-1 flex-col ${nativeScroll ? "overflow-visible" : "overflow-hidden"}`}>
-      <div className="shrink-0 p-3 pb-2">
+      <div className="shrink-0 px-2 pt-2 pb-1.5">
         <label htmlFor="tag-panel-search" className="block text-xs font-medium">Tags</label>
         <input
           ref={searchRef}
@@ -309,14 +309,14 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus,
           onKeyDown={handleKeyDown}
           onBlur={clearSelection}
           placeholder="search tags… (sorted by count)"
-          className="mt-1 w-full rounded-md border border-border bg-secondary/80 px-2 py-1.5 text-xs outline-none placeholder:text-muted-foreground/50"
+          className="mt-1 w-full rounded-md border border-border bg-secondary/80 px-2 py-1 text-xs outline-none placeholder:text-muted-foreground/50"
         />
       </div>
-      <div className={nativeScroll ? "min-h-0 flex-1 p-2" : `scrollbar-slim ${compact ? "min-h-0" : "min-h-[280px]"} flex-1 overflow-y-auto overscroll-contain border-y border-border p-2`}>
+      <div className={nativeScroll ? "min-h-0 flex-1 p-1" : `scrollbar-slim ${compact ? "min-h-0" : "min-h-[280px]"} flex-1 overflow-y-auto overscroll-contain border-y border-border p-1`}>
         {rows.length === 0 ? (
-          <div className="py-6 text-center text-xs text-muted-foreground">No matching tags</div>
+          <div className="py-4 text-center text-xs text-muted-foreground">No matching tags</div>
         ) : (
-          <div className="flex flex-col gap-0.5">
+          <div className="flex flex-col gap-px">
             {rows.map((row, index) => {
               const selected = index === activeIndex;
 
@@ -324,7 +324,7 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus,
                 if (selected && el) el.scrollIntoView({ block: "nearest" });
               };
 
-              const cls = `w-full cursor-pointer rounded-md border px-2 py-1.5 text-left text-xs transition-colors ${
+              const cls = `w-full cursor-pointer rounded-md border px-1.5 py-1 text-left text-xs transition-colors ${
                 selected
                   ? "bg-muted ring-1 ring-ring"
                   : row.isNew
@@ -334,9 +334,9 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus,
 
               if (row.isNew) {
                 return (
-                  <button key={`new-${row.tag}`} type="button" ref={ref} onMouseDown={keepFocus} onClick={() => accept(index)} className={`${cls} flex items-center gap-2`}>
+                  <button key={`new-${row.tag}`} type="button" ref={ref} onMouseDown={keepFocus} onClick={() => accept(index)} className={`${cls} flex items-center gap-1.5`}>
                     <span className="flex-1 truncate"><span className="font-bold text-primary">#</span>{row.tag} <span className="text-muted-foreground">(new)</span></span>
-                    <span className="flex items-center justify-center rounded-md bg-primary p-1.5 text-primary-foreground"><AiOutlinePlus className="size-3" /></span>
+                    <span className="flex items-center justify-center rounded-md bg-primary p-1 text-primary-foreground"><AiOutlinePlus className="size-3" /></span>
                   </button>
                 );
               }
@@ -351,16 +351,15 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus,
                   onMouseDown={keepFocus}
                   onClick={() => accept(index)}
                   title={present ? `Remove #${row.tag}` : `Add #${row.tag}`}
-                  className={`${cls} flex items-center gap-2 ${present && !selected ? "border-primary/30 bg-primary/10" : ""}`}
+                  className={`${cls} flex items-center gap-1.5 ${present && !selected ? "border-primary/30 bg-primary/10" : ""}`}
                 >
                   <span className="flex-1 truncate font-medium">
-                    <span className={`inline-block rounded-md px-1.5 py-0.5 font-bold ${tagColorClass(useTagColor(), row.tag)}`}>#{row.tag}</span>
+                    <span className={`inline-block rounded-md px-1 py-0.5 font-bold ${tagColorClass(useTagColor(), row.tag)}`}>#{row.tag}</span>
                   </span>
-                      <span className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
-
+                  <span className="shrink-0 rounded-full bg-muted px-1 py-0.5 text-[10px] text-muted-foreground">
                     {row.count} {row.count === 1 ? "bookmark" : "bookmarks"}
                   </span>
-                  <span className={`flex items-center justify-center rounded-md p-1.5 text-xs font-bold ${present ? "bg-destructive text-destructive-foreground" : "bg-primary text-primary-foreground dark:bg-primary/50 dark:text-primary-foreground/70"}`}>
+                  <span className={`flex items-center justify-center rounded-md p-1 text-xs font-bold ${present ? "bg-destructive text-destructive-foreground" : "bg-primary text-primary-foreground dark:bg-primary/50 dark:text-primary-foreground/70"}`}>
                     {present ? <AiOutlineMinus className="size-3" /> : <AiOutlinePlus className="size-3" />}
                   </span>
                 </button>
