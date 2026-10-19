@@ -179,7 +179,7 @@ export default function TagField({ title, setTitle, allBookmarks }: TagFieldProp
             // Delay so a mousedown on a row still lands before we unmount.
             setTimeout(() => setDismissed(true), 150);
           }}
-          className="min-w-[90px] flex-1 bg-transparent px-1 text-xs outline-none placeholder:text-muted-foreground/50"
+          className="min-w-[90px] flex-1 bg-transparent px-1 py-0.5 text-xs outline-none placeholder:text-muted-foreground/50"
         />
       </div>
 

@@ -133,7 +133,9 @@ function TagForm({
                             </button>
                         </span>
                     ))}
-                    {tags.length === 0 && <span className="px-1 text-xs text-muted-foreground/60">no tags</span>}
+                    {tags.length === 0 && (
+                        <span className="px-1.5 py-0.5 text-[10px] text-muted-foreground/60">no tags</span>
+                    )}
                 </div>
             </div>
 
