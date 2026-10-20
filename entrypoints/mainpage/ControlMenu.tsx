@@ -34,12 +34,12 @@ export default function ControlMenu(
 
             <Popover.Portal>
                 <Popover.Content
-                    className="animate-in fade-in zoom-in-95 mt-2 mr-4 duration-100 outline-none"
+                    className="animate-in fade-in zoom-in-95 z-50 mt-2 mr-4 duration-100 outline-none"
                     align="end"
                     side="bottom"
                     sideOffset={5}
                 >
-                    <div className="z-50 flex w-52 flex-col rounded-xl border border-border bg-popover p-1.5">
+                    <div className="flex w-52 flex-col rounded-xl border border-border bg-popover p-1.5">
                         <div className="mb-2 flex flex-col gap-0.5">
                             <button
                                 onClick={openSettings}
