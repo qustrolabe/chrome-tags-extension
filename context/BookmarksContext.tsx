@@ -3,6 +3,7 @@ import { useTracking } from "@/context/TrackingContext";
 import { computeFrecency } from "@/utils/tracking";
 import { buildTagIndex, applyQuery, createMatchContext } from "@queryfield/core";
 import type { BookmarkLike } from "@queryfield/core";
+import { appRegistry } from "@/utils/queryRegistry.ts";
 
 export type Bookmark = chrome.bookmarks.BookmarkTreeNode;
 
@@ -11,6 +12,7 @@ export type SortOption =
   | "title"
   | "dateAdded"
   | "dateLastUsed"
+  | "lastVisited"
   | "frecency"
   | "visits";
 
@@ -48,6 +50,9 @@ export const sortBookmarks = (
   } = {
     dateAdded: (a, b) => (b.dateAdded ?? 0) - (a.dateAdded ?? 0),
     dateLastUsed: (a, b) => (b.dateLastUsed ?? 0) - (a.dateLastUsed ?? 0),
+    // Tracking-backed, and available on every browser: untracked bookmarks
+    // carry no timestamp and therefore sort last (0) in descending order.
+    lastVisited: (a, b) => (stats[b.id]?.lastVisited ?? 0) - (stats[a.id]?.lastVisited ?? 0),
     id: (a, b) => b.id.localeCompare(a.id),
     title: (a, b) => b.title.localeCompare(a.title),
     frecency: (a, b) => {
@@ -149,7 +154,7 @@ export const BookmarksManagerProvider = (
 
   // Sort and filter bookmarks into displayBookmarks
   const displayBookmarks = useMemo(() => {
-    const filteredBookmarks = applyQuery(query, bookmarkItems, matchContext);
+    const filteredBookmarks = applyQuery(query, bookmarkItems, matchContext, appRegistry);
 
     return sortBookmarks(
       filteredBookmarks,

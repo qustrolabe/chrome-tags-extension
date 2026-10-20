@@ -6,21 +6,62 @@ import { AiOutlineArrowDown, AiOutlineArrowUp } from "react-icons/ai";
 type SortOptionType = {
   value: SortOption;
   label: string;
+  /** Alt text: shown on hover and read out by screen readers. */
+  hint: string;
 };
 
 const SORT_OPTIONS: SortOptionType[] = [
-  { value: "dateAdded", label: "Date Added" },
-  ...(import.meta.env.FIREFOX ? [] : [{ value: "dateLastUsed" as SortOption, label: "Last Used" }]),
-  { value: "frecency", label: "Frecency" },
-  { value: "visits", label: "Visits" },
-  { value: "id", label: "ID" },
-  { value: "title", label: "Title" },
+  {
+    value: "dateAdded",
+    label: "Date Added",
+    hint: "when the bookmark was saved",
+  },
+  ...(import.meta.env.FIREFOX
+    ? []
+    : [
+        {
+          value: "dateLastUsed" as SortOption,
+          label: "Last Used",
+          hint:
+            "Chrome's own time, written only when you open the bookmark from Chrome's own interface",
+        },
+      ]),
+  {
+    value: "lastVisited",
+    label: "Last Visited",
+    hint:
+      "time this extension recorded the bookmark's URL showing up in a tab, so it also sees visits Chrome's own time misses",
+  },
+  {
+    value: "frecency",
+    label: "Frecency",
+    hint: "how often and how recently it was visited",
+  },
+  {
+    value: "visits",
+    label: "Visits",
+    hint: "how many times it was seen in a tab",
+  },
+  {
+    value: "id",
+    label: "ID",
+    hint: "bookmark id, in creation order",
+  },
+  {
+    value: "title",
+    label: "Title",
+    hint: "alphabetical by title",
+  },
 ];
 
 const SortOptions = () => {
   const {
     sorting: { sortOption, setSortOption, sortDirection, toggleSortDirection },
   } = useBookmarks();
+
+  const currentHint = SORT_OPTIONS.find(
+    (option) => option.value === sortOption,
+  )?.hint;
 
   return (
     <div
@@ -31,7 +72,10 @@ const SortOptions = () => {
         value={sortOption}
         onValueChange={(value) => setSortOption(value as SortOption)}
       >
-        <Select.Trigger className="flex h-7 min-w-0 flex-1 cursor-pointer items-center justify-between gap-1 overflow-hidden rounded-sm bg-inherit px-2 text-secondary-foreground transition-colors outline-none hover:bg-input">
+        <Select.Trigger
+          className="flex h-7 min-w-0 flex-1 cursor-pointer items-center justify-between gap-1 overflow-hidden rounded-sm bg-inherit px-2 text-secondary-foreground transition-colors outline-none hover:bg-input"
+          title={currentHint}
+        >
           <Select.Value className="truncate text-sm whitespace-nowrap" />
         </Select.Trigger>
 
@@ -56,13 +100,15 @@ const SortOptions = () => {
             style={{ minWidth: "var(--radix-select-trigger-width)" }}
           >
             <Select.Viewport className="p-2">
-              {SORT_OPTIONS.map(({ value, label }) => (
+              {SORT_OPTIONS.map(({ value, label, hint }) => (
                 <Select.Item
                   key={value}
                   value={value}
+                  title={hint}
                   className="relative mb-1 flex cursor-pointer items-center rounded-sm p-2 transition-colors outline-none last:mb-0 hover:bg-muted data-[state=checked]:bg-muted data-[state=checked]:font-medium"
                 >
                   <Select.ItemText>{label}</Select.ItemText>
+                  <span className="sr-only">{hint}</span>
                 </Select.Item>
               ))}
             </Select.Viewport>

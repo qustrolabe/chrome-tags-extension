@@ -65,6 +65,24 @@ describe("sortBookmarks — id", () => {
   });
 });
 
+describe("sortBookmarks — lastVisited", () => {
+  // Only 1 and 2 were ever tracked; 3 has no stats entry at all.
+  const stats = {
+    "1": { visits: 2, score: 2, lastVisited: 300 },
+    "2": { visits: 1, score: 1, lastVisited: 100 },
+  };
+
+  it("desc: most recently visited first, untracked last", () => {
+    const result = sortBookmarks([A, B, C], "lastVisited", "desc", stats);
+    expect(result.map((b) => b.id)).toEqual(["1", "2", "3"]);
+  });
+
+  it("asc: never-tracked first", () => {
+    const result = sortBookmarks([A, B, C], "lastVisited", "asc", stats);
+    expect(result.map((b) => b.id)).toEqual(["3", "2", "1"]);
+  });
+});
+
 describe("sortBookmarks — does not mutate input", () => {
   it("returns a new array", () => {
     const input = [A, B, C];

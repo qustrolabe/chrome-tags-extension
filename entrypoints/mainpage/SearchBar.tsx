@@ -2,6 +2,11 @@ import { useMemo } from "react";
 import { buildFolderTree } from "@queryfield/core";
 import { QueryInput } from "@queryfield/react";
 import { useBookmarks } from "@/context/BookmarksContext.tsx";
+import {
+  suggestionCapsuleClassName,
+  tokenClassName,
+} from "@/utils/queryColors.ts";
+import { appRegistry } from "@/utils/queryRegistry.ts";
 
 /**
  * Query-language search bar.
@@ -34,6 +39,9 @@ export default function SearchBar() {
         query={query}
         onQueryChange={setQuery}
         data={data}
+        registry={appRegistry}
+        suggestionCapsuleClassName={suggestionCapsuleClassName}
+        tokenClassName={tokenClassName}
         aria-label="Search bookmarks"
         placeholder='tag:"tech" url:"google" last_used:<1w -folder:"Archive"'
       />

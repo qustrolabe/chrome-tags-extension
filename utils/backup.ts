@@ -81,6 +81,7 @@ const SORT_OPTION_SET: ReadonlySet<unknown> = new Set<SortOption>([
   "dateLastUsed",
   "frecency",
   "id",
+  "lastVisited",
   "title",
   "visits",
 ]);
