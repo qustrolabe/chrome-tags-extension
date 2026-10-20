@@ -42,18 +42,26 @@ const LAST_VISITED: KeySpec = {
  * `last_used` reads `dateLastUsed`, which is Chromium-only (Chrome 114+), so
  * its comment says so. Only the prefix is the app's: everything after it stays
  * the preset's wording, which beats restating the sentence here and drifting.
+ *
+ * The preset labels both folder keys "folder". The suggestion capsule is the
+ * only place a label shows, and there it has to say which key a row inserts,
+ * so `folder_strict` is spelled out here.
  */
-const APP_KEY_SPECS: KeySpec[] = BOOKMARK_KEY_SPECS.flatMap((spec) =>
-  spec.key === "last_used"
-    ? [
-        {
-          ...spec,
-          description: `(Chromium specific) ${spec.description}`,
-        },
-        LAST_VISITED,
-      ]
-    : [spec],
-);
+const APP_KEY_SPECS: KeySpec[] = BOOKMARK_KEY_SPECS.flatMap((spec) => {
+  if (spec.key === "last_used") {
+    return [
+      {
+        ...spec,
+        description: `(Chromium specific) ${spec.description}`,
+      },
+      LAST_VISITED,
+    ];
+  }
+
+  if (spec.key === "folder_strict") return [{ ...spec, label: "folder strict" }];
+
+  return [spec];
+});
 
 /**
  * The registry every query surface must use: `BookmarksContext` for filtering,
