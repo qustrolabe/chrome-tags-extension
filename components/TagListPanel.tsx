@@ -7,13 +7,33 @@ import { sortTagsRight } from "@/utils/titleTags.ts";
 
 type Bookmark = chrome.bookmarks.BookmarkTreeNode;
 
+/** A row's polarity: absent, required, or excluded. */
+type FilterState = "positive" | "negative" | null;
+
+/**
+ * Filter mode: the rows mirror the query's `tag:` tokens instead of a title,
+ * so a click can mean require / exclude / clear. Supplying it replaces the
+ * title edit, leaving `title` / `setTitle` unused.
+ */
+interface TagFilter {
+  /**
+   * Polarity per lowercased tag. Rebuilt with the query, so the panel can
+   * re-sort on identity alone.
+   */
+  states: ReadonlyMap<string, "positive" | "negative">;
+  /** A row was accepted; `reverse` is true for Shift, one step back. */
+  toggle: (tag: string, reverse: boolean) => void;
+}
+
 interface TagListPanelProps {
-  title: string;
-  setTitle: (v: string) => void;
   allBookmarks: Bookmark[];
   autoFocus?: boolean;
   compact?: boolean;
   nativeScroll?: boolean;
+  /** Title mode (default): rows edit the `#tag` tokens inside `title`. */
+  title?: string;
+  setTitle?: (v: string) => void;
+  filter?: TagFilter;
 }
 
 /** A listable row: an existing tag, or the "create this" entry. */
@@ -26,6 +46,32 @@ interface Row {
 /** Strip the leading # and whitespace so the raw box and the row agree. */
 const normalize = (raw: string): string =>
   raw.trim().replace(/^#/, "").replace(/\s+/g, "");
+
+/** A row's polarity: the query owns it in filter mode, the title otherwise. */
+const stateOf = (
+  filter: TagFilter | undefined,
+  tagSet: ReadonlySet<string>,
+  tag: string,
+): FilterState => {
+  if (filter) return filter.states.get(tag.toLowerCase()) ?? null;
+
+  return tagSet.has(tag.toLowerCase()) ? "positive" : null;
+};
+
+/** Sort weight: required tags, then excluded ones, then the rest. */
+const rank = (state: FilterState): number =>
+  state === "positive" ? 2 : state === "negative" ? 1 : 0;
+
+/** What a click, and a Shift-click, do to this row. */
+const rowTooltip = (tag: string, state: FilterState, filtered: boolean): string => {
+  if (!filtered) return state ? `Remove #${tag}` : `Add #${tag}`;
+
+  if (state === "negative") return `Clear #${tag} · Shift-click: require`;
+
+  if (state === "positive") return `Exclude #${tag} · Shift-click: clear`;
+
+  return `Require #${tag} · Shift-click: exclude`;
+};
 
 /**
  * Searchable catalogue of every tag in use, with a keyboard-navigable filter.
@@ -50,14 +96,21 @@ const normalize = (raw: string): string =>
  * mode: the row is toggled, stays selected, and focus goes back to the search
  * box so ↑/↓ and typing carry straight on from there. Moving to a *different*
  * row releases the previous row, so it reflows instead of staying pinned.
+ *
+ * In filter mode that click cycles the query token rather than the title:
+ * absent → required → excluded → absent. Shift takes two steps at once, which
+ * in a three-state cycle is a step backwards: absent → excluded, excluded →
+ * required, required → absent.
  */
-export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus, compact, nativeScroll }: TagListPanelProps) {
+export default function TagListPanel({ allBookmarks, autoFocus, compact, nativeScroll, title = "", setTitle, filter }: TagListPanelProps) {
   const [tagSearch, setTagSearch] = useState("");
   /** Lowercased tag of the selected row; null = nothing selected. */
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   /** Row order captured when a selection starts, replayed until it moves. */
   const [frozen, setFrozen] = useState<string[] | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+  /** Read once here: the row loop uses it, so it cannot be a hook call. */
+  const tagColorMode = useTagColor();
 
   useEffect(() => {
     if (autoFocus) requestAnimationFrame(() => searchRef.current?.focus());
@@ -73,7 +126,7 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus,
     let end = idx;
 
     while (end < title.length && !/\s/.test(title[end] ?? "")) end++;
-    setTitle((title.slice(0, idx) + " " + title.slice(end)).replace(/\s+/g, " ").trim());
+    setTitle?.((title.slice(0, idx) + " " + title.slice(end)).replace(/\s+/g, " ").trim());
   };
 
   const addTag = (raw: string) => {
@@ -81,7 +134,7 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus,
 
     if (!tag || tagSet.has(tag.toLowerCase())) return;
     const base = sortTagsRight(title).trim();
-    setTitle(base ? `${base} #${tag}` : `#${tag}`);
+    setTitle?.(base ? `${base} #${tag}` : `#${tag}`);
   };
 
   const toggleTag = (tag: string) => {
@@ -103,25 +156,27 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus,
     const q = query.toLowerCase();
     const base = q ? knownTags.filter((e) => e.tag.toLowerCase().includes(q)) : knownTags;
 
-    // Active tags on top, then by count desc, then alphabetically
+    // Required tags on top, then excluded ones, then the rest; each by count
+    // desc, then alphabetically.
     return [...base].sort((a, b) => {
-      const aActive = tagSet.has(a.tag.toLowerCase()) ? 1 : 0;
-      const bActive = tagSet.has(b.tag.toLowerCase()) ? 1 : 0;
+      const byState = rank(stateOf(filter, tagSet, b.tag)) - rank(stateOf(filter, tagSet, a.tag));
 
-      if (aActive !== bActive) return bActive - aActive;
+      if (byState !== 0) return byState;
 
       if (b.count !== a.count) return b.count - a.count;
 
       return a.tag.localeCompare(b.tag);
     });
-  }, [knownTags, query, tagSet]);
+  }, [knownTags, query, tagSet, filter]);
 
+  // Creating a tag is a title edit; a filter has nothing to create.
   const canCreate = useMemo(
     () =>
+      !filter &&
       !!query &&
       !tagSet.has(query.toLowerCase()) &&
       !knownTags.some((e) => e.tag.toLowerCase() === query.toLowerCase()),
-    [query, tagSet, knownTags],
+    [query, tagSet, knownTags, filter],
   );
 
   /**
@@ -188,8 +243,12 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus,
    */
   const keepFocus = (e: React.MouseEvent) => e.preventDefault();
 
-  /** Enter/click. Stays selected so a second Enter un-toggles the same tag. */
-  const accept = (index: number | undefined) => {
+  /**
+   * Enter/click. Stays selected so a second Enter (or click) cycles the same
+   * tag again. `reverse` carries Shift through to filter mode, where it steps
+   * backwards instead of forwards.
+   */
+  const accept = (index: number | undefined, reverse = false) => {
     const row = index === undefined ? undefined : rows[index];
 
     if (!row) {
@@ -207,6 +266,7 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus,
     if (row.isNew) setTagSearch("");
 
     if (row.isNew) addTag(row.tag);
+    else if (filter) filter.toggle(row.tag, reverse);
     else toggleTag(row.tag);
 
     const key = row.tag.toLowerCase();
@@ -280,7 +340,7 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus,
       move(-1);
     } else if (e.key === "Enter") {
       e.preventDefault();
-      accept(activeIndex);
+      accept(activeIndex, e.shiftKey);
     } else if (e.key === "Escape") {
       e.preventDefault();
 
@@ -319,6 +379,8 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus,
           <div className="flex flex-col gap-px">
             {rows.map((row, index) => {
               const selected = index === activeIndex;
+              const state = row.isNew ? null : stateOf(filter, tagSet, row.tag);
+              const present = state !== null;
 
               const ref = (el: HTMLButtonElement | null) => {
                 if (selected && el) el.scrollIntoView({ block: "nearest" });
@@ -329,7 +391,11 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus,
                   ? "bg-muted ring-1 ring-ring"
                   : row.isNew
                     ? "border-dashed hover:bg-muted"
-                    : "border-transparent hover:bg-muted"
+                    : state === "negative"
+                      ? "border-destructive/30 bg-destructive/10"
+                      : state === "positive"
+                        ? "border-primary/30 bg-primary/10"
+                        : "border-transparent hover:bg-muted"
               }`;
 
               if (row.isNew) {
@@ -341,20 +407,18 @@ export default function TagListPanel({ title, setTitle, allBookmarks, autoFocus,
                 );
               }
 
-              const present = tagSet.has(row.tag.toLowerCase());
-
               return (
                 <button
                   key={row.tag}
                   type="button"
                   ref={ref}
                   onMouseDown={keepFocus}
-                  onClick={() => accept(index)}
-                  title={present ? `Remove #${row.tag}` : `Add #${row.tag}`}
-                  className={`${cls} flex items-center gap-1.5 ${present && !selected ? "border-primary/30 bg-primary/10" : ""}`}
+                  onClick={(e) => accept(index, e.shiftKey)}
+                  title={rowTooltip(row.tag, state, !!filter)}
+                  className={`${cls} flex items-center gap-1.5`}
                 >
-                  <span className="flex-1 truncate font-medium">
-                    <span className={`inline-block rounded-md px-1 py-0.5 font-bold ${tagColorClass(useTagColor(), row.tag)}`}>#{row.tag}</span>
+                  <span className={`flex-1 truncate font-medium ${state === "negative" ? "opacity-60 line-through" : ""}`}>
+                    <span className={`inline-block rounded-md px-1 py-0.5 font-bold ${tagColorClass(tagColorMode, row.tag)}`}>#{row.tag}</span>
                   </span>
                   <span className="shrink-0 rounded-full bg-muted px-1 py-0.5 text-[10px] text-muted-foreground">
                     {row.count} {row.count === 1 ? "bookmark" : "bookmarks"}

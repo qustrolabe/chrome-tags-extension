@@ -1,4 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useMemo } from "react";
+import {
+    invertTokenAt,
+    parseQuery,
+    setTokenState,
+} from "@queryfield/core";
+import type { FilterToken } from "@queryfield/core";
 import { useBookmarks } from "@/context/BookmarksContext";
 import TagListPanel from "@/components/TagListPanel.tsx";
 import { useTagColor, useTagColorSetter } from "@/context/TagColorContext";
@@ -7,50 +13,74 @@ import {
     TAG_COLOR_MODE_LABELS,
 } from "@/utils/tagColor.ts";
 
-const TAG_TOKEN = /-?\s*tag:"([^"]+)"|-?\s*tag:([^\s]+)/gi;
+/** Row polarity, in the order a click steps through it. */
+const ORDER = [null, "positive", "negative"] as const;
 
-function stripTagTokens(value: string): string {
-    return value.replace(TAG_TOKEN, " ").replace(/\s+/g, " ").trim();
-}
+type Polarity = (typeof ORDER)[number];
 
-function tagTokensToHash(value: string): string {
-    let match: RegExpExecArray | null;
-    const tags: string[] = [];
-    const regex = new RegExp(TAG_TOKEN.source, "gi");
+/** One step forward, or two when Shift is held: with three states that is a
+ *  step backwards. */
+const step = (state: Polarity, reverse: boolean): Polarity =>
+    ORDER[(ORDER.indexOf(state) + (reverse ? 2 : 1)) % ORDER.length] ?? null;
 
-    while ((match = regex.exec(value)) !== null) {
-        const tag = match[1] ?? match[2];
+/** The `tag:` token for this tag, if the query carries one. */
+const findTagToken = (query: string, tag: string): FilterToken | undefined => {
+    for (const token of parseQuery(query).tokens) {
+        if (token.kind !== "filter" || token.key !== "tag") continue;
 
-        if (tag) tags.push(`#${tag}`);
+        if (token.value.toLowerCase() === tag.toLowerCase()) return token;
     }
 
-    return tags.join(" ");
-}
-
-function hashToTagQuery(value: string): string {
-    const hashes = value.match(/#([^\s]+)/g);
-
-    return (hashes ?? [])
-        .map((item) => `tag:"${item.slice(1)}"`)
-        .join(" ");
-}
+    return undefined;
+};
 
 export default function SidebarTagList() {
     const { query, setQuery, bookmarks: { all: allBookmarks } } = useBookmarks();
-    const [title, setTitleState] = useState(tagTokensToHash(query));
 
-    useEffect(() => {
-        setTitleState(tagTokensToHash(query));
+    /** Polarity per tag: parsed once per query instead of once per row. */
+    const filterStates = useMemo(() => {
+        const states = new Map<string, "positive" | "negative">();
+
+        for (const token of parseQuery(query).tokens) {
+            if (token.kind !== "filter" || token.key !== "tag") continue;
+
+            states.set(
+                token.value.toLowerCase(),
+                token.negated ? "negative" : "positive",
+            );
+        }
+
+        return states;
     }, [query]);
 
-    const setTitle = (value: string) => {
-        setTitleState(value);
+    /**
+     * A click advances one state: absent → required → excluded → absent.
+     * Shift advances two, which in a three-state cycle is one step back.
+     *
+     * A token that already exists keeps its place: the polarity flip goes
+     * through `invertTokenAt`, which rewrites the token where it stands. Only
+     * a token that was absent gets appended.
+     */
+    const toggleTag = (tag: string, reverse: boolean) => {
+        const token = findTagToken(query, tag);
 
-        const base = stripTagTokens(query);
-        const tags = hashToTagQuery(value);
-        const next = [base, tags].filter(Boolean).join(" ");
+        const current: Polarity = token
+            ? (token.negated ? "negative" : "positive")
+            : null;
 
-        setQuery(next);
+        const next = step(current, reverse);
+
+        if (next === null) {
+            setQuery(setTokenState(query, "tag", tag, null));
+
+            return;
+        }
+
+        setQuery(
+            token
+                ? invertTokenAt(query, token.end) ?? query
+                : setTokenState(query, "tag", tag, next),
+        );
     };
 
     const tagColorMode = useTagColor();
@@ -81,11 +111,10 @@ export default function SidebarTagList() {
             </div>
             <div className="min-h-0 flex-1 overflow-auto">
                 <TagListPanel
-                    title={title}
-                    setTitle={setTitle}
                     allBookmarks={allBookmarks}
                     nativeScroll
                     compact
+                    filter={{ states: filterStates, toggle: toggleTag }}
                 />
             </div>
         </div>
