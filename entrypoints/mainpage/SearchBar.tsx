@@ -6,6 +6,7 @@ import {
   suggestionCapsuleClassName,
   tokenClassName,
 } from "@/utils/queryColors.ts";
+import { tokenActions } from "@/utils/queryActions.ts";
 import { appRegistry } from "@/utils/queryRegistry.ts";
 
 /**
@@ -14,7 +15,8 @@ import { appRegistry } from "@/utils/queryRegistry.ts";
  * Everything below the surface — token painting, the mirror layer behind the
  * native input, the suggestion list and its keyboard handling — lives in
  * `@queryfield/react`. This file only supplies the app's own state: the raw
- * query string (the single source of truth) and the suggestion sources.
+ * query string (the single source of truth), the suggestion sources and the
+ * extra rows for the token dropdown.
  */
 export default function SearchBar() {
   const {
@@ -40,6 +42,7 @@ export default function SearchBar() {
         onQueryChange={setQuery}
         data={data}
         registry={appRegistry}
+        tokenActions={tokenActions}
         suggestionCapsuleClassName={suggestionCapsuleClassName}
         tokenClassName={tokenClassName}
         aria-label="Search bookmarks"
