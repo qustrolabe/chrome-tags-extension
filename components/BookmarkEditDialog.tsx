@@ -3,7 +3,7 @@ import { Dialog } from "radix-ui";
 import TagListPanel from "@/components/TagListPanel.tsx";
 import TagField from "@/components/TagField.tsx";
 import UrlParams from "@/components/UrlParams.tsx";
-import FolderPicker from "@/components/FolderPicker.tsx";
+import FolderTree from "@/components/FolderTree.tsx";
 import { sortTagsRight } from "@/utils/titleTags.ts";
 
 type Bookmark = chrome.bookmarks.BookmarkTreeNode;
@@ -148,11 +148,13 @@ function EditForm({
           <div className="flex min-h-0 min-w-0 flex-col gap-1 overflow-hidden border-r border-border p-2">
             <label className="shrink-0 text-xs font-medium">Move to</label>
             <div className="min-h-0 flex-1">
-              <FolderPicker
+              <FolderTree
+                variant="picker"
                 allBookmarks={allBookmarks}
-                selfId={bookmark.id}
-                value={folderId}
-                onChange={setFolderId}
+                excludeId={bookmark.id}
+                selectedId={folderId}
+                onSelect={setFolderId}
+                persistExpandedKey="folderPickerExpanded"
               />
             </div>
           </div>

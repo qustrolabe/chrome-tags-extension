@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { sortTagsRight } from "@/utils/titleTags.ts";
 import TagListPanel from "@/components/TagListPanel.tsx";
-import FolderPicker from "@/components/FolderPicker.tsx";
+import FolderTree from "@/components/FolderTree.tsx";
 import TagField from "@/components/TagField.tsx";
 import UrlParams from "@/components/UrlParams.tsx";
 import { initAccent } from "@/utils/accent.ts";
@@ -227,7 +227,14 @@ function QuickEditor({ bookmark, allBookmarks, isExisting }: { bookmark: Bookmar
           <div className="flex min-h-0 min-w-0 flex-col gap-1 overflow-hidden border-r border-border p-2">
             <label className="shrink-0 text-xs font-medium">Move to</label>
             <div className="min-h-0 flex-1">
-              <FolderPicker allBookmarks={allBookmarks} selfId={bookmark.id} value={folderId} onChange={setFolderId} />
+              <FolderTree
+                variant="picker"
+                allBookmarks={allBookmarks}
+                excludeId={bookmark.id}
+                selectedId={folderId}
+                onSelect={setFolderId}
+                persistExpandedKey="folderPickerExpanded"
+              />
             </div>
           </div>
 
