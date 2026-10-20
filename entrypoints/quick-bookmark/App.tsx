@@ -42,16 +42,16 @@ export default function App() {
               const n = stack.pop();
 
               if (!n) continue;
-              flat.push(n as Bookmark);
+              flat.push(n);
 
-              if (n.children) for (const c of n.children) stack.push(c as Bookmark);
+              if (n.children) for (const c of n.children) stack.push(c);
             }
 
             return flat;
           }),
         ]);
 
-        if (nodes[0]) setBookmark(nodes[0] as Bookmark);
+        if (nodes[0]) setBookmark(nodes[0]);
         else setError("Bookmark not found");
         const tree = await browser.bookmarks.getTree();
         const flat: Bookmark[] = [];
@@ -59,9 +59,9 @@ export default function App() {
 
         while (stack2.length) { const n = stack2.pop();
 
- if (!n) continue; flat.push(n as Bookmark);
+ if (!n) continue; flat.push(n);
 
- if (n.children) for (const c of n.children) stack2.push(c as Bookmark); }
+ if (n.children) for (const c of n.children) stack2.push(c); }
 
         setAllBookmarks(flat);
       } catch (e: any) {

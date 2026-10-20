@@ -8,7 +8,7 @@ import {
     AiOutlineSetting,
 } from "react-icons/ai";
 
-import { useTheme, type Theme } from "@/context/ThemeContext";
+import { useTheme } from "@/context/ThemeContext";
 import GeneralTab from "@/entrypoints/options/components/GeneralTab.tsx";
 import CardsTab from "@/entrypoints/options/components/CardsTab.tsx";
 import TrackingTab from "@/entrypoints/options/components/TrackingTab.tsx";
@@ -77,7 +77,7 @@ function SettingsBody() {
             <div className="scrollbar-slim min-h-0 flex-1 overflow-y-auto p-4">
                 {activeTab === "general" && (
                     <GeneralTab
-                        theme={theme as Theme}
+                        theme={theme}
                         setTheme={setTheme}
                     />
                 )}

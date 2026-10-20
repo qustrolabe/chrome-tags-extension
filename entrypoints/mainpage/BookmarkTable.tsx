@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-  type ColumnDef,
-  type ColumnResizeMode,
+  createColumnHelper,
   flexRender,
   getCoreRowModel,
   getSortedRowModel,
   useReactTable,
+  type ColumnResizeMode,
   type SortingState,
   type ColumnSizingState,
   type VisibilityState,
@@ -15,8 +15,15 @@ import { useBookmarks } from "@/context/BookmarksContext";
 import { useTracking } from "@/context/TrackingContext";
 import { computeFrecency } from "@/utils/tracking";
 import { faviconURL } from "@/utils/favicon.ts";
+import {
+  decodeStored,
+  storedBooleanRecord,
+  storedNumberRecord,
+} from "@/utils/storageDecode.ts";
 
 type Bookmark = chrome.bookmarks.BookmarkTreeNode;
+
+const columnHelper = createColumnHelper<Bookmark>();
 
 const cleanLink = (url: string): string => {
   let cleaned = url.replace(/^https?:\/\//i, "");
@@ -104,8 +111,8 @@ export default function BookmarkTable() {
 
   const data = useMemo(() => displayBookmarks, [displayBookmarks]);
 
-  const columns = useMemo<ColumnDef<Bookmark>[]>(() => [
-    {
+  const columns = useMemo(() => [
+    columnHelper.display({
       id: "icon",
       header: "",
       enableSorting: false,
@@ -123,7 +130,9 @@ export default function BookmarkTable() {
                     src={faviconURL(url)}
                     alt=""
                     onError={(e) => {
-                      (e.target as HTMLImageElement).style.visibility = "hidden";
+                      if (e.target instanceof HTMLImageElement) {
+                        e.target.style.visibility = "hidden";
+                      }
                     }}
                   />
                 )
@@ -132,24 +141,22 @@ export default function BookmarkTable() {
         );
       },
       size: 32,
-    },
-    {
+    }),
+    columnHelper.accessor("title", {
       id: "title",
       header: "Title",
-      accessorFn: (row) => row.title,
       cell: (info) => (
-        <div className="truncate font-semibold" title={info.getValue() as string}>
-          {info.getValue() as string}
+        <div className="truncate font-semibold" title={info.getValue()}>
+          {info.getValue()}
         </div>
       ),
       size: 280,
-    },
-    {
+    }),
+    columnHelper.accessor((row) => row.url ?? "", {
       id: "url",
       header: "URL",
-      accessorFn: (row) => row.url ?? "",
       cell: (info) => {
-        const value = info.getValue() as string;
+        const value = info.getValue();
 
         return (
           <div className="truncate text-primary/80" title={value}>
@@ -158,13 +165,12 @@ export default function BookmarkTable() {
         );
       },
       size: 260,
-    },
-    {
+    }),
+    columnHelper.accessor((row) => row.title, {
       id: "tags",
       header: "Tags",
-      accessorFn: (row) => row.title,
       cell: (info) => {
-        const value = info.getValue() as string;
+        const value = info.getValue();
         const tags = value.match(/#(\w+)/g)?.map((tag) => tag.slice(1)) ?? [];
 
         return (
@@ -174,87 +180,84 @@ export default function BookmarkTable() {
         );
       },
       size: 180,
-    },
-    {
+    }),
+    columnHelper.accessor((row) => getPath(row, allBookmarks), {
       id: "path",
       header: "Path",
-      accessorFn: (row) => getPath(row, allBookmarks),
       cell: (info) => (
-        <div className="truncate text-muted-foreground" title={info.getValue() as string}>
-          {info.getValue() as string || "—"}
+        <div className="truncate text-muted-foreground" title={info.getValue()}>
+          {info.getValue() || "—"}
         </div>
       ),
       size: 220,
-    },
-    {
+    }),
+    columnHelper.accessor((row) => row.dateAdded ?? 0, {
       id: "created",
       header: "Created",
-      accessorFn: (row) => row.dateAdded ?? 0,
       cell: (info) => (
         <div className="truncate text-muted-foreground">
-          {formatDateTime(info.getValue() as number)}
+          {formatDateTime(info.getValue())}
         </div>
       ),
       size: 120,
-    },
-    {
+    }),
+    columnHelper.accessor((row) => row.dateLastUsed ?? 0, {
       id: "lastUsed",
       header: "Last Used",
-      accessorFn: (row) => row.dateLastUsed ?? 0,
       cell: (info) => (
         <div className="truncate text-muted-foreground">
-          {formatDateTime(info.getValue() as number)}
+          {formatDateTime(info.getValue())}
         </div>
       ),
       size: 120,
-    },
-    {
+    }),
+    columnHelper.accessor((row) => stats[row.id]?.visits ?? 0, {
       id: "visits",
       header: "Visits",
-      accessorFn: (row) => stats[row.id]?.visits ?? 0,
       cell: (info) => (
         <div className="text-right tabular-nums">
-          {info.getValue() as number}
+          {info.getValue()}
         </div>
       ),
       size: 90,
-    },
-    {
-      id: "frecency",
-      header: "Frecency",
-      accessorFn: (row) =>
-        computeFrecency(stats[row.id]?.score ?? 0, stats[row.id]?.lastVisited ?? 0),
-      cell: (info) => (
-        <div className="text-right tabular-nums">
-          {(info.getValue() as number).toFixed(2)}
-        </div>
-      ),
-      size: 110,
-    },
-    {
+    }),
+    columnHelper.accessor(
+      (row) => computeFrecency(stats[row.id]?.score ?? 0, stats[row.id]?.lastVisited ?? 0),
+      {
+        id: "frecency",
+        header: "Frecency",
+        cell: (info) => (
+          <div className="text-right tabular-nums">
+            {info.getValue().toFixed(2)}
+          </div>
+        ),
+        size: 110,
+      },
+    ),
+    columnHelper.accessor((row) => stats[row.id]?.score ?? 0, {
       id: "score",
       header: "Score",
-      accessorFn: (row) => stats[row.id]?.score ?? 0,
       cell: (info) => (
         <div className="text-right tabular-nums">
-          {(info.getValue() as number).toFixed(2)}
+          {info.getValue().toFixed(2)}
         </div>
       ),
       size: 100,
-    },
-    {
+    }),
+    columnHelper.accessor((row) => stats[row.id]?.lastVisited ?? 0, {
       id: "lastVisited",
       header: "Last Visited",
-      accessorFn: (row) => stats[row.id]?.lastVisited ?? 0,
-      cell: (info) => (
-        <div className="truncate text-muted-foreground">
-          {(info.getValue() as number)
-            ? new Date(info.getValue() as number).toLocaleString()
-            : "—"}
-        </div>
-      ),
+      cell: (info) => {
+        const value = info.getValue();
+
+        return (
+          <div className="truncate text-muted-foreground">
+            {value ? new Date(value).toLocaleString() : "—"}
+          </div>
+        );
+      },
       size: 160,
-    },
+    }),
   ], [allBookmarks, stats]);
 
   // TanStack Table returns non-memoizable handlers — skipping React Compiler memoization is intentional
@@ -313,12 +316,22 @@ export default function BookmarkTable() {
 
   useEffect(() => {
     browser.storage.local.get([STORAGE_KEYS.visibility, STORAGE_KEYS.sizing]).then((result) => {
-      if (result[STORAGE_KEYS.visibility]) {
-        setColumnVisibility(result[STORAGE_KEYS.visibility] as VisibilityState);
+      const visibility = decodeStored(
+        storedBooleanRecord,
+        result[STORAGE_KEYS.visibility],
+      );
+
+      const sizing = decodeStored(
+        storedNumberRecord,
+        result[STORAGE_KEYS.sizing],
+      );
+
+      if (visibility) {
+        setColumnVisibility(visibility);
       }
 
-      if (result[STORAGE_KEYS.sizing]) {
-        setColumnSizing(result[STORAGE_KEYS.sizing] as ColumnSizingState);
+      if (sizing) {
+        setColumnSizing(sizing);
       }
 
       setMounted(true);

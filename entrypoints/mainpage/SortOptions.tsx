@@ -1,6 +1,6 @@
 import React from "react";
 import * as Select from "@radix-ui/react-select";
-import { type SortOption, useBookmarks } from "@/context/BookmarksContext.tsx";
+import { type SortOption, parseSortOption, useBookmarks } from "@/context/BookmarksContext.tsx";
 import { AiOutlineArrowDown, AiOutlineArrowUp } from "react-icons/ai";
 
 type SortOptionType = {
@@ -10,22 +10,24 @@ type SortOptionType = {
   hint: string;
 };
 
+const LAST_USED_OPTIONS: SortOptionType[] = import.meta.env.FIREFOX
+  ? []
+  : [
+      {
+        value: "dateLastUsed",
+        label: "Last Used",
+        hint:
+          "Chrome's own time, written only when you open the bookmark from Chrome's own interface",
+      },
+    ];
+
 const SORT_OPTIONS: SortOptionType[] = [
   {
     value: "dateAdded",
     label: "Date Added",
     hint: "when the bookmark was saved",
   },
-  ...(import.meta.env.FIREFOX
-    ? []
-    : [
-        {
-          value: "dateLastUsed" as SortOption,
-          label: "Last Used",
-          hint:
-            "Chrome's own time, written only when you open the bookmark from Chrome's own interface",
-        },
-      ]),
+  ...LAST_USED_OPTIONS,
   {
     value: "lastVisited",
     label: "Last Visited",
@@ -70,7 +72,11 @@ const SortOptions = () => {
     >
       <Select.Root
         value={sortOption}
-        onValueChange={(value) => setSortOption(value as SortOption)}
+        onValueChange={(value) => {
+          const next = parseSortOption(value);
+
+          if (next) setSortOption(next);
+        }}
       >
         <Select.Trigger
           className="flex h-7 min-w-0 flex-1 cursor-pointer items-center justify-between gap-1 overflow-hidden rounded-sm bg-inherit px-2 text-secondary-foreground transition-colors outline-none hover:bg-input"

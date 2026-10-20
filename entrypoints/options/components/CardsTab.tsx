@@ -12,6 +12,7 @@ export default function CardsTab() {
             dateAdded: Date.now() - 172800000,
             dateLastUsed: Date.now() - 3600000,
             parentId: "10",
+            syncing: false,
         },
         {
             id: "2",
@@ -20,6 +21,7 @@ export default function CardsTab() {
             dateAdded: Date.now() - 86400000,
             dateLastUsed: Date.now() - 7200000,
             parentId: "11",
+            syncing: false,
         },
         {
             id: "3",
@@ -28,6 +30,7 @@ export default function CardsTab() {
             dateAdded: Date.now() - 604800000,
             dateLastUsed: Date.now() - 86400000,
             parentId: "12",
+            syncing: false,
         },
         {
             id: "4",
@@ -36,19 +39,20 @@ export default function CardsTab() {
             dateAdded: Date.now() - 3600000,
             dateLastUsed: Date.now() - 600000,
             parentId: "13",
+            syncing: false,
         },
-    ] as chrome.bookmarks.BookmarkTreeNode[];
+    ] satisfies chrome.bookmarks.BookmarkTreeNode[];
 
     const MOCK_FOLDERS = [
-        { id: "10", title: "Frontend", parentId: "100" },
-        { id: "100", title: "Knowledge", parentId: "1" },
-        { id: "11", title: "Stars", parentId: "110" },
-        { id: "110", title: "Resources", parentId: "1" },
-        { id: "12", title: "Reference", parentId: "1" },
-        { id: "13", title: "Inspo", parentId: "130" },
-        { id: "130", title: "Art", parentId: "1" },
-        { id: "1", title: "Bookmarks Menu", parentId: "0" },
-    ] as chrome.bookmarks.BookmarkTreeNode[];
+        { id: "10", title: "Frontend", parentId: "100", syncing: false },
+        { id: "100", title: "Knowledge", parentId: "1", syncing: false },
+        { id: "11", title: "Stars", parentId: "110", syncing: false },
+        { id: "110", title: "Resources", parentId: "1", syncing: false },
+        { id: "12", title: "Reference", parentId: "1", syncing: false },
+        { id: "13", title: "Inspo", parentId: "130", syncing: false },
+        { id: "130", title: "Art", parentId: "1", syncing: false },
+        { id: "1", title: "Bookmarks Menu", parentId: "0", syncing: false },
+    ] satisfies chrome.bookmarks.BookmarkTreeNode[];
 
     const MOCK_STATS = [
         { visits: 12, score: 9.4, lastVisited: Date.now() - 120000, frecency: 18.8 },

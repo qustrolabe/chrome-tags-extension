@@ -56,14 +56,14 @@ export default function Sidebar({
                     Appearance
                 </div>
                 <div className="flex gap-1 rounded-xl bg-muted/50 p-1">
-                    {[
+                    {([
                         { id: "light", icon: AiOutlineSun, label: "Light" },
                         { id: "dark", icon: AiOutlineMoon, label: "Dark" },
                         { id: "automata", icon: AiOutlineBlock, label: "Automata" },
-                    ].map((t) => (
+                    ] as const).map((t) => (
                         <button
                             key={t.id}
-                            onClick={() => onThemeChange(t.id as Theme)}
+                            onClick={() => onThemeChange(t.id)}
                             title={t.label}
                             className={`flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-medium transition-all ${
                                 theme === t.id

@@ -1,6 +1,12 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { z } from "zod";
+import { decodeStored, storedBoolean } from "@/utils/storageDecode.ts";
 
-export type SidebarMode = "tags" | "folders" | "views";
+const SIDEBAR_MODES = ["tags", "folders", "views"] as const;
+
+export type SidebarMode = (typeof SIDEBAR_MODES)[number];
+
+const sidebarModeSchema = z.enum(SIDEBAR_MODES);
 
 interface SidebarContextType {
     isOpen: boolean;
@@ -24,13 +30,12 @@ export const SidebarProvider = ({
     // Load persisted state
     useEffect(() => {
         browser.storage.local.get(["sidebarOpen", "sidebarMode"]).then((result) => {
-            if (typeof result.sidebarOpen === "boolean") {
-                setIsOpen(result.sidebarOpen);
-            }
+            const open = decodeStored(storedBoolean, result.sidebarOpen);
+            const storedMode = decodeStored(sidebarModeSchema, result.sidebarMode);
 
-            if (result.sidebarMode) {
-                setMode(result.sidebarMode as SidebarMode);
-            }
+            if (open !== undefined) setIsOpen(open);
+
+            if (storedMode) setMode(storedMode);
 
             setMounted(true);
         });

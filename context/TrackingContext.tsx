@@ -8,6 +8,12 @@ import {
   type TrackingStatsMap,
   clampNonNegative,
 } from "@/utils/tracking";
+import {
+  decodeStored,
+  storedBoolean,
+  storedNumber,
+  trackingStatsSchema,
+} from "@/utils/storageDecode.ts";
 
 type TrackingSettings = {
   enabled: boolean;
@@ -55,19 +61,22 @@ export const TrackingProvider = ({ children }: { children: React.ReactNode }) =>
       TRACKING_STORAGE_KEYS.maxAge,
       TRACKING_STORAGE_KEYS.stats,
     ]).then((result) => {
-      if (typeof result[TRACKING_STORAGE_KEYS.enabled] === "boolean") {
-        setEnabledState(result[TRACKING_STORAGE_KEYS.enabled] as boolean);
-      }
+      const enabled = decodeStored(storedBoolean, result[TRACKING_STORAGE_KEYS.enabled]);
+      const showStats = decodeStored(storedBoolean, result[TRACKING_STORAGE_KEYS.showStats]);
+      const maxAge = decodeStored(storedNumber, result[TRACKING_STORAGE_KEYS.maxAge]);
 
-      if (typeof result[TRACKING_STORAGE_KEYS.showStats] === "boolean") {
-        setShowStatsState(result[TRACKING_STORAGE_KEYS.showStats] as boolean);
-      }
+      const storedStats = decodeStored(
+        trackingStatsSchema,
+        result[TRACKING_STORAGE_KEYS.stats],
+      );
 
-      if (typeof result[TRACKING_STORAGE_KEYS.maxAge] === "number") {
-        setMaxAgeState(result[TRACKING_STORAGE_KEYS.maxAge] as number);
-      }
+      if (enabled !== undefined) setEnabledState(enabled);
 
-      setStats(normalizeStats(result[TRACKING_STORAGE_KEYS.stats] as TrackingStatsMap));
+      if (showStats !== undefined) setShowStatsState(showStats);
+
+      if (maxAge !== undefined) setMaxAgeState(maxAge);
+
+      setStats(normalizeStats(storedStats));
       setMounted(true);
     });
   }, []);
@@ -79,26 +88,33 @@ export const TrackingProvider = ({ children }: { children: React.ReactNode }) =>
       const getChange = (key: string) =>
         key in changes ? changes[key]?.newValue : undefined;
 
-      const enabledChange = getChange(TRACKING_STORAGE_KEYS.enabled);
+      const enabledChange = decodeStored(
+        storedBoolean,
+        getChange(TRACKING_STORAGE_KEYS.enabled),
+      );
 
-      if (typeof enabledChange === "boolean") {
-        setEnabledState(enabledChange);
-      }
+      if (enabledChange !== undefined) setEnabledState(enabledChange);
 
-      const showStatsChange = getChange(TRACKING_STORAGE_KEYS.showStats);
+      const showStatsChange = decodeStored(
+        storedBoolean,
+        getChange(TRACKING_STORAGE_KEYS.showStats),
+      );
 
-      if (typeof showStatsChange === "boolean") {
-        setShowStatsState(showStatsChange);
-      }
+      if (showStatsChange !== undefined) setShowStatsState(showStatsChange);
 
-      const maxAgeChange = getChange(TRACKING_STORAGE_KEYS.maxAge);
+      const maxAgeChange = decodeStored(
+        storedNumber,
+        getChange(TRACKING_STORAGE_KEYS.maxAge),
+      );
 
-      if (typeof maxAgeChange === "number") setMaxAgeState(maxAgeChange);
-      const statsChange = getChange(TRACKING_STORAGE_KEYS.stats);
+      if (maxAgeChange !== undefined) setMaxAgeState(maxAgeChange);
 
-      if (statsChange !== undefined) {
-        setStats(normalizeStats(statsChange as TrackingStatsMap));
-      }
+      const statsChange = decodeStored(
+        trackingStatsSchema,
+        getChange(TRACKING_STORAGE_KEYS.stats),
+      );
+
+      if (statsChange !== undefined) setStats(normalizeStats(statsChange));
     };
 
     browser.storage.onChanged.addListener(handleStorageChange);

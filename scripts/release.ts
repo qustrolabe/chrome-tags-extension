@@ -2,9 +2,15 @@
 import { readFileSync, writeFileSync } from "fs";
 import { execSync } from "child_process";
 
-const allowed = new Set(["major", "minor", "patch"]);
+const RELEASE_TYPES = ["major", "minor", "patch"] as const;
+
+type ReleaseType = (typeof RELEASE_TYPES)[number];
+
+const isReleaseType = (value: string | undefined): value is ReleaseType =>
+  RELEASE_TYPES.some((type) => type === value);
+
 const input = process.argv[2];
-const releaseAs = input !== undefined && allowed.has(input) ? (input as "major" | "minor" | "patch") : null;
+const releaseAs = isReleaseType(input) ? input : null;
 
 const bumpVersion = (type: "major" | "minor" | "patch") => {
   const pkg = JSON.parse(readFileSync("package.json", "utf8"));

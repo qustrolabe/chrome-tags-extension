@@ -7,9 +7,10 @@ export const faviconURL = (url: string): string => {
       return `https://www.google.com/s2/favicons?domain=${domain}&sz=16`;
     }
 
-    const faviconUrl = new URL(
-      (browser.runtime.getURL as (p: string) => string)("/_favicon/"),
-    );
+    // SAFETY: "/_favicon/" is Chrome's built-in favicon endpoint, not one of
+    // the extension's own pages, so WXT's getURL overloads reject the literal.
+    const getRuntimeUrl = browser.runtime.getURL as (path: string) => string;
+    const faviconUrl = new URL(getRuntimeUrl("/_favicon/"));
 
     faviconUrl.searchParams.set("pageUrl", url);
     faviconUrl.searchParams.set("size", "16");

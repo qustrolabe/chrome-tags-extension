@@ -1,22 +1,39 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { z } from "zod";
 import { useTracking } from "@/context/TrackingContext";
 import { computeFrecency } from "@/utils/tracking";
+import { decodeStored } from "@/utils/storageDecode.ts";
 import { buildTagIndex, applyQuery, createMatchContext } from "@queryfield/core";
 import type { BookmarkLike } from "@queryfield/core";
 import { appRegistry } from "@/utils/queryRegistry.ts";
 
 export type Bookmark = chrome.bookmarks.BookmarkTreeNode;
 
-export type SortOption =
-  | "id"
-  | "title"
-  | "dateAdded"
-  | "dateLastUsed"
-  | "lastVisited"
-  | "frecency"
-  | "visits";
+const SORT_OPTIONS = [
+  "id",
+  "title",
+  "dateAdded",
+  "dateLastUsed",
+  "lastVisited",
+  "frecency",
+  "visits",
+] as const;
 
-export type SortDirection = "asc" | "desc";
+export type SortOption = (typeof SORT_OPTIONS)[number];
+
+const SORT_DIRECTIONS = ["asc", "desc"] as const;
+
+export type SortDirection = (typeof SORT_DIRECTIONS)[number];
+
+const sortOptionSchema = z.enum(SORT_OPTIONS);
+const sortDirectionSchema = z.enum(SORT_DIRECTIONS);
+
+/** Decode a sort value from the URL or storage; unknown values are ignored. */
+export const parseSortOption = (value: any) =>
+  decodeStored(sortOptionSchema, value);
+
+export const parseSortDirection = (value: any) =>
+  decodeStored(sortDirectionSchema, value);
 
 interface BookmarksManagerContextType {
   bookmarks: {
@@ -45,9 +62,7 @@ export const sortBookmarks = (
   sortDirection: SortDirection,
   stats: Record<string, { visits: number; score: number; lastVisited: number }>,
 ): Bookmark[] => {
-  const compareFunctions: {
-    [key in SortOption]: (a: Bookmark, b: Bookmark) => number;
-  } = {
+  const compareFunctions = {
     dateAdded: (a, b) => (b.dateAdded ?? 0) - (a.dateAdded ?? 0),
     dateLastUsed: (a, b) => (b.dateLastUsed ?? 0) - (a.dateLastUsed ?? 0),
     // Tracking-backed, and available on every browser: untracked bookmarks
@@ -69,7 +84,7 @@ export const sortBookmarks = (
 
       return bValue - aValue;
     },
-  };
+  } satisfies Record<SortOption, (a: Bookmark, b: Bookmark) => number>;
 
   const compareFunction = compareFunctions[sortOption];
 
@@ -89,13 +104,13 @@ export const BookmarksManagerProvider = (
   const [sortOption, setSortOption] = useState<SortOption>(() => {
     const params = new URLSearchParams(globalThis.location.search);
 
-    return params.get("sort") as SortOption || "dateAdded";
+    return parseSortOption(params.get("sort")) ?? "dateAdded";
   });
 
   const [sortDirection, setSortDirection] = useState<SortDirection>(() => {
     const params = new URLSearchParams(globalThis.location.search);
 
-    return params.get("sortDirection") as SortDirection || "desc";
+    return parseSortDirection(params.get("sortDirection")) ?? "desc";
   });
 
   const [sortingMounted, setSortingMounted] = useState(false);
@@ -121,8 +136,8 @@ export const BookmarksManagerProvider = (
 
   useEffect(() => {
     browser.storage.local.get(["sortOption", "sortDirection"]).then((result) => {
-      const storedSort = result.sortOption as SortOption | undefined;
-      const storedDirection = result.sortDirection as SortDirection | undefined;
+      const storedSort = parseSortOption(result.sortOption);
+      const storedDirection = parseSortDirection(result.sortDirection);
 
       if (storedSort) setSortOption(storedSort);
 

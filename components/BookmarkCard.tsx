@@ -129,7 +129,7 @@ export default function BookmarkCard({
     // Known tags across ALL bookmarks (case-merged), most popular first.
     // Only computed while editing.
     const knownTags = useMemo(() => {
-        if (!isEditing) return [] as { tag: string; count: number }[];
+        if (!isEditing) return [];
         const withUrl = allBookmarks.filter((b) => b.url !== undefined);
 
         return Object.entries(buildTagIndex(withUrl))
@@ -317,8 +317,9 @@ export default function BookmarkCard({
                                     src={faviconURL(bookmark.url ?? "")}
                                     alt=""
                                     onError={(e) => {
-                                        (e.target as HTMLImageElement).style
-                                            .visibility = "hidden";
+                                        if (e.target instanceof HTMLImageElement) {
+                                            e.target.style.visibility = "hidden";
+                                        }
                                     }}
                                 />
                             </div>
@@ -484,7 +485,7 @@ export default function BookmarkCard({
                                             onAddFolderFilter?.(
                                                 node.id,
                                                 e.shiftKey,
-                                                e.altKey as boolean,
+                                                e.altKey,
                                             )}
                                     >
                                         {node.title}

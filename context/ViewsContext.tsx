@@ -5,7 +5,9 @@ import React, {
     useEffect,
     useState,
 } from "react";
+import { z } from "zod";
 import { useBookmarks } from "./BookmarksContext";
+import { decodeStored } from "@/utils/storageDecode.ts";
 
 export interface SavedView {
     id: string;
@@ -41,6 +43,23 @@ interface LegacyFilter {
   url?: string;
   value?: string;
 }
+
+const legacyFilterSchema = z.object({
+    type: z.string(),
+    negative: z.boolean().optional(),
+    tag: z.string().optional(),
+    title: z.string().optional(),
+    url: z.string().optional(),
+    value: z.string().optional(),
+});
+
+/** A stored view, including the legacy structured `filters` shape. */
+const storedViewSchema = z.object({
+    id: z.string().optional(),
+    name: z.string().optional(),
+    query: z.string().optional(),
+    filters: z.array(legacyFilterSchema).optional(),
+});
 
 const migrateLegacyView = (view: Partial<SavedView> & { filters?: LegacyFilter[] }): SavedView => ({
     id: view.id ?? generateId(),
@@ -84,11 +103,13 @@ export const ViewsProvider = ({
     // Load persisted views
     useEffect(() => {
         browser.storage.local.get(["savedViews"]).then((result) => {
-            if (result.savedViews) {
-                setViews(
-                    (result.savedViews as (SavedView & { filters?: LegacyFilter[] })[])
-                        .map(migrateLegacyView),
-                );
+            const storedViews = decodeStored(
+                z.array(storedViewSchema),
+                result.savedViews,
+            );
+
+            if (storedViews) {
+                setViews(storedViews.map(migrateLegacyView));
             }
 
             setMounted(true);

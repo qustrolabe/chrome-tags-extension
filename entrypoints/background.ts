@@ -5,9 +5,23 @@ import {
   type TrackingStatsMap,
   clampNonNegative,
 } from "@/utils/tracking";
+import {
+  decodeStored,
+  storedBoolean,
+  storedNumber,
+  storedString,
+  trackingStatsSchema,
+} from "@/utils/storageDecode.ts";
 import { IS_DEV } from "@/utils/version.ts";
 
 const DEDUPE_MS = 30_000;
+
+// SAFETY: Chrome documents "page" and "link" as ContextType values, but the
+// generated enum is nominal, so literals need its declared type.
+const MENU_CONTEXTS = {
+  page: "page" as Browser.contextMenus.ContextType,
+  link: "link" as Browser.contextMenus.ContextType,
+};
 
 export default defineBackground(() => {
   let trackingEnabled = DEFAULT_TRACKING_ENABLED;
@@ -43,13 +57,17 @@ export default defineBackground(() => {
       TRACKING_STORAGE_KEYS.stats,
     ]);
 
-    trackingEnabled = typeof result[TRACKING_STORAGE_KEYS.enabled] === "boolean"
-      ? (result[TRACKING_STORAGE_KEYS.enabled] as boolean)
-      : DEFAULT_TRACKING_ENABLED;
-    maxAge = typeof result[TRACKING_STORAGE_KEYS.maxAge] === "number"
-      ? (result[TRACKING_STORAGE_KEYS.maxAge] as number)
-      : DEFAULT_MAX_AGE;
-    statsCache = normalizeStats(result[TRACKING_STORAGE_KEYS.stats] as TrackingStatsMap);
+    trackingEnabled = decodeStored(
+      storedBoolean,
+      result[TRACKING_STORAGE_KEYS.enabled],
+    ) ?? DEFAULT_TRACKING_ENABLED;
+    maxAge = decodeStored(
+      storedNumber,
+      result[TRACKING_STORAGE_KEYS.maxAge],
+    ) ?? DEFAULT_MAX_AGE;
+    statsCache = normalizeStats(
+      decodeStored(trackingStatsSchema, result[TRACKING_STORAGE_KEYS.stats]),
+    );
   };
 
   const buildUrlIndex = async () => {
@@ -114,7 +132,7 @@ export default defineBackground(() => {
 
     const now = Date.now();
 
-    if (typeof tabId === "number") {
+    if (tabId !== undefined) {
       const recent = recentVisits.get(tabId);
 
       if (recent && recent.url === url && now - recent.ts < DEDUPE_MS) {
@@ -166,12 +184,12 @@ export default defineBackground(() => {
   const getDefaultFolderId = async (): Promise<string | undefined> => {
     try {
       const stored = await browser.storage.local.get(LAST_FOLDER_KEY);
-      const lastId = stored[LAST_FOLDER_KEY] as string | undefined;
+      const lastId = decodeStored(storedString, stored[LAST_FOLDER_KEY]);
 
       if (lastId) {
         try {
           const nodes = await browser.bookmarks.get(lastId);
-          const n = nodes[0] as chrome.bookmarks.BookmarkTreeNode | undefined;
+          const n = nodes[0];
 
           if (n && !n.url) return lastId; // still a folder
         } catch {}
@@ -189,9 +207,9 @@ export default defineBackground(() => {
 
         if (!n) continue;
 
-        if (!n.url) folders.push(n as any);
+        if (!n.url) folders.push(n);
 
-        if (n.children) for (const c of n.children) stack.push(c as any);
+        if (n.children) for (const c of n.children) stack.push(c);
       }
 
       const bar = folders.find((f) => f.parentId === "0" && f.title.toLowerCase() === "bookmarks bar");
@@ -226,29 +244,39 @@ export default defineBackground(() => {
     }
   };
 
-  const getContextMenus = (): typeof browser.contextMenus | undefined => {
-    const b = (browser as any).contextMenus as typeof browser.contextMenus | undefined;
-
-    if (b) return b;
-    const c = (globalThis as any).chrome?.contextMenus as typeof browser.contextMenus | undefined;
-
-    return c;
-  };
+  const getContextMenus = (): typeof browser.contextMenus | undefined =>
+    browser.contextMenus ?? globalThis.chrome?.contextMenus;
 
   const setupContextMenu = () => {
     const ctx = getContextMenus();
 
     if (!ctx) {
-      console.warn("[background] contextMenus API not available", { hasBrowser: !!(browser as any).contextMenus, hasChrome: !!(globalThis as any).chrome?.contextMenus });
+      console.warn("[background] contextMenus API not available", {
+        hasBrowser: Boolean(browser.contextMenus),
+        hasChrome: Boolean(globalThis.chrome?.contextMenus),
+      });
 
       return;
     }
 
     const create = () => {
-      const createOne = (id: string, title: string, contexts: string[]) => {
+      const createOne = (
+        id: string,
+        title: string,
+        contexts: [
+          Browser.contextMenus.ContextType,
+          ...Browser.contextMenus.ContextType[],
+        ],
+      ) => {
         try {
-          ctx.create({ id, title, contexts } as any, () => {
-            const err = (browser.runtime as any).lastError ?? (globalThis as any).chrome?.runtime?.lastError;
+          const properties: Browser.contextMenus.CreateProperties = {
+            id,
+            title,
+            contexts,
+          };
+
+          ctx.create(properties, () => {
+            const err = browser.runtime.lastError ?? globalThis.chrome?.runtime?.lastError;
 
             if (err?.message) console.warn(`[background] contextMenus.create ${id} lastError`, err);
           });
@@ -259,17 +287,17 @@ export default defineBackground(() => {
 
       // Label dev builds so the menu is identifiable next to the release one.
       const devSuffix = IS_DEV ? " (dev)" : "";
-      createOne("bookmark-page", `Bookmark this page${devSuffix}`, ["page"]);
-      createOne("bookmark-link", `Bookmark this link${devSuffix}`, ["link"]);
+      createOne("bookmark-page", `Bookmark this page${devSuffix}`, [MENU_CONTEXTS.page]);
+      createOne("bookmark-link", `Bookmark this link${devSuffix}`, [MENU_CONTEXTS.link]);
       console.log("[background] context menus created");
     };
 
-    // Prefer promise form (WXT/brower polyfill), fallback to callback form (chrome)
+    // Prefer promise form (WXT/browser polyfill), fallback to callback form (chrome)
     try {
-      const res: any = (ctx as any).removeAll();
+      const res = ctx.removeAll();
 
-      if (res && typeof res.then === "function") {
-        res.then(create).catch((e: any) => {
+      if (res instanceof Promise) {
+        res.then(create).catch((e) => {
           console.warn("[background] removeAll promise failed", e);
           create();
         });
@@ -280,8 +308,8 @@ export default defineBackground(() => {
 
     // callback form
     try {
-      (ctx as any).removeAll(() => {
-        const err = (browser.runtime as any).lastError ?? (globalThis as any).chrome?.runtime?.lastError;
+      ctx.removeAll(() => {
+        const err = browser.runtime.lastError ?? globalThis.chrome?.runtime?.lastError;
 
         if (err) console.warn("[background] removeAll lastError", err);
         create();
@@ -294,21 +322,27 @@ export default defineBackground(() => {
 
   const handleBookmarkThis = async (
     info: chrome.contextMenus.OnClickData,
-    tab: any,
+    tab?: chrome.tabs.Tab,
   ) => {
     const isPage = info.menuItemId === "bookmark-page";
     const isLink = info.menuItemId === "bookmark-link";
     // keep backward compat with old id
-    const isLegacy = (info.menuItemId as string) === "bookmark-this";
+    const isLegacy = info.menuItemId === "bookmark-this";
 
     if (!isPage && !isLink && !isLegacy) return;
-    const url = isLink ? (info.linkUrl || "").trim() : (tab?.url || (info.pageUrl as string) || "").trim();
+    const url = isLink ? (info.linkUrl || "").trim() : (tab?.url || info.pageUrl || "").trim();
     // For legacy, prefer linkUrl if present (old emergent behavior)
-    const legacyUrl = isLegacy ? (info.linkUrl || tab?.url || (info.pageUrl as string) || "").trim() : url;
+    const legacyUrl = isLegacy ? (info.linkUrl || tab?.url || info.pageUrl || "").trim() : url;
     const finalUrl = isLegacy ? legacyUrl : url;
 
+    // SAFETY: Firefox adds `linkText` to OnClickData; Chrome's and WXT's
+    // typings only describe the Chrome shape.
+    const linkText = (info as chrome.contextMenus.OnClickData & {
+      linkText?: string;
+    }).linkText;
+
     const title = isLink
-      ? ((info as any).linkText as string | undefined)?.trim() || finalUrl
+      ? linkText?.trim() || finalUrl
       : tab?.title?.trim() || finalUrl;
 
     if (!finalUrl) return;
@@ -381,7 +415,7 @@ export default defineBackground(() => {
   // Chrome MV3 requires menus be (re)created on every startup; onInstalled handles first install,
   // and an immediate call handles reloads. The async init must not delay this.
   browser.runtime.onInstalled.addListener(setupContextMenu);
-  (browser.runtime as any).onStartup?.addListener(setupContextMenu);
+  browser.runtime.onStartup.addListener(setupContextMenu);
   // Immediate attempt for reloads / dev rebuilds where onInstalled won't fire
   setupContextMenu();
   const ctxMenus = getContextMenus();
@@ -394,7 +428,7 @@ export default defineBackground(() => {
 
   // Keyboard shortcut (user-assignable in chrome://extensions/shortcuts)
   try {
-    (browser as any).commands?.onCommand?.addListener((cmd: string) => {
+    browser.commands.onCommand.addListener((cmd) => {
       if (cmd === "bookmark-this-page") bookmarkActiveTab();
     });
   } catch {}
@@ -411,32 +445,38 @@ export default defineBackground(() => {
       browser.tabs.create({ url: browser.runtime.getURL("/mainpage.html") });
     });
   } else {
-    (browser as any).browserAction.onClicked.addListener(() => {
+    browser.browserAction.onClicked.addListener(() => {
       browser.tabs.create({ url: browser.runtime.getURL("/mainpage.html") });
     });
   }
 
   browser.storage.onChanged.addListener((changes) => {
     if (TRACKING_STORAGE_KEYS.enabled in changes) {
-      const change = changes[TRACKING_STORAGE_KEYS.enabled];
+      const enabled = decodeStored(
+        storedBoolean,
+        changes[TRACKING_STORAGE_KEYS.enabled]?.newValue,
+      );
 
-      if (change) trackingEnabled = Boolean(change.newValue);
+      if (enabled !== undefined) trackingEnabled = enabled;
     }
 
     if (TRACKING_STORAGE_KEYS.maxAge in changes) {
-      const change = changes[TRACKING_STORAGE_KEYS.maxAge];
+      const maxAgeChange = decodeStored(
+        storedNumber,
+        changes[TRACKING_STORAGE_KEYS.maxAge]?.newValue,
+      );
 
-      if (change) {
-        const value = change.newValue;
-
-        if (typeof value === "number") maxAge = value;
-      }
+      if (maxAgeChange !== undefined) maxAge = maxAgeChange;
     }
 
     if (TRACKING_STORAGE_KEYS.stats in changes) {
       const change = changes[TRACKING_STORAGE_KEYS.stats];
 
-      if (change) statsCache = normalizeStats(change.newValue as TrackingStatsMap);
+      if (change) {
+        statsCache = normalizeStats(
+          decodeStored(trackingStatsSchema, change.newValue) ?? {},
+        );
+      }
     }
   });
 

@@ -1,5 +1,7 @@
 /** Accent color: persisted and applied as a --primary override. */
 
+import { decodeStored, storedString } from "@/utils/storageDecode.ts";
+
 const ACCENT_KEY = "accentColor";
 
 export const ACCENT_PRESETS = [
@@ -67,7 +69,7 @@ export async function saveAccent(color: string | null): Promise<void> {
 export async function initAccent(): Promise<void> {
     try {
         const result = await browser.storage.local.get([ACCENT_KEY]);
-        applyAccent((result[ACCENT_KEY] as string) ?? null);
+        applyAccent(decodeStored(storedString, result[ACCENT_KEY]) ?? null);
     } catch {
         // non-extension context: ignore
     }
