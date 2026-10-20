@@ -391,12 +391,6 @@ export default function FolderTree({
 
     const rows = (
         <>
-            {onFilter && (
-                <div className="mb-1 px-2 py-1 text-xs text-muted-foreground">
-                    + to filter • − to exclude
-                </div>
-            )}
-
             {favoriteNodes.length > 0 && (
                 <div className="mb-1 border-b border-border pb-1">
                     <div className="px-2 py-1 text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
